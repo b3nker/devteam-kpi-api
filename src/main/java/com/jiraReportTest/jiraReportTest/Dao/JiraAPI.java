@@ -31,7 +31,7 @@ public class JiraAPI {
      */
     final static String USERNAME = "benjamin.kermani@neo9.fr";
     final static String API_TOKEN = "sqjFnTAVspNM4NxLd1QZC5CB";
-    final static String PLANNING_PATH = "/home/bkermani/Projet/jiraReportTest-back/planning.csv";
+    final static String PLANNING_PATH = "planning.csv";
     final static String BOARD_ID = "391";
 
     final static Sprint sprint = new Sprint();
@@ -153,10 +153,17 @@ public class JiraAPI {
     DEBUT - Méthodes utilisés pour obtenir les informations sur la couche données (DAO)
      */
     //Retourne les informations sur le sprint actif
-    public static  Sprint callJiraSprintAPI(){
-        sprint.setTeam(getTeams(REQUESTS_SPRINT).values());
-        sprint.setTimeLeft(Sprint.durationOfSprint(sprint.getStartDate(),sprint.getEndDate()));
-        sprint.setTotalTime(Sprint.timeLeftOnSprint(sprint.getEndDate()));
+    public static Sprint callJiraSprintAPI(){
+        HashMap<String, Team> hmTeams = getTeams(REQUESTS_SPRINT);
+        Team [] teams = new Team[hmTeams.size()];
+        int i = 0;
+        for(String s: hmTeams.keySet()){
+            teams[i] = hmTeams.get(s);
+            i++;
+        }
+        sprint.setTeams(teams);
+        sprint.setTotalTime(Sprint.durationOfSprint(sprint.getStartDate(),sprint.getEndDate()));
+        sprint.setTimeLeft(Sprint.timeLeftOnSprint(sprint.getEndDate()));
         return sprint;
     }
     //Retourne la liste des collaborateurs en prenant en compte les tickets sur le sprint actif

@@ -1,9 +1,11 @@
 package com.jiraReportTest.jiraReportTest.Model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 
 import static java.lang.Integer.parseInt;
 import static java.lang.Math.toIntExact;
@@ -11,11 +13,11 @@ import static java.lang.Math.toIntExact;
 public class Sprint {
     private String name;
     private LocalDateTime startDate;
-    private int timeLeft; // in hours without considering saturdays and sundays
-    private int totalTime; // in hours without considering saturdays and sundays
+    private int timeLeft; // in hours without considering public holidays
+    private int totalTime; // in hours without considering public holidays
     private LocalDateTime endDate;
-    private Collection<Team> team;
-
+    //private HashMap<String,Team> teams;
+    private Team[] teams;
     public Sprint() {}
 
     public int getTimeLeft() {
@@ -58,12 +60,12 @@ public class Sprint {
         this.name = name;
     }
 
-    public Collection<Team> getTeam() {
-        return team;
+    public Team[] getTeams() {
+        return teams;
     }
 
-    public void setTeam(Collection<Team> team) {
-        this.team = team;
+    public void setTeams(Team[] teams) {
+        this.teams = teams;
     }
 
     public String toString(){
@@ -79,7 +81,7 @@ public class Sprint {
     /*
     Return the number of working days between 2 LocalDateTime
      */
-    public int getWorkingDays(LocalDateTime start, LocalDateTime end){
+    public static int getWorkingDays(LocalDateTime start, LocalDateTime end){
         int nbWorkingDays = 0;
         LocalDateTime ldt = start;
         while(ldt.isBefore(end)){
@@ -110,13 +112,15 @@ public class Sprint {
     Hypothesis : There are 2 weekends during a sprint
      */
     public static int durationOfSprint(LocalDateTime start, LocalDateTime end){
-        long hours = ChronoUnit.HOURS.between(start, end) - 48*2;
-        return toIntExact(hours);
+        int workingDays = Sprint.getWorkingDays(start, end);
+        int hours = workingDays*8;
+        return hours;
     }
 
 
     public static int timeLeftOnSprint(LocalDateTime end){
-        long hours = ChronoUnit.HOURS.between(LocalDateTime.now(), end);
+        int workingDays = Sprint.getWorkingDays(LocalDateTime.now(), end);
+        int hours = workingDays*8;
         return toIntExact(hours);
     }
 

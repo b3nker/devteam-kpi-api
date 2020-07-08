@@ -13,7 +13,6 @@ public class TeamController {
 
     @Autowired
     private TeamService teamService;
-    private String teamName;
 
     @RequestMapping(value = "/teams/sprint",method = RequestMethod.GET)
     @CrossOrigin(origins ="http://localhost:4200")
