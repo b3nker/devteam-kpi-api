@@ -6,7 +6,8 @@ public class Collaborator {
     private String name;
     private String emailAddress;
     private double velocity;
-    private double workedTime;
+    private double totalWorkingTime;
+    private double availableTime;
     private double estimatedTime;
     private double loggedTime;
     private double remainingTime;
@@ -15,6 +16,14 @@ public class Collaborator {
     private String role;
 
     public Collaborator() {
+    }
+
+    public double getAvailableTime() {
+        return availableTime;
+    }
+
+    public void setAvailableTime(double availableTime) {
+        this.availableTime = availableTime;
     }
 
     public Collaborator(String accountId) {
@@ -29,8 +38,8 @@ public class Collaborator {
         this.role = role;
     }
 
-    public double getWorkedTime() {
-        return workedTime;
+    public double getTotalWorkingTime() {
+        return totalWorkingTime;
     }
 
     public double getRemainingTime() {
@@ -125,8 +134,8 @@ public class Collaborator {
         this.nbToDo = nbToDo;
     }
 
-    public void setWorkedTime(double workedTime) {
-        this.workedTime = workedTime;
+    public void setTotalWorkingTime(double totalWorkingTime) {
+        this.totalWorkingTime = totalWorkingTime;
     }
 
     public void setRemainingTime(double remainingTime) {

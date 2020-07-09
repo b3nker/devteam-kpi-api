@@ -11,13 +11,14 @@ import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.Unirest;
 import kong.unirest.json.JSONArray;
-import kong.unirest.json.JSONElement;
 import kong.unirest.json.JSONObject;
 import org.springframework.stereotype.Repository;
 
 import java.io.*;
 import java.net.URLEncoder;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static java.lang.Float.parseFloat;
@@ -58,10 +59,11 @@ public class JiraAPI {
         sprint.setStartDate(sprint.toLocalDateTime(startDate));
         sprint.setEndDate(sprint.toLocalDateTime(endDate));
     }
-
     final static String SPRINT_NAME = "'" + sprint.getName() + "'";
-    final static String START_DAY_SPRINT = Integer.toString(sprint.getStartDate().getDayOfMonth());
-    final static String END_DAY_SPRINT = Integer.toString(sprint.getEndDate().getDayOfMonth());
+    final static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/YY");
+    final static String START_DAY_SPRINT = sprint.getStartDate().format(dtf);
+    final static String END_DAY_SPRINT = sprint.getEndDate().format(dtf);
+    final static String TODAY = LocalDateTime.now().format(dtf);
 
     final static ArrayList<String> TEAM_ALPHA = new ArrayList<>(Arrays.asList(
             "5c17b4599f443a65fecae3ca", // Julien Mosset
@@ -142,7 +144,6 @@ public class JiraAPI {
             i++;
         }
     }
-
 
     /*
     FIN - Déclaration et définition des variables
@@ -318,11 +319,13 @@ public class JiraAPI {
             collaborators.put(c.getAccountId(), c);
         }
         // On assigne le temps de travail sur le sprint
-        HashMap<String, Float> planning = getPlanning(PLANNING_PATH, START_DAY_SPRINT, END_DAY_SPRINT);
+        HashMap<String, Float[]> planning = getPlanning(PLANNING_PATH);
         for (String s : planning.keySet()) {
             if (collaborators.containsKey(s)) {
                 Collaborator c = collaborators.get(s);
-                c.setWorkedTime(planning.get(s));
+                c.setTotalWorkingTime(planning.get(s)[0]);
+                c.setAvailableTime(planning.get(s)[1]);
+
                 collaborators.put(s, c);
             }
         }
@@ -520,14 +523,17 @@ public class JiraAPI {
     }
 
 
-    //Lit le planning (CSV) et retourne les informations dans une table de hachage <accountId,workedTime>
-    public static HashMap<String, Float> getPlanning(String PLANNING_PATH, String START_DAY_SPRINT, String END_DAY_SPRINT) {
-        HashMap<String, Float> planning = new HashMap<>();
-        float workedTime = 0;
+    //Lit le planning (CSV) et retourne les informations dans une table de hachage <accountId, [totalWorkingTime, availableTime]>
+    public static HashMap<String, Float[]> getPlanning(String PLANNING_PATH) {
+        HashMap<String, Float[]> planning = new HashMap<>();
+        float totalWorkingTime = 0;
+        float availableTime = 0;
         String accountId;
-        final int indexAccountId = 2; //3ème colonne
+        final int INDEX_ACC_ID = 2; //3ème colonne
+        int FIRST_ROW = 4; //5ème colonne
         int startIndex = -1;
         int endIndex = -1;
+        int todayIndex = -1;
         try {
             FileReader filereader = new FileReader(PLANNING_PATH);
             CSVParser parser = new CSVParserBuilder().withSeparator(',').build();
@@ -540,26 +546,41 @@ public class JiraAPI {
             }
             String[] dates = csvReader.readNext();
             for (int i = 0; i < dates.length; i++) {
-                if (dates[i].equals(START_DAY_SPRINT) && startIndex < 0) {
+                if (dates[i].equals(START_DAY_SPRINT)) {
                     startIndex = i;
                 }
-                if (dates[i].equals(END_DAY_SPRINT) && startIndex > 0) {
+                if(dates[i].equals(END_DAY_SPRINT)) {
                     endIndex = i;
                 }
+                if(dates[i].equals(TODAY)){
+                    todayIndex = i;
+                }
+            }
+            if(startIndex <0){
+                startIndex = FIRST_ROW;
             }
             //On saute une ligne
             csvReader.readNext();
             String[] infos;
             while ((infos = csvReader.readNext()) != null) {
-                if (!infos[indexAccountId].isEmpty()) {
-                    accountId = infos[indexAccountId];
-                    workedTime = 8 * (endIndex - startIndex + 1);
-                    for (int i = startIndex; i < endIndex; i++) {
+                if (!infos[INDEX_ACC_ID].isEmpty()) {
+                    accountId = infos[INDEX_ACC_ID];
+                    totalWorkingTime = 8 * (endIndex - startIndex + 1);
+                    availableTime = 8 *(endIndex - todayIndex +1);
+                    for (int i = startIndex; i <=  endIndex; i++) {
                         if (!infos[i].isEmpty()) {
-                            workedTime -= parseFloat(infos[i]) * 8;
+                            totalWorkingTime -= parseFloat(infos[i]) * 8;
                         }
                     }
-                    planning.put(accountId, workedTime);
+                    for (int i = todayIndex; i <= endIndex; i++) {
+                        if (!infos[i].isEmpty()) {
+                            availableTime -= parseFloat(infos[i]) * 8;
+                        }
+                    }
+                    Float [] workTime = new Float [2];
+                    workTime[0] = totalWorkingTime;
+                    workTime[1] = availableTime;
+                    planning.put(accountId, workTime);
                 }
             }
         } catch (IOException e) {

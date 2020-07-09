@@ -14,7 +14,7 @@ public class CollaboratorController {
     private CollaboratorService collaboratorService;
 
 
-    @RequestMapping(value = "/all/sprint",method = RequestMethod.GET)
+    @RequestMapping(value = "/sprint/all",method = RequestMethod.GET)
     @CrossOrigin(origins ="http://localhost:4200")
     public Collection<Collaborator> getAllCollaboratorsPerSprint(){
         return this.collaboratorService.getAllCollaboratorsPerSprint();

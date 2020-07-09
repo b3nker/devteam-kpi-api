@@ -14,7 +14,9 @@ public class SprintController {
     private SprintService sprintService;
 
     @RequestMapping(value = "/sprint", method = RequestMethod.GET)
-    @CrossOrigin(origins = "http://localhost:4200")
+    @CrossOrigin(origins = {
+            "http://localhost:4200"
+    })
     public Sprint getSprintTeam(){
         return this.sprintService.getSprint();
     }
