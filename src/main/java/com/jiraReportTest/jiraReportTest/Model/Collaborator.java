@@ -95,10 +95,12 @@ public class Collaborator {
     }
 
     public void setFirstName(String firstName) {
+        firstName = firstName.substring(0,1).toUpperCase() + firstName.substring(1).toLowerCase();
         this.firstName = firstName;
     }
 
     public void setName(String name) {
+        name = name.substring(0,1).toUpperCase() + name.substring(1).toLowerCase();
         this.name = name;
     }
 

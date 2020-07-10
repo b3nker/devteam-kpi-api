@@ -12,15 +12,16 @@ public class TeamDao {
     private static HashMap<String, Team> teamsSprint;
     /*
     private static HashMap<String,Team> teamsWeek;
-     */
+
     static{
         teamsSprint = JiraAPI.callJiraSprintTeamAPI();
-        /*
+
         teamsWeek = JiraAPI.callJiraWeekTeamAPI();
 
-         */
-    }
 
+    }
+     */
+    /*
     public Collection<Team> getTeamsPerSprint(){
         return this.teamsSprint.values();
     }
@@ -31,7 +32,7 @@ public class TeamDao {
        return this.teamsSprint.get(teamName);
     }
 
-    /*
+
 
     public Collection<Team> getTeamsPerWeek(){
         return this.teamsWeek.values();

@@ -36,6 +36,7 @@ public class JiraAPI {
     final static String BOARD_ID = "391";
 
     final static Sprint sprint = new Sprint();
+
     static {
         String startDate = "";
         String endDate = "";
@@ -59,6 +60,7 @@ public class JiraAPI {
         sprint.setStartDate(sprint.toLocalDateTime(startDate));
         sprint.setEndDate(sprint.toLocalDateTime(endDate));
     }
+
     final static String SPRINT_NAME = "'" + sprint.getName() + "'";
     final static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/YY");
     final static String START_DAY_SPRINT = sprint.getStartDate().format(dtf);
@@ -76,7 +78,6 @@ public class JiraAPI {
 
     ));
     final static ArrayList<String> TEAM_BETA = new ArrayList<>(Arrays.asList(
-            "5ed754b0f93b230ba59a3d38", // Nicolas Beucler
             "5cb45bb34064460e407eabe4", // Guillermo Garcès
             "5a9ebdf74af2372a88a06565", // Gabriel Roquigny
             "5a2181081594706402dee482", // Etienne Bourgouin
@@ -87,7 +88,6 @@ public class JiraAPI {
             "unassignedBeta"
     ));
     final static ArrayList<String> TEAM_GAMMA = new ArrayList<>(Arrays.asList(
-            "5aafb6012235812a6233652d", // Lionel Sgarbi
             "5e285008ee264b0e74591993", // Eric Coupal
             "5ed76cc1be03220ab32183be", // Thibault Foucault
             "557058:87b17037-8a69-4b38-8dab-b4cf904e960a", // Pierre Thevenet
@@ -97,14 +97,14 @@ public class JiraAPI {
             "unassignedGamma"
     ));
     final static ArrayList<String> DONE = new ArrayList<>(Arrays.asList("Abandonné", "Livré", "Terminé",
-            "Validé en recette", "A tester", "A valider", "A Livrer"));
+            "Validé en recette", "A valider"));
     final static ArrayList<String> IN_PROGRESS = new ArrayList<>(Arrays.asList("En cours", "Dév terminé",
-            "Refusé en recette", "En attente"));
+            "Refusé en recette", "En attente", "A tester", "A Livrer"));
 
 
     final static HashMap<String, String> ID_COLLABS = new HashMap<>();
+
     static {
-        ID_COLLABS.put("5aafb6012235812a6233652d", "scrum"); //Lionel Sjarbi
         ID_COLLABS.put("5c17b4599f443a65fecae3ca", "middle"); // Julien Mosset
         ID_COLLABS.put("5a9ebe1c4af2372a88a0656b", "front"); // Nicolas Ovejero
         ID_COLLABS.put("5bcd8282607ed038040177bb", "middle"); // Pape Thiam
@@ -112,7 +112,6 @@ public class JiraAPI {
         ID_COLLABS.put("5ed76cdf2fdc580b88f3bbef", "middle"); // Alex Cheuko
         ID_COLLABS.put("5ed64583620b1d0c168d4e36", "middle"); // Anthony Hernandez
         ID_COLLABS.put("5cb45bb34064460e407eabe4", "middle"); // Guillermo Garcès
-        ID_COLLABS.put("5ed754b0f93b230ba59a3d38", "scrum"); // Nicolas Beucler
         ID_COLLABS.put("5a9ebdf74af2372a88a06565", "middle"); // Gabriel Roquigny
         ID_COLLABS.put("5a2181081594706402dee482", "front"); // Etienne Bourgouin
         ID_COLLABS.put("5afe92f251d0b7540b43de81", "middle"); // Malick Diagne
@@ -125,16 +124,29 @@ public class JiraAPI {
         ID_COLLABS.put("5a8155f0cad06b353733bae8", "middle"); // Guillaume Coppens
         ID_COLLABS.put("5dfd11b39422830cacaa8a79", "front"); // Carthy Marie Joseph
         ID_COLLABS.put("5ef1afd6561e0e0aae904914", "middle"); // Yong Ma
+        ID_COLLABS.put("5aafb6012235812a6233652d", "scrum"); //Lionel Sjarbi
+        ID_COLLABS.put("5ed754b0f93b230ba59a3d38", "scrum"); // Nicolas Beucler
+        ID_COLLABS.put("557058:1f318bba-6336-4f60-a3b1-67e03a32a3dc", "transverse"); // Kévin Labesse
+        ID_COLLABS.put("5ef5ec9a7e95e80a8126e509", "scrum"); // Pierre-Yves Garic
+        ID_COLLABS.put("5b97bc461b4803467d26fd6e", "transverse"); // Xavier Michel
+        ID_COLLABS.put("5e787dfb2466490c495f2a85", "transverse"); // Maxime Ancellin
+        ID_COLLABS.put("5a96abe5e9dc0033a7af8cfb", "transverse"); // Joël Royer
+        ID_COLLABS.put("5db2f070af604e0db364eb12", "transverse"); // David Boucard Planel
+        ID_COLLABS.put("5a27b9ed466b4a37eec61268", "transverse"); // Pierre Bertin
+        ID_COLLABS.put("557058:d8f506a1-fa47-4681-9ab1-7214a062c264", "transverse"); // Vincent Martin
+        ID_COLLABS.put("557058:834cbf83-d227-4823-bfdf-db62c8672ad1", "transverse"); // Victor Dumesny
+        ID_COLLABS.put("557058:df17bf30-7843-415e-985d-151faba64429", "transverse"); // Philippe Fleur
         ID_COLLABS.put(null, ""); // unassigned
     }
 
     final static String[] REQUESTS_SPRINT = new String[ID_COLLABS.size()];
     final static String[] REQUESTS_WEEK = new String[ID_COLLABS.size()];
+
     static {
         int i = 0;
         for (String s : ID_COLLABS.keySet()) {
             REQUESTS_SPRINT[i] = "search?jql=project=BMKP+AND+assignee=" + s +
-                    "+AND+sprint=" + SPRINT_NAME +"&maxResults=100";
+                    "+AND+sprint=" + SPRINT_NAME + "&maxResults=100";
             try {
                 REQUESTS_WEEK[i] = "search?jql=project=BMKP+AND+assignee=" + s +
                         "+AND+updated " + URLEncoder.encode("<=", "utf-8") + "-1w &maxResults=100";
@@ -154,19 +166,20 @@ public class JiraAPI {
     DEBUT - Méthodes utilisés pour obtenir les informations sur la couche données (DAO)
      */
     //Retourne les informations sur le sprint actif
-    public static Sprint callJiraSprintAPI(){
+    public static Sprint callJiraSprintAPI() {
         HashMap<String, Team> hmTeams = getTeams(REQUESTS_SPRINT);
-        Team [] teams = new Team[hmTeams.size()];
+        Team[] teams = new Team[hmTeams.size()];
         int i = 0;
-        for(String s: hmTeams.keySet()){
+        for (String s : hmTeams.keySet()) {
             teams[i] = hmTeams.get(s);
             i++;
         }
         sprint.setTeams(teams);
-        sprint.setTotalTime(Sprint.durationOfSprint(sprint.getStartDate(),sprint.getEndDate()));
+        sprint.setTotalTime(Sprint.durationOfSprint(sprint.getStartDate(), sprint.getEndDate()));
         sprint.setTimeLeft(Sprint.timeLeftOnSprint(sprint.getEndDate()));
         return sprint;
     }
+
     //Retourne la liste des collaborateurs en prenant en compte les tickets sur le sprint actif
     public static HashMap<String, Collaborator> callJiraCollabSprintAPI() {
         return getCollaborators(REQUESTS_SPRINT);
@@ -187,11 +200,9 @@ public class JiraAPI {
         return getTeams(REQUESTS_WEEK);
     }
 
-
     /*
      FIN - Méthodes utilisés pour obtenir les informations sur la couche données (DAO)
      */
-
 
     /*
     DEBUT - Méthodes pour appeler l'API, les services externes et stocker ces données
@@ -218,11 +229,11 @@ public class JiraAPI {
             JSONObject myObj = response.getBody().getObject();
             int total = myObj.getInt("total");
             JSONArray issues = myObj.getJSONArray("issues");
-            if(request.contains("null")){
+            if (request.contains("null")) {
                 List<Collaborator> collabs = new ArrayList<>();
                 collabs = getUnassignedPerTeam();
-                for(Collaborator c: collabs){
-                    collaborators.put(c.getAccountId(),c);
+                for (Collaborator c : collabs) {
+                    collaborators.put(c.getAccountId(), c);
                 }
             }
             if (total == 0) {
@@ -266,22 +277,24 @@ public class JiraAPI {
                 }
                 //Renseignements sur le statut de la demande
                 String statut = status.getString("name");
+                //Répartition des tickets
+                if (DONE.contains(statut)) {
+                    ticketsDone++;
+                } else if (IN_PROGRESS.contains(statut)) {
+                    ticketsInProgress++;
+                } else {
+                    ticketsToDo++;
+                }
                 //Attribution du temps de travail
+
                 if (!fields.isNull("timeestimate")) {
                     remaining += (fields.getInt("timeestimate") / 3600);
                 }
-                if (DONE.contains(statut)) {
-                    ticketsDone++;
-                    if (!fields.isNull("timeoriginalestimate")) {
-                        estimated += (fields.getInt("timeoriginalestimate") / 3600);
-                    }
-                } else if (IN_PROGRESS.contains(statut)) {
-                    ticketsInProgress++;
-                    if (!fields.isNull("aggregatetimespent")) {
-                        timespent += (fields.getInt("aggregatetimespent") / 3600);
-                    }
-                } else {
-                    ticketsToDo++;
+                if (!fields.isNull("timeoriginalestimate")) {
+                    estimated += (fields.getInt("timeoriginalestimate") / 3600);
+                }
+                if (!fields.isNull("aggregatetimespent")) {
+                    timespent += (fields.getInt("aggregatetimespent") / 3600);
                 }
                 //Attribution des story points
                 if (!fields.isNull("customfield_10005")) {
@@ -332,10 +345,10 @@ public class JiraAPI {
         return collaborators;
     }
 
-    //Retourne dans un objet Collaborator les informations, par équipe, où "assignee=null" (MAUVAISE INTEGRATION)
-    public static List<Collaborator> getUnassignedPerTeam(){
+    //Retourne dans un objet Collaborator les informations par équipe, où "assignee=null" (MAUVAISE INTEGRATION)
+    public static List<Collaborator> getUnassignedPerTeam() {
         List<Collaborator> collaborators = new ArrayList<>();
-        String request = "search?jql=project=BMKP+AND+assignee=null+AND+sprint="+SPRINT_NAME+"&maxResults=100";
+        String request = "search?jql=project=BMKP+AND+assignee=null+AND+sprint=" + SPRINT_NAME + "&maxResults=100";
         //0 : alpha , 1: beta, 2: gamma
         int[] timespent = new int[3];
         int[] estimated = new int[3];
@@ -349,7 +362,7 @@ public class JiraAPI {
         int[] ticketsToDo = new int[3];
         String[] accountId = new String[3];
         String[] prenom = new String[3];
-        String[] nom = new String [3];
+        String[] nom = new String[3];
         HttpResponse<JsonNode> response = Unirest.get("https://apriltechnologies.atlassian.net/rest/api/3/" +
                 request)
                 .basicAuth(USERNAME, API_TOKEN)
@@ -362,29 +375,31 @@ public class JiraAPI {
             JSONObject fields = issue.getJSONObject("fields");
             JSONObject status = fields.getJSONObject("status");
             JSONArray labels = fields.getJSONArray("labels");
-            for(int j = 0; j < labels.length(); j++){
-                if(labels.getString(j).contains("ALPHA")){
+            for (int j = 0; j < labels.length(); j++) {
+                if (labels.getString(j).contains("ALPHA")) {
                     accountId[0] = "unassignedAlpha";
                     prenom[0] = "Non";
                     nom[0] = "Assigné (Alpha)";
                     //Renseignements sur le statut de la demande
                     String statut = status.getString("name");
+                    //Répartition des tickets
+                    if (DONE.contains(statut)) {
+                        ticketsDone[0]++;
+                    } else if (IN_PROGRESS.contains(statut)) {
+                        ticketsInProgress[0]++;
+                    } else {
+                        ticketsToDo[0]++;
+                    }
                     //Attribution du temps de travail
+
                     if (!fields.isNull("timeestimate")) {
                         remaining[0] += (fields.getInt("timeestimate") / 3600);
                     }
-                    if (DONE.contains(statut)) {
-                        ticketsDone[0]++;
-                        if (!fields.isNull("timeoriginalestimate")) {
-                            estimated[0] += (fields.getInt("timeoriginalestimate") / 3600);
-                        }
-                    } else if (IN_PROGRESS.contains(statut)) {
-                        ticketsInProgress[0]++;
-                        if (!fields.isNull("aggregatetimespent")) {
-                            timespent[0] += (fields.getInt("aggregatetimespent") / 3600);
-                        }
-                    } else {
-                        ticketsToDo[0]++;
+                    if (!fields.isNull("timeoriginalestimate")) {
+                        estimated[0] += (fields.getInt("timeoriginalestimate") / 3600);
+                    }
+                    if (!fields.isNull("aggregatetimespent")) {
+                        timespent[0] += (fields.getInt("aggregatetimespent") / 3600);
                     }
                     //Attribution des story points
                     if (!fields.isNull("customfield_10005")) {
@@ -400,28 +415,30 @@ public class JiraAPI {
                     }
 
                 }
-                if(labels.getString(j).contains("BETA")){
+                if (labels.getString(j).contains("BETA")) {
                     accountId[1] = "unassignedBeta";
                     prenom[1] = "Non";
                     nom[1] = "Assigné (Beta)";
                     //Renseignements sur le statut de la demande
                     String statut = status.getString("name");
+                    //Répartition des tickets
+                    if (DONE.contains(statut)) {
+                        ticketsDone[1]++;
+                    } else if (IN_PROGRESS.contains(statut)) {
+                        ticketsInProgress[1]++;
+                    } else {
+                        ticketsToDo[1]++;
+                    }
                     //Attribution du temps de travail
+
                     if (!fields.isNull("timeestimate")) {
                         remaining[1] += (fields.getInt("timeestimate") / 3600);
                     }
-                    if (DONE.contains(statut)) {
-                        ticketsDone[1]++;
-                        if (!fields.isNull("timeoriginalestimate")) {
-                            estimated[1] += (fields.getInt("timeoriginalestimate") / 3600);
-                        }
-                    } else if (IN_PROGRESS.contains(statut)) {
-                        ticketsInProgress[1]++;
-                        if (!fields.isNull("aggregatetimespent")) {
-                            timespent[1] += (fields.getInt("aggregatetimespent") / 3600);
-                        }
-                    } else {
-                        ticketsToDo[1]++;
+                    if (!fields.isNull("timeoriginalestimate")) {
+                        estimated[1] += (fields.getInt("timeoriginalestimate") / 3600);
+                    }
+                    if (!fields.isNull("aggregatetimespent")) {
+                        timespent[1] += (fields.getInt("aggregatetimespent") / 3600);
                     }
                     //Attribution des story points
                     if (!fields.isNull("customfield_10005")) {
@@ -436,28 +453,30 @@ public class JiraAPI {
                         }
                     }
                 }
-                if(labels.getString(j).contains("GAMMA") || labels.getString(j).contains("GAMA")){
+                if (labels.getString(j).contains("GAMMA") || labels.getString(j).contains("GAMA")) {
                     accountId[2] = "unassignedGamma";
                     prenom[2] = "Non";
                     nom[2] = "Assigné (Gamma)";
                     //Renseignements sur le statut de la demande
                     String statut = status.getString("name");
+                    //Répartition des tickets
+                    if (DONE.contains(statut)) {
+                        ticketsDone[2]++;
+                    } else if (IN_PROGRESS.contains(statut)) {
+                        ticketsInProgress[2]++;
+                    } else {
+                        ticketsToDo[2]++;
+                    }
                     //Attribution du temps de travail
+
                     if (!fields.isNull("timeestimate")) {
                         remaining[2] += (fields.getInt("timeestimate") / 3600);
                     }
-                    if (DONE.contains(statut)) {
-                        ticketsDone[2]++;
-                        if (!fields.isNull("timeoriginalestimate")) {
-                            estimated[2] += (fields.getInt("timeoriginalestimate") / 3600);
-                        }
-                    } else if (IN_PROGRESS.contains(statut)) {
-                        ticketsInProgress[2]++;
-                        if (!fields.isNull("aggregatetimespent")) {
-                            timespent[2] += (fields.getInt("aggregatetimespent") / 3600);
-                        }
-                    } else {
-                        ticketsToDo[2]++;
+                    if (!fields.isNull("timeoriginalestimate")) {
+                        estimated[2] += (fields.getInt("timeoriginalestimate") / 3600);
+                    }
+                    if (!fields.isNull("aggregatetimespent")) {
+                        timespent[2] += (fields.getInt("aggregatetimespent") / 3600);
                     }
                     //Attribution des story points
                     if (!fields.isNull("customfield_10005")) {
@@ -474,7 +493,7 @@ public class JiraAPI {
                 }
             }
         }
-        for(int i = 0; i <3; i++){
+        for (int i = 0; i < 3; i++) {
             int totalTickets = ticketsDone[i] + ticketsInProgress[i] + ticketsToDo[i];
             Collaborator c = new Collaborator();
             c.setAccountId(accountId[i]);
@@ -497,7 +516,7 @@ public class JiraAPI {
     }
 
 
-    //Méthode secondaire : Fait un appel à getCollaborators() et aggrège les données par équipes
+    //Fait un appel à getCollaborators() et aggrège les données par équipe
     public static HashMap<String, Team> getTeams(String[] requests) {
         HashMap<String, Collaborator> collaborators = getCollaborators(requests);
         HashMap<String, Team> teams = new HashMap<>();
@@ -549,14 +568,14 @@ public class JiraAPI {
                 if (dates[i].equals(START_DAY_SPRINT)) {
                     startIndex = i;
                 }
-                if(dates[i].equals(END_DAY_SPRINT)) {
+                if (dates[i].equals(END_DAY_SPRINT)) {
                     endIndex = i;
                 }
-                if(dates[i].equals(TODAY)){
+                if (dates[i].equals(TODAY)) {
                     todayIndex = i;
                 }
             }
-            if(startIndex <0){
+            if (startIndex < 0) {
                 startIndex = FIRST_ROW;
             }
             //On saute une ligne
@@ -566,8 +585,8 @@ public class JiraAPI {
                 if (!infos[INDEX_ACC_ID].isEmpty()) {
                     accountId = infos[INDEX_ACC_ID];
                     totalWorkingTime = 8 * (endIndex - startIndex + 1);
-                    availableTime = 8 *(endIndex - todayIndex +1);
-                    for (int i = startIndex; i <=  endIndex; i++) {
+                    availableTime = 8 * (endIndex - todayIndex + 1);
+                    for (int i = startIndex; i <= endIndex; i++) {
                         if (!infos[i].isEmpty()) {
                             totalWorkingTime -= parseFloat(infos[i]) * 8;
                         }
@@ -577,7 +596,7 @@ public class JiraAPI {
                             availableTime -= parseFloat(infos[i]) * 8;
                         }
                     }
-                    Float [] workTime = new Float [2];
+                    Float[] workTime = new Float[2];
                     workTime[0] = totalWorkingTime;
                     workTime[1] = availableTime;
                     planning.put(accountId, workTime);

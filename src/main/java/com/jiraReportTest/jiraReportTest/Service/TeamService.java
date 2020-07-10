@@ -12,7 +12,7 @@ import java.util.Collection;
 public class TeamService {
     @Autowired
     private TeamDao teamDao;
-
+    /*
     public Collection<Team> getTeamsPerSprint(){
         return this.teamDao.getTeamsPerSprint();
     }
