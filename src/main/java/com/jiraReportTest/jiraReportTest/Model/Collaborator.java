@@ -12,10 +12,137 @@ public class Collaborator {
     private double loggedTime;
     private double remainingTime;
     private int nbTickets, nbDone, nbDevDone, nbInProgress, nbToDo;
-    private double spTotal, spDone, spDevDone, spInProgress, spToDo;
+    private double spTotal;
+    private double spAqualifier;
+    private double spBacAffinage;
+    private double spEnAttente;
+    private double spAfaire;
+    private double spEncours;
+    private double spAbandonne;
+    private double spDevTermine;
+    private double spAvalider;
+    private double spAlivrer;
+    private double spATester;
+    private double spRefuseEnRecette;
+    private double spValideEnRecette;
+    private double spLivre;
+    private double spTermine;
     private String role;
 
+
     public Collaborator() {
+    }
+
+    public double getSpTermine() {
+        return spTermine;
+    }
+
+    public void setSpTermine(double spTermine) {
+        this.spTermine = spTermine;
+    }
+
+    public void setSpAqualifier(double spAqualifier) {
+        this.spAqualifier = spAqualifier;
+    }
+
+    public double getSpAqualifier() {
+        return spAqualifier;
+    }
+
+    public double getSpBacAffinage() {
+        return spBacAffinage;
+    }
+
+    public double getSpEnAttente() {
+        return spEnAttente;
+    }
+
+    public double getSpAfaire() {
+        return spAfaire;
+    }
+
+    public double getSpEncours() {
+        return spEncours;
+    }
+
+    public double getSpAbandonne() {
+        return spAbandonne;
+    }
+
+    public double getSpDevTermine() {
+        return spDevTermine;
+    }
+
+    public double getSpAvalider() {
+        return spAvalider;
+    }
+
+    public double getSpAlivrer() {
+        return spAlivrer;
+    }
+
+    public double getSpATester() {
+        return spATester;
+    }
+
+    public double getSpRefuseEnRecette() {
+        return spRefuseEnRecette;
+    }
+
+    public double getSpValideEnRecette() {
+        return spValideEnRecette;
+    }
+
+    public double getSpLivre() {
+        return spLivre;
+    }
+
+    public void setSpBacAffinage(double spBacAffinage) {
+        this.spBacAffinage = spBacAffinage;
+    }
+
+    public void setSpEnAttente(double spEnAttente) {
+        this.spEnAttente = spEnAttente;
+    }
+
+    public void setSpAfaire(double spAfaire) {
+        this.spAfaire = spAfaire;
+    }
+
+    public void setSpEncours(double spEncours) {
+        this.spEncours = spEncours;
+    }
+
+    public void setSpAbandonne(double spAbandonne) {
+        this.spAbandonne = spAbandonne;
+    }
+
+    public void setSpDevTermine(double spDevTermine) {
+        this.spDevTermine = spDevTermine;
+    }
+
+    public void setSpAvalider(double spAvalider) {
+        this.spAvalider = spAvalider;
+    }
+
+    public void setSpAlivrer(double spAlivrer) {
+        this.spAlivrer = spAlivrer;
+    }
+
+    public void setSpATester(double spATester) {
+        this.spATester = spATester;
+    }
+
+    public void setSpRefuseEnRecette(double spRefuseEnRecette) {
+        this.spRefuseEnRecette = spRefuseEnRecette;
+    }
+
+    public void setSpValideEnRecette(double spValideEnRecette) {
+        this.spValideEnRecette = spValideEnRecette;
+    }
+
+    public void setSpLivre(double spLivre) {
+        this.spLivre = spLivre;
     }
 
     public int getNbDevDone() {
@@ -26,13 +153,6 @@ public class Collaborator {
         this.nbDevDone = nbDevDone;
     }
 
-    public double getSpDevDone() {
-        return spDevDone;
-    }
-
-    public void setSpDevDone(double spDevDone) {
-        this.spDevDone = spDevDone;
-    }
 
     public double getAvailableTime() {
         return availableTime;
@@ -164,39 +284,17 @@ public class Collaborator {
         this.spTotal = spTotal;
     }
 
-    public void setSpDone(double spDone) {
-        this.spDone = spDone;
-    }
-
-    public void setSpInProgress(double spInProgress) {
-        this.spInProgress = spInProgress;
-    }
-
-    public void setSpToDo(double spToDo) {
-        this.spToDo = spToDo;
-    }
-
     public double getSpTotal() {
         return spTotal;
     }
 
-    public double getSpDone() {
-        return spDone;
-    }
 
-    public double getSpInProgress() {
-        return spInProgress;
-    }
-
-    public double getSpToDo() {
-        return spToDo;
-    }
 
     public String toString() {
         return ("accountId: " + this.accountId + ", prénom: " + this.firstName + ", nom: " + this.name + ", adresseMail: "
                 + this.emailAddress + ", nbTickets: " + this.nbTickets + ", estimatedTime: " + this.estimatedTime + ", loggedTime: "
                 + this.loggedTime + ", tickets Done: " + this.nbDone + ", tickets InProgress: " + nbInProgress + ", tickets ToDo: "
-                + this.nbToDo+ ", role:" + this.role);
+                + this.nbToDo+ ", role:" + this.role + "spALivrer: " + this.spAlivrer);
     }
 }
 

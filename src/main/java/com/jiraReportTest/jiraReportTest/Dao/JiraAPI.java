@@ -211,7 +211,21 @@ public class JiraAPI {
         HashMap<String, Collaborator> collaborators = new HashMap<>();
         for (String request : requests) {
             int timespent = 0, estimated = 0, remaining = 0;
-            double spTotal = 0, spDone = 0, spInProgress = 0, spToDo = 0, spDevDone = 0;
+            double spTotal = 0;
+            double spAQualifier = 0;
+            double spBacAffinage = 0;
+            double spEnAttente = 0;
+            double spAFaire = 0;
+            double spEnCours = 0;
+            double spAbandonne = 0;
+            double spDevTermine = 0;
+            double spAvalider = 0;
+            double spAlivrer = 0;
+            double spATester = 0;
+            double spRefuseEnRecette = 0;
+            double spValideEnRecette = 0;
+            double spLivre = 0;
+            double spTermine = 0;
             int ticketsDone = 0;
             int ticketsInProgress = 0;
             int ticketsToDo = 0;
@@ -280,9 +294,9 @@ public class JiraAPI {
                 if (DONE.contains(statut)) {
                     ticketsDone++;
                 } else if (IN_PROGRESS.contains(statut)) {
-                    if(DEV_DONE.contains(statut)){
+                    if (DEV_DONE.contains(statut)) {
                         ticketsDevDone++;
-                    }else{
+                    } else {
                         ticketsInProgress++;
                     }
                 } else {
@@ -299,45 +313,111 @@ public class JiraAPI {
                 if (!fields.isNull("aggregatetimespent")) {
                     timespent += (fields.getInt("aggregatetimespent") / 3600);
                 }
+
+
                 //Attribution des story points
                 if (!fields.isNull("customfield_10005")) {
                     double curStoryPoints = fields.getDouble("customfield_10005");
-                    spTotal += curStoryPoints;
-                    if (DONE.contains(statut)) {
-                        spDone += curStoryPoints;
-                    } else if (IN_PROGRESS.contains(statut)) {
-                        if(DEV_DONE.contains(statut)){
-                            spDevDone += curStoryPoints;
-                        }else{
-                            spInProgress += curStoryPoints;
-                        }
-                    } else {
-                        spToDo += curStoryPoints;
+                    switch (statut) {
+                        case "A qualifier":
+                            spTotal += curStoryPoints;
+                            spAQualifier += curStoryPoints;
+                            break;
+                        case "Bac d'affinage":
+                            spTotal += curStoryPoints;
+                            spBacAffinage += curStoryPoints;
+                            break;
+                        case "En attente":
+                            spTotal += curStoryPoints;
+                            spEnAttente += curStoryPoints;
+                            break;
+                        case "A Faire":
+                            spTotal += curStoryPoints;
+                            spAFaire += curStoryPoints;
+                            break;
+                        case "En cours":
+                            spTotal += curStoryPoints;
+                            spEnCours += curStoryPoints;
+                            break;
+                        case "Abandonné":
+                            spTotal += curStoryPoints;
+                            spAbandonne += curStoryPoints;
+                            break;
+                        case "Dév terminé":
+                            spTotal += curStoryPoints;
+                            spDevTermine += curStoryPoints;
+                            break;
+                        case "A valider":
+                            spTotal += curStoryPoints;
+                            spAvalider += curStoryPoints;
+                            break;
+                        case "A Livrer":
+                            spTotal += curStoryPoints;
+                            spAlivrer += curStoryPoints;
+                            break;
+                        case "A tester":
+                            spTotal += curStoryPoints;
+                            spATester += curStoryPoints;
+                            break;
+                        case "Refusé en recette":
+                            spTotal += curStoryPoints;
+                            spRefuseEnRecette += curStoryPoints;
+                            break;
+                        case "Validé en recette":
+                            spTotal += curStoryPoints;
+                            spValideEnRecette += curStoryPoints;
+                            break;
+                        case "Livré":
+                            spTotal += curStoryPoints;
+                            spLivre += curStoryPoints;
+                            break;
+                        case "Terminé":
+                            spTotal += curStoryPoints;
+                            spTermine += curStoryPoints;
+                            break;
+                        default:
+                            spTotal += curStoryPoints;
                     }
                 }
 
             }
             //Attribution du role
             String role = ID_COLLABS.get(accountId);
+
+            //Création d'un objet Collaborateur
             Collaborator c = new Collaborator();
             c.setAccountId(accountId);
             c.setEmailAddress(emailAddress);
             c.setName(nom);
             c.setFirstName(prenom);
+            c.setRole(role);
+
             c.setLoggedTime(timespent);
             c.setEstimatedTime(estimated);
+            c.setRemainingTime(remaining);
+
             c.setNbTickets(total);
             c.setNbDone(ticketsDone);
             c.setNbDevDone(ticketsDevDone);
             c.setNbInProgress(ticketsInProgress);
             c.setNbToDo(ticketsToDo);
-            c.setRemainingTime(remaining);
+
             c.setSpTotal(spTotal);
-            c.setSpDone(spDone);
-            c.setSpDevDone(spDevDone);
-            c.setSpInProgress(spInProgress);
-            c.setSpToDo(spToDo);
-            c.setRole(role);
+            c.setSpAqualifier(spAQualifier);
+            c.setSpBacAffinage(spBacAffinage);
+            c.setSpEnAttente(spEnAttente);
+            c.setSpAfaire(spAFaire);
+            c.setSpEncours(spEnCours);
+            c.setSpAbandonne(spAbandonne);
+            c.setSpDevTermine(spDevTermine);
+            c.setSpAvalider(spAvalider);
+            c.setSpAlivrer(spAlivrer);
+            c.setSpATester(spATester);
+            c.setSpRefuseEnRecette(spRefuseEnRecette);
+            c.setSpValideEnRecette(spValideEnRecette);
+            c.setSpLivre(spLivre);
+            c.setSpTermine(spTermine);
+            //Ajout de l'objet dans une Hash Map
             collaborators.put(c.getAccountId(), c);
         }
         // On assigne le temps de travail sur le sprint
@@ -347,7 +427,6 @@ public class JiraAPI {
                 Collaborator c = collaborators.get(s);
                 c.setTotalWorkingTime(planning.get(s)[0]);
                 c.setAvailableTime(planning.get(s)[1]);
-
                 collaborators.put(s, c);
             }
         }
@@ -363,10 +442,6 @@ public class JiraAPI {
         int[] estimated = new int[3];
         int[] remaining = new int[3];
         double[] spTotal = new double[3];
-        double[] spDone = new double[3];
-        double[] spDevDone = new double[3];
-        double[] spInProgress = new double[3];
-        double[] spToDo = new double[3];
         int[] ticketsDone = new int[3];
         int[] ticketsDevDone = new int[3];
         int[] ticketsInProgress = new int[3];
@@ -397,9 +472,9 @@ public class JiraAPI {
                     if (DONE.contains(statut)) {
                         ticketsDone[0]++;
                     } else if (IN_PROGRESS.contains(statut)) {
-                        if(DEV_DONE.contains(statut)){
+                        if (DEV_DONE.contains(statut)) {
                             ticketsDevDone[0]++;
-                        }else{
+                        } else {
                             ticketsInProgress[0]++;
                         }
                     } else {
@@ -420,17 +495,6 @@ public class JiraAPI {
                     if (!fields.isNull("customfield_10005")) {
                         double curStoryPoints = fields.getDouble("customfield_10005");
                         spTotal[0] += curStoryPoints;
-                        if (DONE.contains(statut)) {
-                            spDone[0] += curStoryPoints;
-                        } else if (IN_PROGRESS.contains(statut)) {
-                            if(DEV_DONE.contains(statut)){
-                                spDevDone[0] += curStoryPoints;
-                            }else{
-                                spInProgress[0] += curStoryPoints;
-                            }
-                        } else {
-                            spToDo[0] += curStoryPoints;
-                        }
                     }
 
                 }
@@ -444,9 +508,9 @@ public class JiraAPI {
                     if (DONE.contains(statut)) {
                         ticketsDone[1]++;
                     } else if (IN_PROGRESS.contains(statut)) {
-                        if(DEV_DONE.contains(statut)){
+                        if (DEV_DONE.contains(statut)) {
                             ticketsDevDone[1]++;
-                        }else{
+                        } else {
                             ticketsInProgress[1]++;
                         }
                     } else {
@@ -467,17 +531,6 @@ public class JiraAPI {
                     if (!fields.isNull("customfield_10005")) {
                         double curStoryPoints = fields.getDouble("customfield_10005");
                         spTotal[1] += curStoryPoints;
-                        if (DONE.contains(statut)) {
-                            spDone[1] += curStoryPoints;
-                        } else if (IN_PROGRESS.contains(statut)) {
-                            if(DEV_DONE.contains(statut)){
-                                spDevDone[1] += curStoryPoints;
-                            }else{
-                                spInProgress[1] += curStoryPoints;
-                            }
-                        }else {
-                            spToDo[1] += curStoryPoints;
-                        }
                     }
                 }
                 if (labels.getString(j).contains("GAMMA") || labels.getString(j).contains("GAMA")) {
@@ -490,9 +543,9 @@ public class JiraAPI {
                     if (DONE.contains(statut)) {
                         ticketsDone[2]++;
                     } else if (IN_PROGRESS.contains(statut)) {
-                        if(DEV_DONE.contains(statut)){
+                        if (DEV_DONE.contains(statut)) {
                             ticketsDevDone[2]++;
-                        }else{
+                        } else {
                             ticketsInProgress[2]++;
                         }
                     } else {
@@ -513,17 +566,6 @@ public class JiraAPI {
                     if (!fields.isNull("customfield_10005")) {
                         double curStoryPoints = fields.getDouble("customfield_10005");
                         spTotal[2] += curStoryPoints;
-                        if (DONE.contains(statut)) {
-                            spDone[2] += curStoryPoints;
-                        } else if (IN_PROGRESS.contains(statut)) {
-                            if(DEV_DONE.contains(statut)){
-                                spDevDone[2] += curStoryPoints;
-                            }else{
-                                spInProgress[2] += curStoryPoints;
-                            }
-                        }else {
-                            spToDo[2] += curStoryPoints;
-                        }
                     }
                 }
             }
@@ -543,10 +585,6 @@ public class JiraAPI {
             c.setNbToDo(ticketsToDo[i]);
             c.setRemainingTime(remaining[i]);
             c.setSpTotal(spTotal[i]);
-            c.setSpDone(spDone[i]);
-            c.setSpInProgress(spInProgress[i]);
-            c.setSpToDo(spToDo[i]);
-            c.setSpDevDone(spDevDone[i]);
             collaborators.add(c);
         }
         return collaborators;
