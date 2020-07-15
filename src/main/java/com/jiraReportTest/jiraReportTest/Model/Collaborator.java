@@ -11,11 +11,27 @@ public class Collaborator {
     private double estimatedTime;
     private double loggedTime;
     private double remainingTime;
-    private int nbTickets, nbDone, nbInProgress, nbToDo;
-    private double spTotal, spDone, spInProgress, spToDo;
+    private int nbTickets, nbDone, nbDevDone, nbInProgress, nbToDo;
+    private double spTotal, spDone, spDevDone, spInProgress, spToDo;
     private String role;
 
     public Collaborator() {
+    }
+
+    public int getNbDevDone() {
+        return nbDevDone;
+    }
+
+    public void setNbDevDone(int nbDevDone) {
+        this.nbDevDone = nbDevDone;
+    }
+
+    public double getSpDevDone() {
+        return spDevDone;
+    }
+
+    public void setSpDevDone(double spDevDone) {
+        this.spDevDone = spDevDone;
     }
 
     public double getAvailableTime() {
