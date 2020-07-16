@@ -11,7 +11,7 @@ public class Collaborator {
     private double estimatedTime;
     private double loggedTime;
     private double remainingTime;
-    private int nbTickets, nbDone, nbDevDone, nbInProgress, nbToDo;
+    private int nbTickets, nbDone, nbDevDone, nbInProgress, nbToDo, nbEnCoursDevTermine, nbATester;
     private double spTotal;
     private double spAqualifier;
     private double spBacAffinage;
@@ -31,6 +31,22 @@ public class Collaborator {
 
 
     public Collaborator() {
+    }
+
+    public int getNbEnCoursDevTermine() {
+        return nbEnCoursDevTermine;
+    }
+
+    public void setNbEnCoursDevTermine(int nbEnCoursDevTermine) {
+        this.nbEnCoursDevTermine = nbEnCoursDevTermine;
+    }
+
+    public int getNbATester() {
+        return nbATester;
+    }
+
+    public void setNbATester(int nbATester) {
+        this.nbATester = nbATester;
     }
 
     public double getSpTermine() {

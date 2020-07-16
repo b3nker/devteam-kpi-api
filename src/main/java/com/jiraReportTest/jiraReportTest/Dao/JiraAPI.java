@@ -95,28 +95,28 @@ public class JiraAPI {
             "5dfd11b39422830cacaa8a79", // Carthy Marie Joseph
             "unassignedGamma"
     ));
-    final static ArrayList<String> DONE = new ArrayList<>(Arrays.asList("Abandonné", "Livré", "Terminé",
-            "Validé en recette", "A valider"));
+    final static ArrayList<String> DONE = new ArrayList<>(Arrays.asList("Livré", "Terminé",
+            "Validé en recette")); // Ne contient pas les statuts jira suivants : Abandonné, a valider
     final static ArrayList<String> IN_PROGRESS = new ArrayList<>(Arrays.asList("En cours", "Dév terminé",
             "Refusé en recette", "En attente", "A tester", "A Livrer"));
     final static ArrayList<String> DEV_DONE = new ArrayList<>(Arrays.asList("A tester", "A Livrer"));
     final static HashMap<String, String> ID_COLLABS = new HashMap<>();
 
     static {
-        ID_COLLABS.put("5c17b4599f443a65fecae3ca", "middle"); // Julien Mosset
-        ID_COLLABS.put("5a9ebe1c4af2372a88a0656b", "front"); // Nicolas Ovejero
+        ID_COLLABS.put("5c17b4599f443a65fecae3ca", "middle lead dev"); // Julien Mosset
+        ID_COLLABS.put("5a9ebe1c4af2372a88a0656b", "front lead dev"); // Nicolas Ovejero
         ID_COLLABS.put("5bcd8282607ed038040177bb", "middle"); // Pape Thiam
         ID_COLLABS.put("5cf921f6b06c540e82580cbd", "front"); // Valentin Pierrel
         ID_COLLABS.put("5ed76cdf2fdc580b88f3bbef", "middle"); // Alex Cheuko
         ID_COLLABS.put("5ed64583620b1d0c168d4e36", "middle"); // Anthony Hernandez
-        ID_COLLABS.put("5cb45bb34064460e407eabe4", "middle"); // Guillermo Garcès
-        ID_COLLABS.put("5a9ebdf74af2372a88a06565", "middle"); // Gabriel Roquigny
-        ID_COLLABS.put("5a2181081594706402dee482", "front"); // Etienne Bourgouin
+        ID_COLLABS.put("5cb45bb34064460e407eabe4", "middle lead dev"); // Guillermo Garcès
+        ID_COLLABS.put("5a9ebdf74af2372a88a06565", "middle lead dev"); // Gabriel Roquigny
+        ID_COLLABS.put("5a2181081594706402dee482", "front lead dev"); // Etienne Bourgouin
         ID_COLLABS.put("5afe92f251d0b7540b43de81", "middle"); // Malick Diagne
         ID_COLLABS.put("5e98521a3a8b910c085d6a28", "middle"); // Kévin Youna
         ID_COLLABS.put("5d6e32e06e3e1f0d9623cb5a", "middle"); // Pierre Tomasina
-        ID_COLLABS.put("5e285008ee264b0e74591993", "middle"); // Eric Coupal
-        ID_COLLABS.put("5ed76cc1be03220ab32183be", "front"); // Thibault Foucault
+        ID_COLLABS.put("5e285008ee264b0e74591993", "middle lead dev"); // Eric Coupal
+        ID_COLLABS.put("5ed76cc1be03220ab32183be", "front lead dev"); // Thibault Foucault
         ID_COLLABS.put("557058:87b17037-8a69-4b38-8dab-b4cf904e960a", "middle"); // Pierre Thevenet
         ID_COLLABS.put("5d9b0573ea65c10c3fdbaab2", "middle"); // Maxime Fourt
         ID_COLLABS.put("5a8155f0cad06b353733bae8", "middle"); // Guillaume Coppens
@@ -205,7 +205,6 @@ public class JiraAPI {
     /*
     DEBUT - Méthodes pour appeler l'API, les services externes et stocker ces données
      */
-
     //Méthode principale : Appel à l'API JIRA et stockage des informations dans une HashMap
     public static HashMap<String, Collaborator> getCollaborators(String[] requests) {
         HashMap<String, Collaborator> collaborators = new HashMap<>();
@@ -230,6 +229,8 @@ public class JiraAPI {
             int ticketsInProgress = 0;
             int ticketsToDo = 0;
             int ticketsDevDone = 0;
+            int ticketsEnCoursDevTermine = 0;
+            int ticketsAtester = 0;
             String accountId = "";
             String emailAddress = "";
             String nom = "";
@@ -301,6 +302,12 @@ public class JiraAPI {
                     }
                 } else {
                     ticketsToDo++;
+                }
+                if (statut.contains("En cours") || statut.contains("Dév terminé")) {
+                    ticketsEnCoursDevTermine++;
+                }
+                if (statut.contains("A tester")) {
+                    ticketsAtester++;
                 }
                 //Attribution du temps de travail
 
@@ -395,13 +402,13 @@ public class JiraAPI {
             c.setLoggedTime(timespent);
             c.setEstimatedTime(estimated);
             c.setRemainingTime(remaining);
-
             c.setNbTickets(total);
             c.setNbDone(ticketsDone);
             c.setNbDevDone(ticketsDevDone);
             c.setNbInProgress(ticketsInProgress);
             c.setNbToDo(ticketsToDo);
-
+            c.setNbATester(ticketsAtester);
+            c.setNbEnCoursDevTermine(ticketsEnCoursDevTermine);
             c.setSpTotal(spTotal);
             c.setSpAqualifier(spAQualifier);
             c.setSpBacAffinage(spBacAffinage);
