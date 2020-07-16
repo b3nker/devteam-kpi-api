@@ -1,5 +1,6 @@
 package com.jiraReportTest.jiraReportTest.Dao;
 
+import com.jiraReportTest.jiraReportTest.Model.Backlog;
 import com.jiraReportTest.jiraReportTest.Model.Collaborator;
 import com.jiraReportTest.jiraReportTest.Model.Sprint;
 import com.jiraReportTest.jiraReportTest.Model.Team;
@@ -155,9 +156,8 @@ public class JiraAPI {
         }
     }
 
-    /*
-    FIN - Déclaration et définition des variables
-     */
+    final static String PROJECT_NAME = "BMKP";
+    final static Backlog backlog = new Backlog();
 
 
     /*
@@ -623,6 +623,50 @@ public class JiraAPI {
         return teams;
     }
 
+    //Retourne un objet Backlog pour un projet (depuis sa création) qui contient des informations concernant les bugs (nombre et priorité)
+    public static Backlog getProjectBugs(String projectName){
+        Backlog backlog = new Backlog();
+        int nbBugs = 0;
+        int nbBugsLow = 0;
+        int nbBugsMedium = 0;
+        int nbBugsHigh = 0;
+        int nbBugsHighest = 0;
+        int startAt = 0;
+        String request = "search?jql=project=" + projectName + "+AND+issuetype='Bug'" + "&maxResults=100&startAt=" + startAt;
+        HttpResponse<JsonNode> response = Unirest.get("https://apriltechnologies.atlassian.net/rest/api/3/" +
+                request)
+                .basicAuth(USERNAME, API_TOKEN)
+                .header("Accept", "application/json")
+                .asJson();
+        JSONObject myObj = response.getBody().getObject();
+        int total = myObj.getInt("total");
+        JSONArray issues = myObj.getJSONArray("issues");
+        for (int j = 0; j < issues.length(); j++) {
+            //Ensemble des objets JSON utiles
+            JSONObject issue = issues.getJSONObject(j);
+            JSONObject fields = issue.getJSONObject("fields");
+            JSONObject priority = fields.getJSONObject("priority");
+
+            //Attribution des bugs
+            nbBugs++;
+            if(priority.getString("name").equals("Low")){
+                nbBugsLow++;
+            }else if(priority.getString("name").equals("Medium")){
+                nbBugsMedium++;
+            }else if(priority.getString("name").equals("High")){
+                nbBugsHigh++;
+            }else if(priority.getString("name").equals("Highest")){
+                nbBugsHighest++;
+            }
+        }
+        backlog.setProjectName(projectName);
+        backlog.setNbBugs(nbBugs);
+        backlog.setNbBugsLow(nbBugsLow);
+        backlog.setNbBugsMedium(nbBugsMedium);
+        backlog.setNbBugsHigh(nbBugsHigh);
+        backlog.setNbBugsHighest(nbBugsHighest);
+        return backlog;
+    }
 
     //Lit le planning (CSV) et retourne les informations dans une table de hachage <accountId, [totalWorkingTime, availableTime]>
     public static HashMap<String, Float[]> getPlanning(String PLANNING_PATH) {
