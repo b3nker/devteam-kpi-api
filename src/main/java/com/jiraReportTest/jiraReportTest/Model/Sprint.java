@@ -98,7 +98,7 @@ public class Sprint {
     Convert a string with the following format: "2020-03-27T08:59:12.342Z"
     to a LocalDateTime
      */
-    public LocalDateTime toLocalDateTime(String date){
+    public static LocalDateTime toLocalDateTime(String date){
         int year = parseInt(date.substring(0,4));
         int month = parseInt(date.substring(5,7));
         int dayOfMonth = parseInt(date.substring(8,10));

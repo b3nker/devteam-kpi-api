@@ -7,8 +7,26 @@ public class Backlog {
     private int nbBugsMedium;
     private int nbBugsHigh;
     private int nbBugsHighest;
+    private int nbBugsCreated [];
+    private int nbBugsResolved [];
 
     public Backlog() {
+    }
+
+    public int[] getNbBugsCreated() {
+        return nbBugsCreated;
+    }
+
+    public void setNbBugsCreated(int[] nbBugsCreated) {
+        this.nbBugsCreated = nbBugsCreated;
+    }
+
+    public int[] getNbBugsResolved() {
+        return nbBugsResolved;
+    }
+
+    public void setNbBugsResolved(int[] nbBugsResolved) {
+        this.nbBugsResolved = nbBugsResolved;
     }
 
     public String getProjectName() {

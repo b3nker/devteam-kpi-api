@@ -23,6 +23,7 @@ import java.util.*;
 
 import static java.lang.Float.parseFloat;
 import static java.lang.Integer.parseInt;
+import static java.time.temporal.ChronoUnit.DAYS;
 
 @Repository
 public class JiraAPI {
@@ -57,8 +58,8 @@ public class JiraAPI {
             }
         }
         sprint.setName(sprintName);
-        sprint.setStartDate(sprint.toLocalDateTime(startDate));
-        sprint.setEndDate(sprint.toLocalDateTime(endDate));
+        sprint.setStartDate(Sprint.toLocalDateTime(startDate));
+        sprint.setEndDate(Sprint.toLocalDateTime(endDate));
     }
 
     final static String SPRINT_NAME = "'" + sprint.getName() + "'";
@@ -181,8 +182,13 @@ public class JiraAPI {
         return getCollaborators(REQUESTS_SPRINT);
     }
 
-    public static Backlog callJiraBacklogAPI() {
-        return getProjectBugs(PROJECT_NAME);
+    public static Backlog callJiraBacklogAPI() throws UnsupportedEncodingException {
+        int nbDays = 20;
+        Backlog backlog = getProjectBugs(PROJECT_NAME);
+        backlog.setNbBugsCreated(getBugsCreated(nbDays,PROJECT_NAME));
+        backlog.setNbBugsResolved(getBugsResolved(nbDays,PROJECT_NAME));
+
+        return backlog;
     }
 
     //Retourne la liste des collaborateurs en prenant en compte les tickets sur la dernière semaine
@@ -689,6 +695,79 @@ public class JiraAPI {
         backlog.setNbBugsHighest(nbBugsHighest);
         return backlog;
 
+    }
+
+    /* Return an array of integer of length 'nbDays'. Each element corresponds to the number of bug created
+    *  Index i represent the number of bugs created (nbDays-i) ago
+     */
+    public static int[] getBugsCreated(int nbDays, String projectName) throws UnsupportedEncodingException {
+        int[] bugsCreated = new int[nbDays];
+        int maxResults = 100;
+        String request = "search?jql=project=" + projectName + "+AND+issuetype='Bug'+AND+created" +
+                URLEncoder.encode(">=","utf-8")+ "-" + nbDays + "d&maxResults=" + maxResults;
+        HttpResponse<JsonNode> response = Unirest.get("https://apriltechnologies.atlassian.net/rest/api/3/" +
+                request)
+                .basicAuth(USERNAME, API_TOKEN)
+                .header("Accept", "application/json")
+                .asJson();
+        JSONObject myObj = response.getBody().getObject();
+        JSONArray issues = myObj.getJSONArray("issues");
+        for (int j = 0; j < issues.length(); j++) {
+            //Ensemble des objets JSON utiles
+            JSONObject issue = issues.getJSONObject(j);
+            JSONObject fields = issue.getJSONObject("fields");
+            String dateCreation = fields.getString("created");
+            LocalDateTime ldtBug = Sprint.toLocalDateTime(dateCreation);
+            int days = (int)DAYS.between(ldtBug, LocalDateTime.now());
+            bugsCreated[nbDays-1-days] += 1;
+        }
+        return bugsCreated;
+    }
+
+    /* Return an array of integer of length 'nbDays'. Each element corresponds to the number of bug resolved (Jira status "terminé/livré")
+     *  Index i represent the number of bugs resolved (nbDays-i) ago
+     */
+    public static int[] getBugsResolved(int nbDays, String projectName) throws UnsupportedEncodingException {
+        int[] bugsResolved = new int[nbDays];
+        int maxResults = 100;
+        int startAt = 0;
+        String request = "search?jql=project=" + projectName + "+AND+issuetype='Bug'+AND+updated" +
+                URLEncoder.encode(">=","utf-8")+ "-" + nbDays + "d&maxResults=" + maxResults +"&startAt=" + startAt;
+        HttpResponse<JsonNode> response = Unirest.get("https://apriltechnologies.atlassian.net/rest/api/3/" +
+                request)
+                .basicAuth(USERNAME, API_TOKEN)
+                .header("Accept", "application/json")
+                .asJson();
+        JSONObject myObj = response.getBody().getObject();
+        JSONArray issues = myObj.getJSONArray("issues");
+        int total = myObj.getInt("total");
+        while (startAt < total) {
+            for (int j = 0; j < issues.length(); j++) {
+                //Ensemble des objets JSON utiles
+                JSONObject issue = issues.getJSONObject(j);
+                JSONObject fields = issue.getJSONObject("fields");
+                JSONObject status = fields.getJSONObject("status");
+                String statut = status.getString("name");
+                if (!statut.contains("Terminé") || !statut.contains("Livré")) {
+                    String updateDate = fields.getString("updated");
+                    LocalDateTime ldtBug = Sprint.toLocalDateTime(updateDate);
+                    int days = (int) DAYS.between(ldtBug, LocalDateTime.now());
+                    bugsResolved[nbDays - 1 - days] += 1;
+                }
+
+            }
+            startAt += maxResults;
+            request = "search?jql=project=" + projectName + "+AND+issuetype='Bug'+AND+updated" +
+                    URLEncoder.encode(">=","utf-8")+ "-" + nbDays + "d&maxResults=" + maxResults +"&startAt=" + startAt;
+            response = Unirest.get("https://apriltechnologies.atlassian.net/rest/api/3/" +
+                    request)
+                    .basicAuth(USERNAME, API_TOKEN)
+                    .header("Accept", "application/json")
+                    .asJson();
+            myObj = response.getBody().getObject();
+            issues = myObj.getJSONArray("issues");
+        }
+        return bugsResolved;
     }
 
     //Lit le planning (CSV) et retourne les informations dans une table de hachage <accountId, [totalWorkingTime, availableTime]>
