@@ -157,8 +157,6 @@ public class JiraAPI {
     }
 
     final static String PROJECT_NAME = "BMKP";
-    final static Backlog backlog = new Backlog();
-
 
     /*
     DEBUT - Méthodes utilisés pour obtenir les informations sur la couche données (DAO)
@@ -181,6 +179,10 @@ public class JiraAPI {
     //Retourne la liste des collaborateurs en prenant en compte les tickets sur le sprint actif
     public static HashMap<String, Collaborator> callJiraCollabSprintAPI() {
         return getCollaborators(REQUESTS_SPRINT);
+    }
+
+    public static Backlog callJiraBacklogAPI() {
+        return getProjectBugs(PROJECT_NAME);
     }
 
     //Retourne la liste des collaborateurs en prenant en compte les tickets sur la dernière semaine
@@ -623,41 +625,61 @@ public class JiraAPI {
         return teams;
     }
 
-    //Retourne un objet Backlog pour un projet (depuis sa création) qui contient des informations concernant les bugs (nombre et priorité)
-    public static Backlog getProjectBugs(String projectName){
+    /*Retourne un objet Backlog pour un projet (depuis sa création) qui contient des informations concernant les bugs  en cours(nombre et priorité)
+     * Un bug est en cours quand il n'est pas dans un des états JIRA suivants: Terminé, livré
+     * Lors de l'appel à cette API, il y a plus de 100 résultats, il faut boucler jusqu'à
+     * */
+    public static Backlog getProjectBugs(String projectName) {
         Backlog backlog = new Backlog();
+        int maxResults = 100;
         int nbBugs = 0;
         int nbBugsLow = 0;
         int nbBugsMedium = 0;
         int nbBugsHigh = 0;
         int nbBugsHighest = 0;
         int startAt = 0;
-        String request = "search?jql=project=" + projectName + "+AND+issuetype='Bug'" + "&maxResults=100&startAt=" + startAt;
+        String request = "search?jql=project=" + projectName + "+AND+issuetype='Bug'" + "&maxResults=" + maxResults +"&startAt=" + Integer.toString(startAt);
         HttpResponse<JsonNode> response = Unirest.get("https://apriltechnologies.atlassian.net/rest/api/3/" +
                 request)
                 .basicAuth(USERNAME, API_TOKEN)
                 .header("Accept", "application/json")
                 .asJson();
         JSONObject myObj = response.getBody().getObject();
-        int total = myObj.getInt("total");
         JSONArray issues = myObj.getJSONArray("issues");
-        for (int j = 0; j < issues.length(); j++) {
-            //Ensemble des objets JSON utiles
-            JSONObject issue = issues.getJSONObject(j);
-            JSONObject fields = issue.getJSONObject("fields");
-            JSONObject priority = fields.getJSONObject("priority");
-
-            //Attribution des bugs
-            nbBugs++;
-            if(priority.getString("name").equals("Low")){
-                nbBugsLow++;
-            }else if(priority.getString("name").equals("Medium")){
-                nbBugsMedium++;
-            }else if(priority.getString("name").equals("High")){
-                nbBugsHigh++;
-            }else if(priority.getString("name").equals("Highest")){
-                nbBugsHighest++;
+        int total = myObj.getInt("total");
+        while (startAt < total) {
+            for (int j = 0; j < issues.length(); j++) {
+                //Ensemble des objets JSON utiles
+                JSONObject issue = issues.getJSONObject(j);
+                JSONObject fields = issue.getJSONObject("fields");
+                JSONObject priority = fields.getJSONObject("priority");
+                JSONObject status = fields.getJSONObject("status");
+                String statut = status.getString("name");
+                if (statut.contains("Terminé") || statut.contains("Livré")) {
+                    continue;
+                }
+                //Attribution des bugs
+                nbBugs++;
+                if (priority.getString("name").equals("Low")) {
+                    nbBugsLow++;
+                } else if (priority.getString("name").equals("Medium")) {
+                    nbBugsMedium++;
+                } else if (priority.getString("name").equals("High")) {
+                    nbBugsHigh++;
+                } else if (priority.getString("name").equals("Highest")) {
+                    nbBugsHighest++;
+                }
             }
+            //on incrémente du nombre de résultats dans la requête
+            startAt += maxResults;
+            request = "search?jql=project=" + projectName + "+AND+issuetype='Bug'" + "&maxResults=100&startAt=" + startAt;
+            response = Unirest.get("https://apriltechnologies.atlassian.net/rest/api/3/" +
+                    request)
+                    .basicAuth(USERNAME, API_TOKEN)
+                    .header("Accept", "application/json")
+                    .asJson();
+            myObj = response.getBody().getObject();
+            issues = myObj.getJSONArray("issues");
         }
         backlog.setProjectName(projectName);
         backlog.setNbBugs(nbBugs);
@@ -666,6 +688,7 @@ public class JiraAPI {
         backlog.setNbBugsHigh(nbBugsHigh);
         backlog.setNbBugsHighest(nbBugsHighest);
         return backlog;
+
     }
 
     //Lit le planning (CSV) et retourne les informations dans une table de hachage <accountId, [totalWorkingTime, availableTime]>
