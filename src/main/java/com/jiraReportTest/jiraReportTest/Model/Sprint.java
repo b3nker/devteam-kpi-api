@@ -11,7 +11,12 @@ import static java.lang.Integer.parseInt;
 import static java.lang.Math.toIntExact;
 
 public class Sprint {
+    private int id;
     private String name;
+    private double initialCommitment;
+    private double finalCommitment;
+    private double addedWork;
+    private double completedWork;
     private LocalDateTime startDate;
     private int timeLeft; // in hours without considering public holidays
     private int totalTime; // in hours without considering public holidays
@@ -19,6 +24,46 @@ public class Sprint {
     //private HashMap<String,Team> teams;
     private Team[] teams;
     public Sprint() {}
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public double getInitialCommitment() {
+        return initialCommitment;
+    }
+
+    public void setInitialCommitment(double initialCommitment) {
+        this.initialCommitment = initialCommitment;
+    }
+
+    public double getFinalCommitment() {
+        return finalCommitment;
+    }
+
+    public void setFinalCommitment(double finalCommitment) {
+        this.finalCommitment = finalCommitment;
+    }
+
+    public double getAddedWork() {
+        return addedWork;
+    }
+
+    public void setAddedWork(double addedWork) {
+        this.addedWork = addedWork;
+    }
+
+    public double getCompletedWork() {
+        return completedWork;
+    }
+
+    public void setCompletedWork(double completedWork) {
+        this.completedWork = completedWork;
+    }
 
     public int getTimeLeft() {
         return timeLeft;

@@ -1,9 +1,6 @@
 package com.jiraReportTest.jiraReportTest.Dao;
 
-import com.jiraReportTest.jiraReportTest.Model.Backlog;
-import com.jiraReportTest.jiraReportTest.Model.Collaborator;
-import com.jiraReportTest.jiraReportTest.Model.Sprint;
-import com.jiraReportTest.jiraReportTest.Model.Team;
+import com.jiraReportTest.jiraReportTest.Model.*;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
@@ -35,6 +32,7 @@ public class JiraAPI {
     final static String API_TOKEN = "sqjFnTAVspNM4NxLd1QZC5CB";
     final static String PLANNING_PATH = "planning.csv";
     final static String BOARD_ID = "391";
+    final static String BOARD_ID_ALPHA_SP = "451";
 
     final static Sprint sprint = new Sprint();
 
@@ -42,6 +40,7 @@ public class JiraAPI {
         String startDate = "";
         String endDate = "";
         String sprintName = "";
+        int sprintId = 0;
         HttpResponse<JsonNode> response = Unirest.get("https://apriltechnologies.atlassian.net/rest/agile/1.0/board/" + BOARD_ID + "/sprint")
                 .basicAuth(USERNAME, API_TOKEN)
                 .header("Accept", "application/json")
@@ -55,8 +54,10 @@ public class JiraAPI {
                 sprintName = value.getString("name");
                 startDate = value.getString("startDate");
                 endDate = value.getString("endDate");
+                sprintId = parseInt(value.getString("id"));
             }
         }
+        sprint.setId(sprintId);
         sprint.setName(sprintName);
         sprint.setStartDate(Sprint.toLocalDateTime(startDate));
         sprint.setEndDate(Sprint.toLocalDateTime(endDate));
@@ -140,19 +141,12 @@ public class JiraAPI {
     }
 
     final static String[] REQUESTS_SPRINT = new String[ID_COLLABS.size()];
-    final static String[] REQUESTS_WEEK = new String[ID_COLLABS.size()];
 
     static {
         int i = 0;
         for (String s : ID_COLLABS.keySet()) {
             REQUESTS_SPRINT[i] = "search?jql=project=BMKP+AND+assignee=" + s +
                     "+AND+sprint=" + SPRINT_NAME + "&maxResults=100";
-            try {
-                REQUESTS_WEEK[i] = "search?jql=project=BMKP+AND+assignee=" + s +
-                        "+AND+updated " + URLEncoder.encode("<=", "utf-8") + "-1w &maxResults=100";
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
             i++;
         }
     }
@@ -185,27 +179,36 @@ public class JiraAPI {
     public static Backlog callJiraBacklogAPI() throws UnsupportedEncodingException {
         int nbDays = 20;
         Backlog backlog = getProjectBugs(PROJECT_NAME);
-        backlog.setNbBugsCreated(getBugsCreated(nbDays,PROJECT_NAME));
-        backlog.setNbBugsResolved(getBugsResolved(nbDays,PROJECT_NAME));
+        backlog.setNbBugsCreated(getBugsCreated(nbDays, PROJECT_NAME));
+        backlog.setNbBugsResolved(getBugsResolved(nbDays, PROJECT_NAME));
 
         return backlog;
     }
 
-    //Retourne la liste des collaborateurs en prenant en compte les tickets sur la dernière semaine
-    public static HashMap<String, Collaborator> callJiraCollabWeekAPI() {
-        return getCollaborators(REQUESTS_WEEK);
+    public static HashMap<String,Retrospective> callJiraRestrospectiveAPI() throws UnsupportedEncodingException {
+        int nbSprints = 4;
+        HashMap<String,Retrospective> retrospectives = new HashMap<>();
+        ArrayList<Sprint> sprints = getLastlyClosedSprints(nbSprints);
+        HashMap<String, Team> teams = getTeams(REQUESTS_SPRINT);
+        Sprint[] s = new Sprint[sprints.size()];
+        for(Sprint sprint: sprints){
+            double[] commitment = getCommitment(sprint,BOARD_ID_ALPHA_SP);
+            sprint.setInitialCommitment(commitment[0]);
+            sprint.setFinalCommitment(commitment[1]);
+            sprint.setAddedWork(commitment[2]);
+            sprint.setCompletedWork(commitment[3]);
+        }
+        int i = 0;
+        for(Sprint sprint: sprints){
+            s[i] = sprint;
+            i++;
+        }
+        Retrospective r = new Retrospective();
+        r.setTeamName(teams.get("alpha").getName());
+        r.setSprints(s);
+        retrospectives.put(r.getTeamName(),r);
+        return retrospectives;
     }
-
-    //Retourne la liste des équipes en prenant en compte les tickets sur le sprint actif
-    public static HashMap<String, Team> callJiraSprintTeamAPI() {
-        return getTeams(REQUESTS_SPRINT);
-    }
-
-    //Retourne la liste des équipes en prenant en compte les tickets sur la dernière semaine
-    public static HashMap<String, Team> callJiraWeekTeamAPI() {
-        return getTeams(REQUESTS_WEEK);
-    }
-
     /*
      FIN - Méthodes utilisés pour obtenir les informations sur la couche données (DAO)
      */
@@ -325,8 +328,8 @@ public class JiraAPI {
                 if (!fields.isNull("timeoriginalestimate")) {
                     estimated += (fields.getInt("timeoriginalestimate") / 3600);
                 }
-                if (!fields.isNull("aggregatetimespent")) {
-                    timespent += (fields.getInt("aggregatetimespent") / 3600);
+                if (!fields.isNull("timespent")) {
+                    timespent += (fields.getInt("timespent") / 3600);
                 }
 
 
@@ -406,7 +409,6 @@ public class JiraAPI {
             c.setName(nom);
             c.setFirstName(prenom);
             c.setRole(role);
-
             c.setLoggedTime(timespent);
             c.setEstimatedTime(estimated);
             c.setRemainingTime(remaining);
@@ -633,18 +635,23 @@ public class JiraAPI {
 
     /*Retourne un objet Backlog pour un projet (depuis sa création) qui contient des informations concernant les bugs  en cours(nombre et priorité)
      * Un bug est en cours quand il n'est pas dans un des états JIRA suivants: Terminé, livré
-     * Lors de l'appel à cette API, il y a plus de 100 résultats, il faut boucler jusqu'à
+     * Lors de l'appel à cette API, il y a plus de 100 résultats, il faut boucler jusqu'à obtenir la totalité des résultats
      * */
     public static Backlog getProjectBugs(String projectName) {
         Backlog backlog = new Backlog();
         int maxResults = 100;
         int nbBugs = 0;
+        int nbBugsWVEC = 0;
         int nbBugsLow = 0;
         int nbBugsMedium = 0;
         int nbBugsHigh = 0;
         int nbBugsHighest = 0;
+        int nbBugsLowWVEC = 0;
+        int nbBugsMediumWVEC = 0;
+        int nbBugsHighWVEC = 0;
+        int nbBugsHighestWVEC = 0;
         int startAt = 0;
-        String request = "search?jql=project=" + projectName + "+AND+issuetype='Bug'" + "&maxResults=" + maxResults +"&startAt=" + Integer.toString(startAt);
+        String request = "search?jql=project=" + projectName + "+AND+issuetype='Bug'" + "&maxResults=" + maxResults + "&startAt=" + Integer.toString(startAt);
         HttpResponse<JsonNode> response = Unirest.get("https://apriltechnologies.atlassian.net/rest/api/3/" +
                 request)
                 .basicAuth(USERNAME, API_TOKEN)
@@ -661,19 +668,34 @@ public class JiraAPI {
                 JSONObject priority = fields.getJSONObject("priority");
                 JSONObject status = fields.getJSONObject("status");
                 String statut = status.getString("name");
-                if (statut.contains("Terminé") || statut.contains("Livré")) {
+                if (statut.contains("Terminé") || statut.contains("Livré") || statut.contains("Abandonné")) {
                     continue;
                 }
                 //Attribution des bugs
                 nbBugs++;
+                if (!statut.contains("Validé en recette")) {
+                    nbBugsWVEC++;
+                }
                 if (priority.getString("name").equals("Low")) {
                     nbBugsLow++;
+                    if (!statut.contains("Validé en recette")) {
+                        nbBugsLowWVEC++;
+                    }
                 } else if (priority.getString("name").equals("Medium")) {
                     nbBugsMedium++;
+                    if (!statut.contains("Validé en recette")) {
+                        nbBugsMediumWVEC++;
+                    }
                 } else if (priority.getString("name").equals("High")) {
                     nbBugsHigh++;
+                    if (!statut.contains("Validé en recette")) {
+                        nbBugsHighWVEC++;
+                    }
                 } else if (priority.getString("name").equals("Highest")) {
                     nbBugsHighest++;
+                    if (!statut.contains("Validé en recette")) {
+                        nbBugsHighestWVEC++;
+                    }
                 }
             }
             //on incrémente du nombre de résultats dans la requête
@@ -689,22 +711,27 @@ public class JiraAPI {
         }
         backlog.setProjectName(projectName);
         backlog.setNbBugs(nbBugs);
+        backlog.setNbBugsWVEC(nbBugsWVEC);
         backlog.setNbBugsLow(nbBugsLow);
         backlog.setNbBugsMedium(nbBugsMedium);
         backlog.setNbBugsHigh(nbBugsHigh);
         backlog.setNbBugsHighest(nbBugsHighest);
+        backlog.setNbBugsLowWVEC(nbBugsLowWVEC);
+        backlog.setNbBugsMediumWVEC(nbBugsMediumWVEC);
+        backlog.setNbBugsHighWVEC(nbBugsHighWVEC);
+        backlog.setNbBugsHighestWVEC(nbBugsHighestWVEC);
         return backlog;
 
     }
 
-    /* Return an array of integer of length 'nbDays'. Each element corresponds to the number of bug created
-    *  Index i represent the number of bugs created (nbDays-i) ago
+    /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug created
+     *  Index i represent the number of bugs created (nbDays-i) ago
      */
     public static int[] getBugsCreated(int nbDays, String projectName) throws UnsupportedEncodingException {
         int[] bugsCreated = new int[nbDays];
         int maxResults = 100;
         String request = "search?jql=project=" + projectName + "+AND+issuetype='Bug'+AND+created" +
-                URLEncoder.encode(">=","utf-8")+ "-" + nbDays + "d&maxResults=" + maxResults;
+                URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + maxResults;
         HttpResponse<JsonNode> response = Unirest.get("https://apriltechnologies.atlassian.net/rest/api/3/" +
                 request)
                 .basicAuth(USERNAME, API_TOKEN)
@@ -718,13 +745,13 @@ public class JiraAPI {
             JSONObject fields = issue.getJSONObject("fields");
             String dateCreation = fields.getString("created");
             LocalDateTime ldtBug = Sprint.toLocalDateTime(dateCreation);
-            int days = (int)DAYS.between(ldtBug, LocalDateTime.now());
-            bugsCreated[nbDays-1-days] += 1;
+            int days = (int) DAYS.between(ldtBug, LocalDateTime.now());
+            bugsCreated[nbDays - 1 - days] += 1;
         }
         return bugsCreated;
     }
 
-    /* Return an array of integer of length 'nbDays'. Each element corresponds to the number of bug resolved (Jira status "terminé/livré")
+    /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug resolved (Jira status "terminé/livré")
      *  Index i represent the number of bugs resolved (nbDays-i) ago
      */
     public static int[] getBugsResolved(int nbDays, String projectName) throws UnsupportedEncodingException {
@@ -732,7 +759,7 @@ public class JiraAPI {
         int maxResults = 100;
         int startAt = 0;
         String request = "search?jql=project=" + projectName + "+AND+issuetype='Bug'+AND+updated" +
-                URLEncoder.encode(">=","utf-8")+ "-" + nbDays + "d&maxResults=" + maxResults +"&startAt=" + startAt;
+                URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + maxResults + "&startAt=" + startAt;
         HttpResponse<JsonNode> response = Unirest.get("https://apriltechnologies.atlassian.net/rest/api/3/" +
                 request)
                 .basicAuth(USERNAME, API_TOKEN)
@@ -758,7 +785,7 @@ public class JiraAPI {
             }
             startAt += maxResults;
             request = "search?jql=project=" + projectName + "+AND+issuetype='Bug'+AND+updated" +
-                    URLEncoder.encode(">=","utf-8")+ "-" + nbDays + "d&maxResults=" + maxResults +"&startAt=" + startAt;
+                    URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + maxResults + "&startAt=" + startAt;
             response = Unirest.get("https://apriltechnologies.atlassian.net/rest/api/3/" +
                     request)
                     .basicAuth(USERNAME, API_TOKEN)
@@ -770,6 +797,124 @@ public class JiraAPI {
         return bugsResolved;
     }
 
+    /* Returns an array of size (nbSprints) of the lastly closed sprints including the lastly active sprint
+     */
+    public static ArrayList<Sprint> getLastlyClosedSprints(int nbSprints) {
+        ArrayList<Sprint> sprints = new ArrayList<>(nbSprints);
+        String startDate = "";
+        String endDate = "";
+        String sprintName = "";
+        int sprintId = 0;
+        int lastlyActiveSprintIndex = -1;
+        HttpResponse<JsonNode> response = Unirest.get("https://apriltechnologies.atlassian.net/rest/agile/1.0/board/" + BOARD_ID + "/sprint")
+                .basicAuth(USERNAME, API_TOKEN)
+                .header("Accept", "application/json")
+                .asJson();
+        JSONObject myObj = response.getBody().getObject();
+        JSONArray values = myObj.getJSONArray("values");
+        for (int i = 0; i < values.length(); i++) {
+            JSONObject value = values.getJSONObject(i);
+            if (value.getString("state").equals("active") && value.getString("name").equals("Sprint 30")) {
+                lastlyActiveSprintIndex = i;
+            }
+        }
+        int i = 0;
+        while (i < nbSprints) {
+            JSONObject value = values.getJSONObject(lastlyActiveSprintIndex - i);
+            sprintName = value.getString("name");
+            startDate = value.getString("startDate");
+            endDate = value.getString("endDate");
+            sprintId = parseInt(value.getString("id"));
+            Sprint s = new Sprint();
+            s.setName(sprintName);
+            s.setId(sprintId);
+            s.setStartDate(Sprint.toLocalDateTime(startDate));
+            s.setEndDate(Sprint.toLocalDateTime(endDate));
+            sprints.add(s);
+            i++;
+        }
+        return sprints;
+    }
+
+    /* Returns 4 information on a sprint
+     * 0: initialCommitment
+     * 1: finalCommitment
+     * 2: addedWork
+     * 3: completedWork
+     */
+    public static double[] getCommitment(Sprint s, String boardId) throws UnsupportedEncodingException {
+        double[] commitment = new double[4];
+        double initialCommitment = 0;
+        double finalCommitment = 0;
+        double addedWork = 0;
+        double completedWork = 0;
+        String request = "https://apriltechnologies.atlassian.net/rest/greenhopper/1.0/rapid/charts/sprintreport" +
+                "?rapidViewId=" + boardId +
+                "&sprintId=" + s.getId();
+        HttpResponse<JsonNode> response = Unirest.get(request)
+                .basicAuth(USERNAME, API_TOKEN)
+                .header("Accept", "application/json")
+                .asJson();
+        JSONObject myObj = response.getBody().getObject();
+        JSONObject contents = myObj.getJSONObject("contents");
+        JSONObject addedIssues = contents.getJSONObject("issueKeysAddedDuringSprint");
+        // Completed Issues
+        JSONObject completedIssuesEstimateSum = contents.getJSONObject("completedIssuesEstimateSum");
+        JSONObject completedIssuesInitialEstimateSum = contents.getJSONObject("completedIssuesInitialEstimateSum");
+        // Not Completed Issues
+        JSONObject issuesNotCompletedEstimateSum = contents.getJSONObject("issuesNotCompletedEstimateSum");
+        JSONObject issuesNotCompletedInitialEstimateSum = contents.getJSONObject("issuesNotCompletedInitialEstimateSum");
+        //All issues
+        JSONObject allIssuesEstimateSum = contents.getJSONObject("allIssuesEstimateSum");
+
+        if(completedIssuesEstimateSum.has("value")){
+            completedWork += completedIssuesEstimateSum.getInt("value");
+            initialCommitment += completedIssuesEstimateSum.getInt("value");
+        }
+        if(completedIssuesInitialEstimateSum.has("value")){
+            initialCommitment += completedIssuesInitialEstimateSum.getInt("value");
+        }
+        if(issuesNotCompletedEstimateSum.has("value")){
+            initialCommitment += issuesNotCompletedEstimateSum.getInt("value");
+        }
+        if(issuesNotCompletedInitialEstimateSum.has("value")){
+            initialCommitment += issuesNotCompletedInitialEstimateSum.getInt("value");
+        }
+        if(allIssuesEstimateSum.has("value")){
+            finalCommitment += allIssuesEstimateSum.getInt("value");
+        }
+        //Added issues
+        Iterator<String> keys = addedIssues.keys();
+        while(keys.hasNext()){
+            String issueID = keys.next();
+            addedWork += getStoryPoint(issueID);
+        }
+        commitment[0] = initialCommitment;
+        commitment[1] = finalCommitment;
+        commitment[2] = addedWork;
+        commitment[3] = completedWork;
+        return commitment;
+    }
+
+    public static double getStoryPoint(String issueID){
+        double spIssue = 0;
+        String request = "https://apriltechnologies.atlassian.net/rest/api/3/search?jql=project=BMKP+AND+issue=" + issueID;
+        HttpResponse<JsonNode> response = Unirest.get(request)
+                .basicAuth(USERNAME, API_TOKEN)
+                .header("Accept", "application/json")
+                .asJson();
+        JSONObject myObj = response.getBody().getObject();
+        JSONArray issues = myObj.getJSONArray("issues");
+        for (int j = 0; j < issues.length(); j++) {
+            //Ensemble des objets JSON utiles
+            JSONObject issue = issues.getJSONObject(j);
+            JSONObject fields = issue.getJSONObject("fields");
+            if (!fields.isNull("customfield_10005")) {
+                spIssue = fields.getDouble("customfield_10005");
+            }
+        }
+        return spIssue;
+    }
     //Lit le planning (CSV) et retourne les informations dans une table de hachage <accountId, [totalWorkingTime, availableTime]>
     public static HashMap<String, Float[]> getPlanning(String PLANNING_PATH) {
         HashMap<String, Float[]> planning = new HashMap<>();
@@ -835,7 +980,6 @@ public class JiraAPI {
         }
         return planning;
     }
-
     /*
     FIN - Méthodes pour appeler l'API, les services externes et stocker ces données
      */

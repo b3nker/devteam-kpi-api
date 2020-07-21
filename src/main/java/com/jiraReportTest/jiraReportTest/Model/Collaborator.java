@@ -252,7 +252,9 @@ public class Collaborator {
     }
 
     public void setName(String name) {
-        name = name.substring(0,1).toUpperCase() + name.substring(1).toLowerCase();
+        if(name.length() >0){
+            name = name.substring(0,1).toUpperCase() + name.substring(1).toLowerCase();
+        }
         this.name = name;
     }
 

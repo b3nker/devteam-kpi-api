@@ -3,14 +3,59 @@ package com.jiraReportTest.jiraReportTest.Model;
 public class Backlog {
     private String projectName;
     private int nbBugs;
+    private int nbBugsWVEC;
     private int nbBugsLow;
     private int nbBugsMedium;
     private int nbBugsHigh;
     private int nbBugsHighest;
+    private int nbBugsLowWVEC;
+    private int nbBugsMediumWVEC;
+    private int nbBugsHighWVEC;
+    private int nbBugsHighestWVEC;
     private int nbBugsCreated [];
     private int nbBugsResolved [];
 
     public Backlog() {
+    }
+
+    public int getNbBugsWVEC() {
+        return nbBugsWVEC;
+    }
+
+    public void setNbBugsWVEC(int nbBugsWVEC) {
+        this.nbBugsWVEC = nbBugsWVEC;
+    }
+
+    public int getNbBugsLowWVEC() {
+        return nbBugsLowWVEC;
+    }
+
+    public void setNbBugsLowWVEC(int nbBugsLowWVEC) {
+        this.nbBugsLowWVEC = nbBugsLowWVEC;
+    }
+
+    public int getNbBugsMediumWVEC() {
+        return nbBugsMediumWVEC;
+    }
+
+    public void setNbBugsMediumWVEC(int nbBugsMediumWVEC) {
+        this.nbBugsMediumWVEC = nbBugsMediumWVEC;
+    }
+
+    public int getNbBugsHighWVEC() {
+        return nbBugsHighWVEC;
+    }
+
+    public void setNbBugsHighWVEC(int nbBugsHighWVEC) {
+        this.nbBugsHighWVEC = nbBugsHighWVEC;
+    }
+
+    public int getNbBugsHighestWVEC() {
+        return nbBugsHighestWVEC;
+    }
+
+    public void setNbBugsHighestWVEC(int nbBugsHighestWVEC) {
+        this.nbBugsHighestWVEC = nbBugsHighestWVEC;
     }
 
     public int[] getNbBugsCreated() {
