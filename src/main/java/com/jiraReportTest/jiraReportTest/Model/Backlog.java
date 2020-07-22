@@ -1,61 +1,97 @@
 package com.jiraReportTest.jiraReportTest.Model;
 
+
 public class Backlog {
     private String projectName;
     private int nbBugs;
-    private int nbBugsWVEC;
     private int nbBugsLow;
     private int nbBugsMedium;
     private int nbBugsHigh;
     private int nbBugsHighest;
-    private int nbBugsLowWVEC;
-    private int nbBugsMediumWVEC;
-    private int nbBugsHighWVEC;
-    private int nbBugsHighestWVEC;
+    private int nbIncidents;
+    private int nbIncidentsLow;
+    private int nbIncidentsMedium;
+    private int nbIncidentsHigh;
+    private int nbIncidentsHighest;
+    private int nbIncidentsCreated [];
+    private int nbIncidentsResolved [];
+    private int nbIncidentsInProgress[];
     private int nbBugsCreated [];
     private int nbBugsResolved [];
+    private int nbBugsInProgress[];
 
-    public Backlog() {
+    public Backlog() { }
+
+    public int[] getNbIncidentsInProgress() {
+        return nbIncidentsInProgress;
     }
 
-    public int getNbBugsWVEC() {
-        return nbBugsWVEC;
+    public void setNbIncidentsInProgress(int[] nbIncidentsInProgress) {
+        this.nbIncidentsInProgress = nbIncidentsInProgress;
     }
 
-    public void setNbBugsWVEC(int nbBugsWVEC) {
-        this.nbBugsWVEC = nbBugsWVEC;
+    public int[] getNbBugsInProgress() {
+        return nbBugsInProgress;
     }
 
-    public int getNbBugsLowWVEC() {
-        return nbBugsLowWVEC;
+    public void setNbBugsInProgress(int[] nbBugsInProgress) {
+        this.nbBugsInProgress = nbBugsInProgress;
     }
 
-    public void setNbBugsLowWVEC(int nbBugsLowWVEC) {
-        this.nbBugsLowWVEC = nbBugsLowWVEC;
+    public int[] getNbIncidentsCreated() {
+        return nbIncidentsCreated;
     }
 
-    public int getNbBugsMediumWVEC() {
-        return nbBugsMediumWVEC;
+    public void setNbIncidentsCreated(int[] nbIncidentsCreated) {
+        this.nbIncidentsCreated = nbIncidentsCreated;
     }
 
-    public void setNbBugsMediumWVEC(int nbBugsMediumWVEC) {
-        this.nbBugsMediumWVEC = nbBugsMediumWVEC;
+    public int[] getNbIncidentsResolved() {
+        return nbIncidentsResolved;
     }
 
-    public int getNbBugsHighWVEC() {
-        return nbBugsHighWVEC;
+    public void setNbIncidentsResolved(int[] nbIncidentsResolved) {
+        this.nbIncidentsResolved = nbIncidentsResolved;
     }
 
-    public void setNbBugsHighWVEC(int nbBugsHighWVEC) {
-        this.nbBugsHighWVEC = nbBugsHighWVEC;
+    public int getNbIncidents() {
+        return nbIncidents;
     }
 
-    public int getNbBugsHighestWVEC() {
-        return nbBugsHighestWVEC;
+    public void setNbIncidents(int nbIncidents) {
+        this.nbIncidents = nbIncidents;
     }
 
-    public void setNbBugsHighestWVEC(int nbBugsHighestWVEC) {
-        this.nbBugsHighestWVEC = nbBugsHighestWVEC;
+    public int getNbIncidentsLow() {
+        return nbIncidentsLow;
+    }
+
+    public void setNbIncidentsLow(int nbIncidentsLow) {
+        this.nbIncidentsLow = nbIncidentsLow;
+    }
+
+    public int getNbIncidentsMedium() {
+        return nbIncidentsMedium;
+    }
+
+    public void setNbIncidentsMedium(int nbIncidentsMedium) {
+        this.nbIncidentsMedium = nbIncidentsMedium;
+    }
+
+    public int getNbIncidentsHigh() {
+        return nbIncidentsHigh;
+    }
+
+    public void setNbIncidentsHigh(int nbIncidentsHigh) {
+        this.nbIncidentsHigh = nbIncidentsHigh;
+    }
+
+    public int getNbIncidentsHighest() {
+        return nbIncidentsHighest;
+    }
+
+    public void setNbIncidentsHighest(int nbIncidentsHighest) {
+        this.nbIncidentsHighest = nbIncidentsHighest;
     }
 
     public int[] getNbBugsCreated() {

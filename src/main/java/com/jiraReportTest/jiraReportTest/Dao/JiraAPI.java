@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import java.io.*;
 import java.net.URLEncoder;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -24,18 +25,38 @@ import static java.time.temporal.ChronoUnit.DAYS;
 
 @Repository
 public class JiraAPI {
-
     /*
     DEBUT - Déclaration et définition des variables
      */
+    final static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yy");
+    final static DateTimeFormatter dtfLocalDate = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     final static String USERNAME = "benjamin.kermani@neo9.fr";
     final static String API_TOKEN = "sqjFnTAVspNM4NxLd1QZC5CB";
     final static String PLANNING_PATH = "planning.csv";
+    // Project global variables
     final static String BOARD_ID = "391";
     final static String BOARD_ID_ALPHA_SP = "451";
-
-    final static Sprint sprint = new Sprint();
-
+    final static String PROJECT_NAME = "BMKP";
+    final static String RUN_PROJECT_NAME = "RMKP";
+    final static int MAX_RESULTS = 100;
+    final static int NB_SPRINTS_RETROSPECTIVE = 4;
+    final static int NB_DAYS_BACKLOG = 20;
+    // API URLs
+    final static String JIRA_API_URL = "https://apriltechnologies.atlassian.net/rest/api/3/";
+    final static String JIRA_AGILEAPI_URL = "https://apriltechnologies.atlassian.net/rest/agile/1.0/";
+    final static String JIRA_GREENHOPPER_URL = "https://apriltechnologies.atlassian.net/rest/greenhopper/1.0/";
+    // JSONObject and JSONArray names in JIRA API's response
+    final static String JSON_ISSUES = "issues";
+    final static String JSON_FIELDS = "fields";
+    final static String JSON_STATUS = "status";
+    final static String JSON_PRIORITY = "priority";
+    // JSONObject's keys
+    final static String JSON_KEY_TIMEESTIMATE = "timeestimate";
+    final static String JSON_KEY_TIMEORIGINALESTIMATE = "timeoriginalestimate";
+    final static String JSON_KEY_TIMESPENT = "timespent";
+    final static String JSON_KEY_STORYPOINTS = "customfield_10005";
+    // Sprint variables
+    final static Sprint SPRINT_ACTIF = new Sprint();
     static {
         String startDate = "";
         String endDate = "";
@@ -50,25 +71,23 @@ public class JiraAPI {
         for (int i = 0; i < values.length(); i++) {
             JSONObject value = values.getJSONObject(i);
             //Condition à modifier quant il n'y aura qu'un seul sprint actif
-            if (value.getString("state").equals("active") && value.getString("name").equals("Sprint 30")) {
+            if (value.getString("state").equals("closed") && value.getString("name").equals("Sprint 30")) {
                 sprintName = value.getString("name");
                 startDate = value.getString("startDate");
                 endDate = value.getString("endDate");
                 sprintId = parseInt(value.getString("id"));
             }
         }
-        sprint.setId(sprintId);
-        sprint.setName(sprintName);
-        sprint.setStartDate(Sprint.toLocalDateTime(startDate));
-        sprint.setEndDate(Sprint.toLocalDateTime(endDate));
+        SPRINT_ACTIF.setId(sprintId);
+        SPRINT_ACTIF.setName(sprintName);
+        SPRINT_ACTIF.setStartDate(Sprint.toLocalDateTime(startDate));
+        SPRINT_ACTIF.setEndDate(Sprint.toLocalDateTime(endDate));
     }
-
-    final static String SPRINT_NAME = "'" + sprint.getName() + "'";
-    final static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/YY");
-    final static String START_DAY_SPRINT = sprint.getStartDate().format(dtf);
-    final static String END_DAY_SPRINT = sprint.getEndDate().format(dtf);
+    final static String SPRINT_NAME = "'" + SPRINT_ACTIF.getName() + "'";
+    final static String START_DAY_SPRINT = SPRINT_ACTIF.getStartDate().format(dtf);
+    final static String END_DAY_SPRINT = SPRINT_ACTIF.getEndDate().format(dtf);
     final static String TODAY = LocalDateTime.now().format(dtf);
-
+    final static String TODAY_LD = LocalDateTime.now().format(dtfLocalDate);
     final static ArrayList<String> TEAM_ALPHA = new ArrayList<>(Arrays.asList(
             "5c17b4599f443a65fecae3ca", // Julien Mosset
             "5a9ebe1c4af2372a88a0656b", // Nicolas Ovejero
@@ -98,13 +117,30 @@ public class JiraAPI {
             "5dfd11b39422830cacaa8a79", // Carthy Marie Joseph
             "unassignedGamma"
     ));
-    final static ArrayList<String> DONE = new ArrayList<>(Arrays.asList("Livré", "Terminé",
-            "Validé en recette")); // Ne contient pas les statuts jira suivants : Abandonné, a valider
-    final static ArrayList<String> IN_PROGRESS = new ArrayList<>(Arrays.asList("En cours", "Dév terminé",
-            "Refusé en recette", "En attente", "A tester", "A Livrer"));
-    final static ArrayList<String> DEV_DONE = new ArrayList<>(Arrays.asList("A tester", "A Livrer"));
+    // JIRA STATUS
+    final static String TERMINE = "Terminé";
+    final static String LIVRE = "Livré";
+    final static String VALIDE_RECETTE = "Validé en recette";
+    final static String VALIDE = "Validé";
+    final static String ABANDONNE = "Abandonné";
+    final static String EN_COURS = "En cours";
+    final static String DEV_TERMINE = "Dév terminé";
+    final static String REFUSE_RECETTE = "Refusé en recette";
+    final static String EN_ATTENTE = "En attente";
+    final static String A_LIVRER = "A Livrer";
+    final static String A_TESTER = "A tester";
+    /*To define */
+    final static ArrayList<String> JIRA_DONE = new ArrayList<>(Arrays.asList(ABANDONNE, LIVRE, TERMINE, VALIDE));
+    final static ArrayList<String> JIRA_IN_PROGRESS = new ArrayList<>(Arrays.asList());
+    final static ArrayList<String> DONE = new ArrayList<>(Arrays.asList(LIVRE, TERMINE, VALIDE, VALIDE_RECETTE));
+    final static ArrayList<String> DONE_BUGS = new ArrayList<>(Arrays.asList(LIVRE, TERMINE, VALIDE_RECETTE, ABANDONNE));
+    final static ArrayList<String> IN_PROGRESS = new ArrayList<>(Arrays.asList(EN_COURS, DEV_TERMINE, REFUSE_RECETTE, EN_ATTENTE, A_TESTER, A_LIVRER));
+    final static ArrayList<String> DEV_DONE = new ArrayList<>(Arrays.asList(A_TESTER, A_LIVRER));
+    final static ArrayList<String> DEV_DONE_EN_COURS = new ArrayList<>(Arrays.asList(DEV_TERMINE, EN_COURS));
+    // JIRA ISSUETYPE
+    final static String ISSUE_BUG = "Bug";
+    final static String ISSUE_INCIDENT = "Incident";
     final static HashMap<String, String> ID_COLLABS = new HashMap<>();
-
     static {
         ID_COLLABS.put("5c17b4599f443a65fecae3ca", "middle lead dev"); // Julien Mosset
         ID_COLLABS.put("5a9ebe1c4af2372a88a0656b", "front lead dev"); // Nicolas Ovejero
@@ -139,19 +175,16 @@ public class JiraAPI {
         ID_COLLABS.put("557058:df17bf30-7843-415e-985d-151faba64429", "transverse"); // Philippe Fleur
         ID_COLLABS.put(null, ""); // unassigned
     }
-
     final static String[] REQUESTS_SPRINT = new String[ID_COLLABS.size()];
-
     static {
         int i = 0;
         for (String s : ID_COLLABS.keySet()) {
-            REQUESTS_SPRINT[i] = "search?jql=project=BMKP+AND+assignee=" + s +
-                    "+AND+sprint=" + SPRINT_NAME + "&maxResults=100";
+            REQUESTS_SPRINT[i] = JIRA_API_URL + "search?jql=project=" + PROJECT_NAME + "+AND+assignee=" + s +
+                    "+AND+sprint=" + SPRINT_NAME + "&maxResults=" + MAX_RESULTS;
             i++;
         }
     }
 
-    final static String PROJECT_NAME = "BMKP";
 
     /*
     DEBUT - Méthodes utilisés pour obtenir les informations sur la couche données (DAO)
@@ -165,10 +198,10 @@ public class JiraAPI {
             teams[i] = hmTeams.get(s);
             i++;
         }
-        sprint.setTeams(teams);
-        sprint.setTotalTime(Sprint.durationOfSprint(sprint.getStartDate(), sprint.getEndDate()));
-        sprint.setTimeLeft(Sprint.timeLeftOnSprint(sprint.getEndDate()));
-        return sprint;
+        SPRINT_ACTIF.setTeams(teams);
+        SPRINT_ACTIF.setTotalTime(Sprint.durationOfSprint(SPRINT_ACTIF.getStartDate(), SPRINT_ACTIF.getEndDate()));
+        SPRINT_ACTIF.setTimeLeft(Sprint.timeLeftOnSprint(SPRINT_ACTIF.getEndDate()));
+        return SPRINT_ACTIF;
     }
 
     //Retourne la liste des collaborateurs en prenant en compte les tickets sur le sprint actif
@@ -177,36 +210,45 @@ public class JiraAPI {
     }
 
     public static Backlog callJiraBacklogAPI() throws UnsupportedEncodingException {
-        int nbDays = 20;
         Backlog backlog = getProjectBugs(PROJECT_NAME);
-        backlog.setNbBugsCreated(getBugsCreated(nbDays, PROJECT_NAME));
-        backlog.setNbBugsResolved(getBugsResolved(nbDays, PROJECT_NAME));
+        int [] incidents = getProjectIncident(RUN_PROJECT_NAME, ISSUE_INCIDENT);
+        backlog.setNbIncidents(incidents[0]);
+        backlog.setNbIncidentsLow(incidents[1]);
+        backlog.setNbIncidentsMedium(incidents[2]);
+        backlog.setNbIncidentsHigh(incidents[3]);
+        backlog.setNbIncidentsHighest(incidents[4]);
+        backlog.setNbIncidentsCreated(getCreated(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT));
+        backlog.setNbIncidentsResolved(getResolved(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT));
+        backlog.setNbIncidentsInProgress(getInProgress(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT));
+        backlog.setNbBugsCreated(getCreated(NB_DAYS_BACKLOG, PROJECT_NAME, ISSUE_BUG));
+        backlog.setNbBugsResolved(getResolved(NB_DAYS_BACKLOG, PROJECT_NAME,ISSUE_BUG));
+        backlog.setNbBugsInProgress(getInProgress(NB_DAYS_BACKLOG, PROJECT_NAME,ISSUE_BUG));
+
 
         return backlog;
     }
 
-    public static HashMap<String,Retrospective> callJiraRestrospectiveAPI() throws UnsupportedEncodingException {
-        int nbSprints = 4;
-        HashMap<String,Retrospective> retrospectives = new HashMap<>();
-        ArrayList<Sprint> sprints = getLastlyClosedSprints(nbSprints);
+    public static HashMap<String, Retrospective> callJiraRestrospectiveAPI() {
+        HashMap<String, Retrospective> retrospectives = new HashMap<>();
+        ArrayList<Sprint> sprints = getLastlyClosedSprints(NB_SPRINTS_RETROSPECTIVE);
         HashMap<String, Team> teams = getTeams(REQUESTS_SPRINT);
         Sprint[] s = new Sprint[sprints.size()];
-        for(Sprint sprint: sprints){
-            double[] commitment = getCommitment(sprint,BOARD_ID_ALPHA_SP);
+        for (Sprint sprint : sprints) {
+            double[] commitment = getCommitment(sprint, BOARD_ID_ALPHA_SP);
             sprint.setInitialCommitment(commitment[0]);
             sprint.setFinalCommitment(commitment[1]);
             sprint.setAddedWork(commitment[2]);
             sprint.setCompletedWork(commitment[3]);
         }
         int i = 0;
-        for(Sprint sprint: sprints){
+        for (Sprint sprint : sprints) {
             s[i] = sprint;
             i++;
         }
         Retrospective r = new Retrospective();
         r.setTeamName(teams.get("alpha").getName());
         r.setSprints(s);
-        retrospectives.put(r.getTeamName(),r);
+        retrospectives.put(r.getTeamName(), r);
         return retrospectives;
     }
     /*
@@ -216,10 +258,16 @@ public class JiraAPI {
     /*
     DEBUT - Méthodes pour appeler l'API, les services externes et stocker ces données
      */
-    //Méthode principale : Appel à l'API JIRA et stockage des informations dans une HashMap
+
+    /* Main method : Returns in an HashMap all collaborators (+ unassigned) given an array of request containing assignees
+     * accountId
+     */
     public static HashMap<String, Collaborator> getCollaborators(String[] requests) {
         HashMap<String, Collaborator> collaborators = new HashMap<>();
         for (String request : requests) {
+            /*
+            Variables
+             */
             int timespent = 0, estimated = 0, remaining = 0;
             double spTotal = 0;
             double spAQualifier = 0;
@@ -246,17 +294,21 @@ public class JiraAPI {
             String emailAddress = "";
             String nom = "";
             String prenom = "";
-            HttpResponse<JsonNode> response = Unirest.get("https://apriltechnologies.atlassian.net/rest/api/3/" +
-                    request)
+            JSONObject issue;
+            JSONObject fields;
+            JSONObject status;
+            JSONArray issues;
+            int total;
+            String statut;
+            HttpResponse<JsonNode> response = Unirest.get(request)
                     .basicAuth(USERNAME, API_TOKEN)
                     .header("Accept", "application/json")
                     .asJson();
             JSONObject myObj = response.getBody().getObject();
-            int total = myObj.getInt("total");
-            JSONArray issues = myObj.getJSONArray("issues");
+            total = myObj.getInt("total");
+            issues = myObj.getJSONArray(JSON_ISSUES);
             if (request.contains("null")) {
-                List<Collaborator> collabs = new ArrayList<>();
-                collabs = getUnassignedPerTeam();
+                List<Collaborator> collabs = getUnassignedPerTeam();
                 for (Collaborator c : collabs) {
                     collaborators.put(c.getAccountId(), c);
                 }
@@ -265,14 +317,10 @@ public class JiraAPI {
                 continue;
             }
             for (int j = 0; j < issues.length(); j++) {
-                //Ensemble des objets JSON utiles
-                JSONObject issue = issues.getJSONObject(j);
-                JSONObject fields = issue.getJSONObject("fields");
-                JSONObject status = fields.getJSONObject("status");
-                //Renseignements sur le collaborateur
-                /*
-                Cas spécial pour les tâches non-assignées
-                 */
+                issue = issues.getJSONObject(j);
+                fields = issue.getJSONObject(JSON_FIELDS);
+                status = fields.getJSONObject(JSON_STATUS);
+                // Collaborator information
                 if (request.contains("null")) {
                     prenom = "Non";
                     nom = "Assigné";
@@ -288,7 +336,6 @@ public class JiraAPI {
                         prenom = emailAddress.substring(0, indexDot);
                         nom = emailAddress.substring(indexDot + 1, indexAt);
                     } else if (nom.isEmpty() && prenom.isEmpty()) {
-                        //Si plusieurs noms/prenoms le découpage peut-être incorrecte
                         String fullName = assignee.getString("displayName");
                         int fullNameLength = fullName.length();
                         int indexSpace = fullName.indexOf(" ");
@@ -300,9 +347,8 @@ public class JiraAPI {
                         }
                     }
                 }
-                //Renseignements sur le statut de la demande
-                String statut = status.getString("name");
-                //Répartition des tickets
+                statut = status.getString("name");
+                // Setting Tickets
                 if (DONE.contains(statut)) {
                     ticketsDone++;
                 } else if (IN_PROGRESS.contains(statut)) {
@@ -314,28 +360,26 @@ public class JiraAPI {
                 } else {
                     ticketsToDo++;
                 }
-                if (statut.contains("En cours") || statut.contains("Dév terminé")) {
+                if (DEV_DONE_EN_COURS.contains(statut)) {
                     ticketsEnCoursDevTermine++;
                 }
-                if (statut.contains("A tester")) {
+                if (A_TESTER.contains(statut)) {
                     ticketsAtester++;
                 }
-                //Attribution du temps de travail
-
-                if (!fields.isNull("timeestimate")) {
-                    remaining += (fields.getInt("timeestimate") / 3600);
+                // Setting working time
+                if (!fields.isNull(JSON_KEY_TIMEESTIMATE)) {
+                    remaining += (fields.getInt(JSON_KEY_TIMEESTIMATE) / 3600);
                 }
-                if (!fields.isNull("timeoriginalestimate")) {
-                    estimated += (fields.getInt("timeoriginalestimate") / 3600);
+                if (!fields.isNull(JSON_KEY_TIMEORIGINALESTIMATE)) {
+                    estimated += (fields.getInt(JSON_KEY_TIMEORIGINALESTIMATE) / 3600);
                 }
-                if (!fields.isNull("timespent")) {
-                    timespent += (fields.getInt("timespent") / 3600);
+                if (!fields.isNull(JSON_KEY_TIMESPENT)) {
+                    timespent += (fields.getInt(JSON_KEY_TIMESPENT) / 3600);
                 }
-
 
                 //Attribution des story points
-                if (!fields.isNull("customfield_10005")) {
-                    double curStoryPoints = fields.getDouble("customfield_10005");
+                if (!fields.isNull(JSON_KEY_STORYPOINTS)) {
+                    double curStoryPoints = fields.getDouble(JSON_KEY_STORYPOINTS);
                     switch (statut) {
                         case "A qualifier":
                             spTotal += curStoryPoints;
@@ -397,47 +441,45 @@ public class JiraAPI {
                             spTotal += curStoryPoints;
                     }
                 }
-
             }
             //Attribution du role
             String role = ID_COLLABS.get(accountId);
 
             //Création d'un objet Collaborateur
-            Collaborator c = new Collaborator();
-            c.setAccountId(accountId);
-            c.setEmailAddress(emailAddress);
-            c.setName(nom);
-            c.setFirstName(prenom);
-            c.setRole(role);
-            c.setLoggedTime(timespent);
-            c.setEstimatedTime(estimated);
-            c.setRemainingTime(remaining);
-            c.setNbTickets(total);
-            c.setNbDone(ticketsDone);
-            c.setNbDevDone(ticketsDevDone);
-            c.setNbInProgress(ticketsInProgress);
-            c.setNbToDo(ticketsToDo);
-            c.setNbATester(ticketsAtester);
-            c.setNbEnCoursDevTermine(ticketsEnCoursDevTermine);
-            c.setSpTotal(spTotal);
-            c.setSpAqualifier(spAQualifier);
-            c.setSpBacAffinage(spBacAffinage);
-            c.setSpEnAttente(spEnAttente);
-            c.setSpAfaire(spAFaire);
-            c.setSpEncours(spEnCours);
-            c.setSpAbandonne(spAbandonne);
-            c.setSpDevTermine(spDevTermine);
-            c.setSpAvalider(spAvalider);
-            c.setSpAlivrer(spAlivrer);
-            c.setSpATester(spATester);
-            c.setSpRefuseEnRecette(spRefuseEnRecette);
-            c.setSpValideEnRecette(spValideEnRecette);
-            c.setSpLivre(spLivre);
-            c.setSpTermine(spTermine);
-            //Ajout de l'objet dans une Hash Map
+            Collaborator c = Collaborator.builder()
+                    .accountId(accountId)
+                    .emailAddress(emailAddress)
+                    .name(nom)
+                    .firstName(prenom)
+                    .role(role)
+                    .loggedTime(timespent)
+                    .estimatedTime(estimated)
+                    .remainingTime(remaining)
+                    .nbTickets(total)
+                    .nbDone(ticketsDone)
+                    .nbDevDone(ticketsDevDone)
+                    .nbInProgress(ticketsInProgress)
+                    .nbToDo(ticketsToDo)
+                    .nbATester(ticketsAtester)
+                    .nbEnCoursDevTermine(ticketsEnCoursDevTermine)
+                    .spTotal(spTotal)
+                    .spAqualifier(spAQualifier)
+                    .spBacAffinage(spBacAffinage)
+                    .spEnAttente(spEnAttente)
+                    .spAfaire(spAFaire)
+                    .spEncours(spEnCours)
+                    .spAbandonne(spAbandonne)
+                    .spDevTermine(spDevTermine)
+                    .spAvalider(spAvalider)
+                    .spAlivrer(spAlivrer)
+                    .spATester(spATester)
+                    .spRefuseEnRecette(spRefuseEnRecette)
+                    .spValideEnRecette(spValideEnRecette)
+                    .spLivre(spLivre)
+                    .spTermine(spTermine)
+                    .build();
             collaborators.put(c.getAccountId(), c);
         }
-        // On assigne le temps de travail sur le sprint
         HashMap<String, Float[]> planning = getPlanning(PLANNING_PATH);
         for (String s : planning.keySet()) {
             if (collaborators.containsKey(s)) {
@@ -450,10 +492,16 @@ public class JiraAPI {
         return collaborators;
     }
 
-    //Retourne dans un objet Collaborator les informations par équipe, où "assignee=null" (MAUVAISE INTEGRATION)
+    /* Creates Collaborator objects for unassigned assignee (assignee=null)
+     * for each team (A MAJ, PAS OPTI)
+     */
+    /* Creates Collaborator objects for unassigned assignee (assignee=null)
+     * for each team (A MAJ, PAS OPTI)
+     */
     public static List<Collaborator> getUnassignedPerTeam() {
         List<Collaborator> collaborators = new ArrayList<>();
-        String request = "search?jql=project=BMKP+AND+assignee=null+AND+sprint=" + SPRINT_NAME + "&maxResults=100";
+        String request = JIRA_API_URL + "search?jql=project=" + PROJECT_NAME + "+AND+assignee=null+AND+sprint=" +
+                SPRINT_NAME + "&maxResults=" + MAX_RESULTS;
         //0 : alpha , 1: beta, 2: gamma
         int[] timespent = new int[3];
         int[] estimated = new int[3];
@@ -466,8 +514,7 @@ public class JiraAPI {
         String[] accountId = new String[3];
         String[] prenom = new String[3];
         String[] nom = new String[3];
-        HttpResponse<JsonNode> response = Unirest.get("https://apriltechnologies.atlassian.net/rest/api/3/" +
-                request)
+        HttpResponse<JsonNode> response = Unirest.get(request)
                 .basicAuth(USERNAME, API_TOKEN)
                 .header("Accept", "application/json")
                 .asJson();
@@ -589,26 +636,29 @@ public class JiraAPI {
         }
         for (int i = 0; i < 3; i++) {
             int totalTickets = ticketsDone[i] + ticketsInProgress[i] + ticketsToDo[i];
-            Collaborator c = new Collaborator();
-            c.setAccountId(accountId[i]);
-            c.setName(nom[i]);
-            c.setFirstName(prenom[i]);
-            c.setLoggedTime(timespent[i]);
-            c.setEstimatedTime(estimated[i]);
-            c.setNbTickets(totalTickets);
-            c.setNbDone(ticketsDone[i]);
-            c.setNbDevDone(ticketsDevDone[i]);
-            c.setNbInProgress(ticketsInProgress[i]);
-            c.setNbToDo(ticketsToDo[i]);
-            c.setRemainingTime(remaining[i]);
-            c.setSpTotal(spTotal[i]);
+            Collaborator c = Collaborator.builder()
+                    .accountId(accountId[i])
+                    .name(nom[i])
+                    .firstName(prenom[i])
+                    .loggedTime(timespent[i])
+                    .estimatedTime(estimated[i])
+                    .nbTickets(totalTickets)
+                    .nbDone(ticketsDone[i])
+                    .nbDevDone(ticketsDevDone[i])
+                    .nbInProgress(ticketsInProgress[i])
+                    .nbToDo(ticketsToDo[i])
+                    .remainingTime(remaining[i])
+                    .spTotal(spTotal[i])
+                    .build();
             collaborators.add(c);
         }
         return collaborators;
     }
 
 
-    //Fait un appel à getCollaborators() et aggrège les données par équipe
+    /* Call getCollaborator() and assign each collaborator to its team
+     * returning a HashMap of size nbTeams
+     */
     public static HashMap<String, Team> getTeams(String[] requests) {
         HashMap<String, Collaborator> collaborators = getCollaborators(requests);
         HashMap<String, Team> teams = new HashMap<>();
@@ -633,76 +683,73 @@ public class JiraAPI {
         return teams;
     }
 
-    /*Retourne un objet Backlog pour un projet (depuis sa création) qui contient des informations concernant les bugs  en cours(nombre et priorité)
-     * Un bug est en cours quand il n'est pas dans un des états JIRA suivants: Terminé, livré
-     * Lors de l'appel à cette API, il y a plus de 100 résultats, il faut boucler jusqu'à obtenir la totalité des résultats
-     * */
+    /* Returns a backlog object containing information on bugs since project's creation (number and priority)
+     * A bug is active when NOT in following jira states : Terminé, Livré
+     */
     public static Backlog getProjectBugs(String projectName) {
+        /*
+        Variables
+         */
         Backlog backlog = new Backlog();
-        int maxResults = 100;
         int nbBugs = 0;
-        int nbBugsWVEC = 0;
         int nbBugsLow = 0;
         int nbBugsMedium = 0;
         int nbBugsHigh = 0;
         int nbBugsHighest = 0;
-        int nbBugsLowWVEC = 0;
-        int nbBugsMediumWVEC = 0;
-        int nbBugsHighWVEC = 0;
-        int nbBugsHighestWVEC = 0;
         int startAt = 0;
-        String request = "search?jql=project=" + projectName + "+AND+issuetype='Bug'" + "&maxResults=" + maxResults + "&startAt=" + Integer.toString(startAt);
-        HttpResponse<JsonNode> response = Unirest.get("https://apriltechnologies.atlassian.net/rest/api/3/" +
-                request)
+        JSONObject myObj;
+        JSONArray issues;
+        JSONObject issue;
+        JSONObject fields;
+        JSONObject priority;
+        JSONObject status;
+        String statut;
+        String request = JIRA_API_URL + "search?jql=project=" + projectName +
+                "+AND+issuetype='Bug'" + "&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+
+        /*
+        Logic
+         */
+        HttpResponse<JsonNode> response = Unirest.get(request)
                 .basicAuth(USERNAME, API_TOKEN)
                 .header("Accept", "application/json")
                 .asJson();
-        JSONObject myObj = response.getBody().getObject();
-        JSONArray issues = myObj.getJSONArray("issues");
+        myObj = response.getBody().getObject();
+        issues = myObj.getJSONArray(JSON_ISSUES);
         int total = myObj.getInt("total");
         while (startAt < total) {
             for (int j = 0; j < issues.length(); j++) {
                 //Ensemble des objets JSON utiles
-                JSONObject issue = issues.getJSONObject(j);
-                JSONObject fields = issue.getJSONObject("fields");
-                JSONObject priority = fields.getJSONObject("priority");
-                JSONObject status = fields.getJSONObject("status");
-                String statut = status.getString("name");
-                if (statut.contains("Terminé") || statut.contains("Livré") || statut.contains("Abandonné")) {
-                    continue;
-                }
-                //Attribution des bugs
-                nbBugs++;
-                if (!statut.contains("Validé en recette")) {
-                    nbBugsWVEC++;
-                }
-                if (priority.getString("name").equals("Low")) {
-                    nbBugsLow++;
-                    if (!statut.contains("Validé en recette")) {
-                        nbBugsLowWVEC++;
-                    }
-                } else if (priority.getString("name").equals("Medium")) {
-                    nbBugsMedium++;
-                    if (!statut.contains("Validé en recette")) {
-                        nbBugsMediumWVEC++;
-                    }
-                } else if (priority.getString("name").equals("High")) {
-                    nbBugsHigh++;
-                    if (!statut.contains("Validé en recette")) {
-                        nbBugsHighWVEC++;
-                    }
-                } else if (priority.getString("name").equals("Highest")) {
-                    nbBugsHighest++;
-                    if (!statut.contains("Validé en recette")) {
-                        nbBugsHighestWVEC++;
+                issue = issues.getJSONObject(j);
+                fields = issue.getJSONObject(JSON_FIELDS);
+                priority = fields.getJSONObject(JSON_PRIORITY);
+                status = fields.getJSONObject(JSON_STATUS);
+                statut = status.getString("name");
+                if (!DONE_BUGS.contains(statut)) {
+                    nbBugs++;
+                    switch (priority.getString("name")) {
+                        case "Low":
+                            nbBugsLow++;
+                            break;
+                        case "Medium":
+                            nbBugsMedium++;
+                            break;
+                        case "High":
+                            nbBugsHigh++;
+                            break;
+                        case "Highest":
+                            nbBugsHighest++;
+                            break;
+                        default:
+                            break;
                     }
                 }
+
             }
-            //on incrémente du nombre de résultats dans la requête
-            startAt += maxResults;
-            request = "search?jql=project=" + projectName + "+AND+issuetype='Bug'" + "&maxResults=100&startAt=" + startAt;
-            response = Unirest.get("https://apriltechnologies.atlassian.net/rest/api/3/" +
-                    request)
+            startAt += MAX_RESULTS;
+            request = JIRA_API_URL + "search?jql=project=" + projectName +
+                    "+AND+issuetype='Bug'" + "&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+            response = Unirest.get(request)
                     .basicAuth(USERNAME, API_TOKEN)
                     .header("Accept", "application/json")
                     .asJson();
@@ -711,83 +758,182 @@ public class JiraAPI {
         }
         backlog.setProjectName(projectName);
         backlog.setNbBugs(nbBugs);
-        backlog.setNbBugsWVEC(nbBugsWVEC);
         backlog.setNbBugsLow(nbBugsLow);
         backlog.setNbBugsMedium(nbBugsMedium);
         backlog.setNbBugsHigh(nbBugsHigh);
         backlog.setNbBugsHighest(nbBugsHighest);
-        backlog.setNbBugsLowWVEC(nbBugsLowWVEC);
-        backlog.setNbBugsMediumWVEC(nbBugsMediumWVEC);
-        backlog.setNbBugsHighWVEC(nbBugsHighWVEC);
-        backlog.setNbBugsHighestWVEC(nbBugsHighestWVEC);
         return backlog;
-
     }
-
-    /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug created
-     *  Index i represent the number of bugs created (nbDays-i) ago
-     */
-    public static int[] getBugsCreated(int nbDays, String projectName) throws UnsupportedEncodingException {
-        int[] bugsCreated = new int[nbDays];
-        int maxResults = 100;
-        String request = "search?jql=project=" + projectName + "+AND+issuetype='Bug'+AND+created" +
-                URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + maxResults;
-        HttpResponse<JsonNode> response = Unirest.get("https://apriltechnologies.atlassian.net/rest/api/3/" +
-                request)
-                .basicAuth(USERNAME, API_TOKEN)
-                .header("Accept", "application/json")
-                .asJson();
-        JSONObject myObj = response.getBody().getObject();
-        JSONArray issues = myObj.getJSONArray("issues");
-        for (int j = 0; j < issues.length(); j++) {
-            //Ensemble des objets JSON utiles
-            JSONObject issue = issues.getJSONObject(j);
-            JSONObject fields = issue.getJSONObject("fields");
-            String dateCreation = fields.getString("created");
-            LocalDateTime ldtBug = Sprint.toLocalDateTime(dateCreation);
-            int days = (int) DAYS.between(ldtBug, LocalDateTime.now());
-            bugsCreated[nbDays - 1 - days] += 1;
-        }
-        return bugsCreated;
-    }
-
-    /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug resolved (Jira status "terminé/livré")
-     *  Index i represent the number of bugs resolved (nbDays-i) ago
-     */
-    public static int[] getBugsResolved(int nbDays, String projectName) throws UnsupportedEncodingException {
-        int[] bugsResolved = new int[nbDays];
-        int maxResults = 100;
+    public static int[] getProjectIncident(String projectName, String issueType){
+        /*
+        Variables
+         */
+        // 0 : total, 1: low, 2: medium, 3: high, 4: highest
+        int[] incidents = new int[5];
         int startAt = 0;
-        String request = "search?jql=project=" + projectName + "+AND+issuetype='Bug'+AND+updated" +
-                URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + maxResults + "&startAt=" + startAt;
-        HttpResponse<JsonNode> response = Unirest.get("https://apriltechnologies.atlassian.net/rest/api/3/" +
-                request)
+        JSONObject myObj;
+        JSONArray issues;
+        JSONObject issue;
+        JSONObject fields;
+        JSONObject priority;
+        JSONObject status;
+        String statut;
+        String request = JIRA_API_URL + "search?jql=project=" + projectName +
+                "+AND+issuetype='" + issueType + "'&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+        /*
+        Logic
+         */
+        HttpResponse<JsonNode> response = Unirest.get(request)
                 .basicAuth(USERNAME, API_TOKEN)
                 .header("Accept", "application/json")
                 .asJson();
-        JSONObject myObj = response.getBody().getObject();
-        JSONArray issues = myObj.getJSONArray("issues");
+        myObj = response.getBody().getObject();
+        issues = myObj.getJSONArray(JSON_ISSUES);
         int total = myObj.getInt("total");
         while (startAt < total) {
             for (int j = 0; j < issues.length(); j++) {
                 //Ensemble des objets JSON utiles
-                JSONObject issue = issues.getJSONObject(j);
-                JSONObject fields = issue.getJSONObject("fields");
-                JSONObject status = fields.getJSONObject("status");
-                String statut = status.getString("name");
-                if (!statut.contains("Terminé") || !statut.contains("Livré")) {
-                    String updateDate = fields.getString("updated");
-                    LocalDateTime ldtBug = Sprint.toLocalDateTime(updateDate);
-                    int days = (int) DAYS.between(ldtBug, LocalDateTime.now());
-                    bugsResolved[nbDays - 1 - days] += 1;
+                issue = issues.getJSONObject(j);
+                fields = issue.getJSONObject(JSON_FIELDS);
+                priority = fields.getJSONObject(JSON_PRIORITY);
+                status = fields.getJSONObject(JSON_STATUS);
+                statut = status.getString("name");
+                if (!DONE_BUGS.contains(statut)) {
+                    incidents[0]++;
+                    switch (priority.getString("name")) {
+                        case "Low":
+                            incidents[1]++;
+                            break;
+                        case "Medium":
+                            incidents[2]++;
+                            break;
+                        case "High":
+                            incidents[3]++;
+                            break;
+                        case "Highest":
+                            incidents[4]++;
+                            break;
+                        default:
+                            break;
+                    }
                 }
 
             }
-            startAt += maxResults;
-            request = "search?jql=project=" + projectName + "+AND+issuetype='Bug'+AND+updated" +
-                    URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + maxResults + "&startAt=" + startAt;
-            response = Unirest.get("https://apriltechnologies.atlassian.net/rest/api/3/" +
-                    request)
+            startAt += MAX_RESULTS;
+            request = JIRA_API_URL + "search?jql=project=" + projectName +
+                    "+AND+issuetype='Bug'" + "&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+            response = Unirest.get(request)
+                    .basicAuth(USERNAME, API_TOKEN)
+                    .header("Accept", "application/json")
+                    .asJson();
+            myObj = response.getBody().getObject();
+            issues = myObj.getJSONArray("issues");
+        }
+        return incidents;
+    }
+
+    /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug/incident created
+     *  Index i represent the number of bugs created (nbDays-i) ago
+     */
+    public static int[] getCreated(int nbDays, String projectName, String issueType) throws UnsupportedEncodingException {
+        /*
+        Variables
+         */
+        int[] bugsCreated = new int[nbDays + 1];
+        int startAt = 0;
+        int days;
+        String dateCreation;
+        JSONObject myObj;
+        JSONArray issues;
+        JSONObject issue;
+        JSONObject fields;
+        LocalDate ldtBug;
+        String request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+created" +
+                URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+        /*
+        Logic
+         */
+        HttpResponse<JsonNode> response = Unirest.get(request)
+                .basicAuth(USERNAME, API_TOKEN)
+                .header("Accept", "application/json")
+                .asJson();
+        myObj = response.getBody().getObject();
+        issues = myObj.getJSONArray(JSON_ISSUES);
+        int total = myObj.getInt("total");
+        while (startAt < total) {
+            for (int j = 0; j < issues.length(); j++) {
+                //Ensemble des objets JSON utiles
+                issue = issues.getJSONObject(j);
+                fields = issue.getJSONObject(JSON_FIELDS);
+                dateCreation = fields.getString("created").substring(0, 10);
+                ldtBug = LocalDate.parse(dateCreation);
+                days = (int) DAYS.between(ldtBug, LocalDate.parse(TODAY_LD));
+                bugsCreated[nbDays - days] += 1;
+            }
+            //on incrémente du nombre de résultats dans la requête
+            startAt += MAX_RESULTS;
+            request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+created" +
+                    URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+            response = Unirest.get(request)
+                    .basicAuth(USERNAME, API_TOKEN)
+                    .header("Accept", "application/json")
+                    .asJson();
+            myObj = response.getBody().getObject();
+            issues = myObj.getJSONArray("issues");
+        }
+        return bugsCreated;
+    }
+
+    /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug/incident resolved (Jira status "terminé/livré")
+     *  Index i represent the number of bugs resolved (nbDays-i) ago
+     */
+    public static int[] getResolved(int nbDays, String projectName, String issueType) throws UnsupportedEncodingException {
+        /*
+        Variables
+         */
+        int[] bugsResolved = new int[nbDays + 1];
+        int startAt = 0;
+        String statut;
+        String updateDate;
+        LocalDate ldtBug;
+        int days;
+        String today = LocalDateTime.now().format(dtfLocalDate);
+        String request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType+ "'+AND+updated" +
+                URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+        JSONObject myObj;
+        JSONArray issues;
+        JSONObject issue;
+        JSONObject fields;
+        JSONObject status;
+
+        /*
+        Logic
+         */
+        HttpResponse<JsonNode> response = Unirest.get(request)
+                .basicAuth(USERNAME, API_TOKEN)
+                .header("Accept", "application/json")
+                .asJson();
+        myObj = response.getBody().getObject();
+        issues = myObj.getJSONArray(JSON_ISSUES);
+        int total = myObj.getInt("total");
+        while (startAt < total) {
+            for (int j = 0; j < issues.length(); j++) {
+                //Ensemble des objets JSON utiles
+                issue = issues.getJSONObject(j);
+                fields = issue.getJSONObject(JSON_FIELDS);
+                status = fields.getJSONObject(JSON_STATUS);
+                statut = status.getString("name");
+                if (statut.contains(TERMINE) || statut.contains(LIVRE)) {
+                    updateDate = fields.getString("updated").substring(0, 10);
+                    ldtBug = LocalDate.parse(updateDate);
+                    days = (int) DAYS.between(ldtBug, LocalDate.parse(today));
+                    bugsResolved[nbDays - days] += 1;
+                }
+            }
+            startAt += MAX_RESULTS;
+            request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='Bug'+AND+updated" +
+                    URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+            response = Unirest.get(request)
                     .basicAuth(USERNAME, API_TOKEN)
                     .header("Accept", "application/json")
                     .asJson();
@@ -797,30 +943,100 @@ public class JiraAPI {
         return bugsResolved;
     }
 
-    /* Returns an array of size (nbSprints) of the lastly closed sprints including the lastly active sprint
+    /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug/incident in progress (Jira status "terminé/livré")
+     *  Index i represent the number of bugs resolved (nbDays-i) ago
      */
-    public static ArrayList<Sprint> getLastlyClosedSprints(int nbSprints) {
-        ArrayList<Sprint> sprints = new ArrayList<>(nbSprints);
-        String startDate = "";
-        String endDate = "";
-        String sprintName = "";
-        int sprintId = 0;
-        int lastlyActiveSprintIndex = -1;
-        HttpResponse<JsonNode> response = Unirest.get("https://apriltechnologies.atlassian.net/rest/agile/1.0/board/" + BOARD_ID + "/sprint")
+    public static int[] getInProgress(int nbDays, String projectName, String issueType) throws UnsupportedEncodingException {
+        /*
+        Variables
+         */
+        int[] inProgress = new int[nbDays + 1];
+        int startAt = 0;
+        String statut;
+        String updateDate;
+        LocalDate ldtBug;
+        int days;
+        String today = LocalDateTime.now().format(dtfLocalDate);
+        String request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+updated" +
+                URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+        JSONObject myObj;
+        JSONArray issues;
+        JSONObject issue;
+        JSONObject fields;
+        JSONObject status;
+
+        /*
+        Logic
+         */
+        HttpResponse<JsonNode> response = Unirest.get(request)
                 .basicAuth(USERNAME, API_TOKEN)
                 .header("Accept", "application/json")
                 .asJson();
-        JSONObject myObj = response.getBody().getObject();
-        JSONArray values = myObj.getJSONArray("values");
+        myObj = response.getBody().getObject();
+        issues = myObj.getJSONArray(JSON_ISSUES);
+        int total = myObj.getInt("total");
+        while (startAt < total) {
+            for (int j = 0; j < issues.length(); j++) {
+                //Ensemble des objets JSON utiles
+                issue = issues.getJSONObject(j);
+                fields = issue.getJSONObject(JSON_FIELDS);
+                status = fields.getJSONObject(JSON_STATUS);
+                statut = status.getString("name");
+                if (IN_PROGRESS.contains(statut)) {
+                    updateDate = fields.getString("updated").substring(0, 10);
+                    ldtBug = LocalDate.parse(updateDate);
+                    days = (int) DAYS.between(ldtBug, LocalDate.parse(today));
+                    inProgress[nbDays - days] += 1;
+                }
+            }
+            startAt += MAX_RESULTS;
+            request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='Bug'+AND+updated" +
+                    URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+            response = Unirest.get(request)
+                    .basicAuth(USERNAME, API_TOKEN)
+                    .header("Accept", "application/json")
+                    .asJson();
+            myObj = response.getBody().getObject();
+            issues = myObj.getJSONArray("issues");
+        }
+        return inProgress;
+    }
+
+    /* Returns an array of size (nbSprints) of the lastly closed sprints including the lastly active sprint
+     */
+    public static ArrayList<Sprint> getLastlyClosedSprints(int nbSprints) {
+        /*
+        Variables
+         */
+        ArrayList<Sprint> sprints = new ArrayList<>(nbSprints);
+        String startDate;
+        String endDate;
+        String sprintName;
+        int sprintId;
+        JSONObject myObj;
+        JSONArray values;
+        JSONObject value;
+        String request = JIRA_AGILEAPI_URL + "/board/" + BOARD_ID + "/sprint";
+        int lastlyActiveSprintIndex = -1;
+
+        /*
+        Logic
+         */
+        HttpResponse<JsonNode> response = Unirest.get(request)
+                .basicAuth(USERNAME, API_TOKEN)
+                .header("Accept", "application/json")
+                .asJson();
+        myObj = response.getBody().getObject();
+        values = myObj.getJSONArray("values");
         for (int i = 0; i < values.length(); i++) {
-            JSONObject value = values.getJSONObject(i);
-            if (value.getString("state").equals("active") && value.getString("name").equals("Sprint 30")) {
+            value = values.getJSONObject(i);
+            if (value.getString("state").equals("closed") && value.getString("name").equals("Sprint 30")) {
                 lastlyActiveSprintIndex = i;
             }
         }
         int i = 0;
         while (i < nbSprints) {
-            JSONObject value = values.getJSONObject(lastlyActiveSprintIndex - i);
+            value = values.getJSONObject(lastlyActiveSprintIndex - i);
             sprintName = value.getString("name");
             startDate = value.getString("startDate");
             endDate = value.getString("endDate");
@@ -842,15 +1058,19 @@ public class JiraAPI {
      * 2: addedWork
      * 3: completedWork
      */
-    public static double[] getCommitment(Sprint s, String boardId) throws UnsupportedEncodingException {
+    public static double[] getCommitment(Sprint s, String boardId) {
+        /*
+        Variables
+         */
         double[] commitment = new double[4];
         double initialCommitment = 0;
         double finalCommitment = 0;
         double addedWork = 0;
         double completedWork = 0;
-        String request = "https://apriltechnologies.atlassian.net/rest/greenhopper/1.0/rapid/charts/sprintreport" +
-                "?rapidViewId=" + boardId +
-                "&sprintId=" + s.getId();
+        String request = JIRA_GREENHOPPER_URL + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
+        /*
+        Logic
+         */
         HttpResponse<JsonNode> response = Unirest.get(request)
                 .basicAuth(USERNAME, API_TOKEN)
                 .header("Accept", "application/json")
@@ -867,25 +1087,25 @@ public class JiraAPI {
         //All issues
         JSONObject allIssuesEstimateSum = contents.getJSONObject("allIssuesEstimateSum");
 
-        if(completedIssuesEstimateSum.has("value")){
+        if (completedIssuesEstimateSum.has("value")) {
             completedWork += completedIssuesEstimateSum.getInt("value");
             initialCommitment += completedIssuesEstimateSum.getInt("value");
         }
-        if(completedIssuesInitialEstimateSum.has("value")){
+        if (completedIssuesInitialEstimateSum.has("value")) {
             initialCommitment += completedIssuesInitialEstimateSum.getInt("value");
         }
-        if(issuesNotCompletedEstimateSum.has("value")){
+        if (issuesNotCompletedEstimateSum.has("value")) {
             initialCommitment += issuesNotCompletedEstimateSum.getInt("value");
         }
-        if(issuesNotCompletedInitialEstimateSum.has("value")){
+        if (issuesNotCompletedInitialEstimateSum.has("value")) {
             initialCommitment += issuesNotCompletedInitialEstimateSum.getInt("value");
         }
-        if(allIssuesEstimateSum.has("value")){
+        if (allIssuesEstimateSum.has("value")) {
             finalCommitment += allIssuesEstimateSum.getInt("value");
         }
         //Added issues
         Iterator<String> keys = addedIssues.keys();
-        while(keys.hasNext()){
+        while (keys.hasNext()) {
             String issueID = keys.next();
             addedWork += getStoryPoint(issueID);
         }
@@ -896,58 +1116,85 @@ public class JiraAPI {
         return commitment;
     }
 
-    public static double getStoryPoint(String issueID){
+    /* Method that returns the number of story points assigned to an issue.
+     * Used to retrieve story points linked to added tickets in getCommitment()
+     */
+    public static double getStoryPoint(String issueID) {
+        /*
+        Variables
+         */
         double spIssue = 0;
-        String request = "https://apriltechnologies.atlassian.net/rest/api/3/search?jql=project=BMKP+AND+issue=" + issueID;
+        String request = JIRA_API_URL + "search?jql=project=" + PROJECT_NAME + "+AND+issue=" + issueID;
+        JSONObject myObj;
+        JSONArray issues;
+        JSONObject issue;
+        JSONObject fields;
+
+        /*
+        Logic
+         */
         HttpResponse<JsonNode> response = Unirest.get(request)
                 .basicAuth(USERNAME, API_TOKEN)
                 .header("Accept", "application/json")
                 .asJson();
-        JSONObject myObj = response.getBody().getObject();
-        JSONArray issues = myObj.getJSONArray("issues");
+        myObj = response.getBody().getObject();
+        issues = myObj.getJSONArray(JSON_ISSUES);
         for (int j = 0; j < issues.length(); j++) {
             //Ensemble des objets JSON utiles
-            JSONObject issue = issues.getJSONObject(j);
-            JSONObject fields = issue.getJSONObject("fields");
-            if (!fields.isNull("customfield_10005")) {
-                spIssue = fields.getDouble("customfield_10005");
+            issue = issues.getJSONObject(j);
+            fields = issue.getJSONObject(JSON_FIELDS);
+            if (!fields.isNull(JSON_KEY_STORYPOINTS)) {
+                spIssue = fields.getDouble(JSON_KEY_STORYPOINTS);
             }
         }
         return spIssue;
     }
-    //Lit le planning (CSV) et retourne les informations dans une table de hachage <accountId, [totalWorkingTime, availableTime]>
+
+    /* Method that reads a CSV (planning/absences) which is located at PLANNING_PATH
+     * Returns in a HashMap two floats (values), the totalWorkingTime and availableTime
+     * The key being accountId
+     */
     public static HashMap<String, Float[]> getPlanning(String PLANNING_PATH) {
+        /*
+         Variables
+         */
         HashMap<String, Float[]> planning = new HashMap<>();
-        float totalWorkingTime = 0;
-        float availableTime = 0;
+        float totalWorkingTime;
+        float availableTime;
         String accountId;
-        final int INDEX_ACC_ID = 2; //3ème colonne
-        int FIRST_ROW = 4; //5ème colonne
         int startIndex = -1;
         int endIndex = -1;
         int todayIndex = -1;
+        //Two constants giving the column containing information about accountId and the 1st date
+        final int INDEX_ACC_ID = 2;
+        int FIRST_ROW = 4;
+        Float[] workTime = new Float[2];
+        String[] dates;
+        /*
+        Logic
+         */
         try {
             FileReader filereader = new FileReader(PLANNING_PATH);
             CSVParser parser = new CSVParserBuilder().withSeparator(',').build();
             CSVReader csvReader = new CSVReaderBuilder(filereader)
                     .withCSVParser(parser)
                     .build();
-            //On saute 4 lignes du CSV
             for (int i = 0; i < 4; i++) {
                 csvReader.readNext();
             }
-            String[] dates = csvReader.readNext();
+            dates = csvReader.readNext();
             for (int i = 0; i < dates.length; i++) {
-                if (dates[i].equals(START_DAY_SPRINT)) {
+                if (START_DAY_SPRINT.equals(dates[i])) {
                     startIndex = i;
                 }
-                if (dates[i].equals(END_DAY_SPRINT)) {
+                if (END_DAY_SPRINT.equals(dates[i])) {
                     endIndex = i;
                 }
-                if (dates[i].equals(TODAY)) {
+                if (TODAY.equals(dates[i])) {
                     todayIndex = i;
                 }
             }
+            // When the initial date is not contained in the CSV
             if (startIndex < 0) {
                 startIndex = FIRST_ROW;
             }
@@ -969,7 +1216,6 @@ public class JiraAPI {
                             availableTime -= parseFloat(infos[i]) * 8;
                         }
                     }
-                    Float[] workTime = new Float[2];
                     workTime[0] = totalWorkingTime;
                     workTime[1] = availableTime;
                     planning.put(accountId, workTime);

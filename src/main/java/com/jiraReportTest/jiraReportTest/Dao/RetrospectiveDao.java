@@ -10,17 +10,13 @@ import java.util.List;
 
 @Repository
 public class RetrospectiveDao {
-    private static HashMap<String,Retrospective> retrospectives;
+    private static HashMap<String, Retrospective> retrospectives;
 
-    static{
-        try {
-            retrospectives = JiraAPI.callJiraRestrospectiveAPI();
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+    static {
+        retrospectives = JiraAPI.callJiraRestrospectiveAPI();
     }
 
-    public Collection<Retrospective> getRetrospectives(){
+    public Collection<Retrospective> getRetrospectives() {
         return this.retrospectives.values();
     }
 }
