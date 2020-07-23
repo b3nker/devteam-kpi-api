@@ -13,7 +13,7 @@ public class RetrospectiveDao {
     private static HashMap<String, Retrospective> retrospectives;
 
     static {
-        retrospectives = JiraAPI.callJiraRestrospectiveAPI();
+        retrospectives = JiraAPI.callJiraRetrospectiveAPI();
     }
 
     public Collection<Retrospective> getRetrospectives() {

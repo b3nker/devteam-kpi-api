@@ -1,6 +1,8 @@
 package com.jiraReportTest.jiraReportTest.Model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
+import lombok.Data;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
@@ -10,118 +12,16 @@ import java.util.List;
 import static java.lang.Integer.parseInt;
 import static java.lang.Math.toIntExact;
 
+@Data
+@Builder
 public class Sprint {
     private int id;
     private String name;
-    private double initialCommitment;
-    private double finalCommitment;
-    private double addedWork;
-    private double completedWork;
     private LocalDateTime startDate;
     private int timeLeft; // in hours without considering public holidays
     private int totalTime; // in hours without considering public holidays
     private LocalDateTime endDate;
-    //private HashMap<String,Team> teams;
     private Team[] teams;
-    public Sprint() {}
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public double getInitialCommitment() {
-        return initialCommitment;
-    }
-
-    public void setInitialCommitment(double initialCommitment) {
-        this.initialCommitment = initialCommitment;
-    }
-
-    public double getFinalCommitment() {
-        return finalCommitment;
-    }
-
-    public void setFinalCommitment(double finalCommitment) {
-        this.finalCommitment = finalCommitment;
-    }
-
-    public double getAddedWork() {
-        return addedWork;
-    }
-
-    public void setAddedWork(double addedWork) {
-        this.addedWork = addedWork;
-    }
-
-    public double getCompletedWork() {
-        return completedWork;
-    }
-
-    public void setCompletedWork(double completedWork) {
-        this.completedWork = completedWork;
-    }
-
-    public int getTimeLeft() {
-        return timeLeft;
-    }
-
-    public void setTimeLeft(int timeLeft) {
-        this.timeLeft = timeLeft;
-    }
-
-    public int getTotalTime() {
-        return totalTime;
-    }
-
-    public void setTotalTime(int totalTime) {
-        this.totalTime = totalTime;
-    }
-
-    public LocalDateTime getStartDate() {
-        return startDate;
-    }
-
-    public void setStartDate(LocalDateTime startDate) {
-        this.startDate = startDate;
-    }
-
-    public LocalDateTime getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(LocalDateTime endDate) {
-        this.endDate = endDate;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Team[] getTeams() {
-        return teams;
-    }
-
-    public void setTeams(Team[] teams) {
-        this.teams = teams;
-    }
-
-    public String toString(){
-        return ("name : " + this.name +
-                ", start : " + this.startDate.toString() +
-                ", end : " + this.endDate.toString() +
-                ", timeLeft : " + this.timeLeft +
-                ", totalTime : " + this.totalTime
-        );
-    }
-
 
     /*
     Return the number of working days between 2 LocalDateTime

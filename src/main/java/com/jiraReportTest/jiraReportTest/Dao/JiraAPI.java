@@ -10,6 +10,7 @@ import kong.unirest.JsonNode;
 import kong.unirest.Unirest;
 import kong.unirest.json.JSONArray;
 import kong.unirest.json.JSONObject;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Repository;
 
 import java.io.*;
@@ -26,7 +27,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 @Repository
 public class JiraAPI {
     /*
-    DEBUT - Déclaration et définition des variables
+    DEBUT - Déclaration et définition des variables globales
      */
     final static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yy");
     final static DateTimeFormatter dtfLocalDate = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -36,12 +37,16 @@ public class JiraAPI {
     // Project global variables
     final static String BOARD_ID = "391";
     final static String BOARD_ID_ALPHA_SP = "451";
+    final static String BOARD_ID_BETA_SP = "443";
     final static String PROJECT_NAME = "BMKP";
     final static String RUN_PROJECT_NAME = "RMKP";
     final static int MAX_RESULTS = 100;
     final static int NB_SPRINTS_RETROSPECTIVE = 4;
     final static int NB_DAYS_BACKLOG = 20;
-    // API URLs
+    final static String TEAM_NAME_ALPHA = "alpha";
+    final static String TEAM_NAME_BETA = "beta";
+    final static String TEAM_NAME_GAMMA = "gamma";
+    final static ArrayList<String> TEAM_NAMES = new ArrayList<>(Arrays.asList(TEAM_NAME_ALPHA, TEAM_NAME_BETA, TEAM_NAME_GAMMA));
     final static String JIRA_API_URL = "https://apriltechnologies.atlassian.net/rest/api/3/";
     final static String JIRA_AGILEAPI_URL = "https://apriltechnologies.atlassian.net/rest/agile/1.0/";
     final static String JIRA_GREENHOPPER_URL = "https://apriltechnologies.atlassian.net/rest/greenhopper/1.0/";
@@ -56,7 +61,8 @@ public class JiraAPI {
     final static String JSON_KEY_TIMESPENT = "timespent";
     final static String JSON_KEY_STORYPOINTS = "customfield_10005";
     // Sprint variables
-    final static Sprint SPRINT_ACTIF = new Sprint();
+    final static Sprint SPRINT_ACTIF = Sprint.builder().build();
+
     static {
         String startDate = "";
         String endDate = "";
@@ -70,8 +76,8 @@ public class JiraAPI {
         JSONArray values = myObj.getJSONArray("values");
         for (int i = 0; i < values.length(); i++) {
             JSONObject value = values.getJSONObject(i);
-            //Condition à modifier quant il n'y aura qu'un seul sprint actif
-            if (value.getString("state").equals("closed") && value.getString("name").equals("Sprint 30")) {
+            //Condition à modifier quand il n'y aura qu'un seul sprint actif
+            if (value.getString("state").equals("active")) {
                 sprintName = value.getString("name");
                 startDate = value.getString("startDate");
                 endDate = value.getString("endDate");
@@ -83,9 +89,11 @@ public class JiraAPI {
         SPRINT_ACTIF.setStartDate(Sprint.toLocalDateTime(startDate));
         SPRINT_ACTIF.setEndDate(Sprint.toLocalDateTime(endDate));
     }
+    final static String UNASSIGNED_ALPHA = "unassignedAlpha";
+    final static String UNASSIGNED_BETA = "unassignedBeta";
+    final static String UNASSIGNED_GAMMA = "unassignedGamma";
+
     final static String SPRINT_NAME = "'" + SPRINT_ACTIF.getName() + "'";
-    final static String START_DAY_SPRINT = SPRINT_ACTIF.getStartDate().format(dtf);
-    final static String END_DAY_SPRINT = SPRINT_ACTIF.getEndDate().format(dtf);
     final static String TODAY = LocalDateTime.now().format(dtf);
     final static String TODAY_LD = LocalDateTime.now().format(dtfLocalDate);
     final static ArrayList<String> TEAM_ALPHA = new ArrayList<>(Arrays.asList(
@@ -94,19 +102,19 @@ public class JiraAPI {
             "5bcd8282607ed038040177bb", // Pape Thiam
             "5cf921f6b06c540e82580cbd", // Valentin Pierrel
             "5ed76cdf2fdc580b88f3bbef", // Alex Cheuko
-            "5e98521a3a8b910c085d6a28", // Kévin Youna
-            "unassignedAlpha"
+            "5a9ebdf74af2372a88a06565", // Gabriel Roquigny
+            UNASSIGNED_ALPHA
 
     ));
     final static ArrayList<String> TEAM_BETA = new ArrayList<>(Arrays.asList(
             "5cb45bb34064460e407eabe4", // Guillermo Garcès
-            "5a9ebdf74af2372a88a06565", // Gabriel Roquigny
             "5a2181081594706402dee482", // Etienne Bourgouin
             "5afe92f251d0b7540b43de81", // Malick Diagne
             "5d6e32e06e3e1f0d9623cb5a", // Pierre Tomasina
             "5ed64583620b1d0c168d4e36", // Anthony Hernandez
             "5ef1afd6561e0e0aae904914", // Yong Ma
-            "unassignedBeta"
+            "5e98521a3a8b910c085d6a28", // Kévin Youna
+            UNASSIGNED_BETA
     ));
     final static ArrayList<String> TEAM_GAMMA = new ArrayList<>(Arrays.asList(
             "5e285008ee264b0e74591993", // Eric Coupal
@@ -115,7 +123,7 @@ public class JiraAPI {
             "5d9b0573ea65c10c3fdbaab2", // Maxime Fourt
             "5a8155f0cad06b353733bae8", // Guillaume Coppens
             "5dfd11b39422830cacaa8a79", // Carthy Marie Joseph
-            "unassignedGamma"
+            UNASSIGNED_GAMMA
     ));
     // JIRA STATUS
     final static String TERMINE = "Terminé";
@@ -129,6 +137,7 @@ public class JiraAPI {
     final static String EN_ATTENTE = "En attente";
     final static String A_LIVRER = "A Livrer";
     final static String A_TESTER = "A tester";
+    final static String A_VALIDER = "A valider";
     /*To define */
     final static ArrayList<String> JIRA_DONE = new ArrayList<>(Arrays.asList(ABANDONNE, LIVRE, TERMINE, VALIDE));
     final static ArrayList<String> JIRA_IN_PROGRESS = new ArrayList<>(Arrays.asList());
@@ -141,6 +150,7 @@ public class JiraAPI {
     final static String ISSUE_BUG = "Bug";
     final static String ISSUE_INCIDENT = "Incident";
     final static HashMap<String, String> ID_COLLABS = new HashMap<>();
+
     static {
         ID_COLLABS.put("5c17b4599f443a65fecae3ca", "middle lead dev"); // Julien Mosset
         ID_COLLABS.put("5a9ebe1c4af2372a88a0656b", "front lead dev"); // Nicolas Ovejero
@@ -175,7 +185,9 @@ public class JiraAPI {
         ID_COLLABS.put("557058:df17bf30-7843-415e-985d-151faba64429", "transverse"); // Philippe Fleur
         ID_COLLABS.put(null, ""); // unassigned
     }
+
     final static String[] REQUESTS_SPRINT = new String[ID_COLLABS.size()];
+
     static {
         int i = 0;
         for (String s : ID_COLLABS.keySet()) {
@@ -184,6 +196,10 @@ public class JiraAPI {
             i++;
         }
     }
+
+    /*
+    FIN - Déclaration et définition des variables globales
+     */
 
 
     /*
@@ -210,44 +226,46 @@ public class JiraAPI {
     }
 
     public static Backlog callJiraBacklogAPI() throws UnsupportedEncodingException {
-        Backlog backlog = getProjectBugs(PROJECT_NAME);
-        int [] incidents = getProjectIncident(RUN_PROJECT_NAME, ISSUE_INCIDENT);
-        backlog.setNbIncidents(incidents[0]);
-        backlog.setNbIncidentsLow(incidents[1]);
-        backlog.setNbIncidentsMedium(incidents[2]);
-        backlog.setNbIncidentsHigh(incidents[3]);
-        backlog.setNbIncidentsHighest(incidents[4]);
-        backlog.setNbIncidentsCreated(getCreated(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT));
-        backlog.setNbIncidentsResolved(getResolved(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT));
-        backlog.setNbIncidentsInProgress(getInProgress(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT));
-        backlog.setNbBugsCreated(getCreated(NB_DAYS_BACKLOG, PROJECT_NAME, ISSUE_BUG));
-        backlog.setNbBugsResolved(getResolved(NB_DAYS_BACKLOG, PROJECT_NAME,ISSUE_BUG));
-        backlog.setNbBugsInProgress(getInProgress(NB_DAYS_BACKLOG, PROJECT_NAME,ISSUE_BUG));
-
-
-        return backlog;
+        int[] incidents = getProjectIncidentBug(RUN_PROJECT_NAME, ISSUE_INCIDENT);
+        int[] bugs = getProjectIncidentBug(PROJECT_NAME, ISSUE_BUG);
+        return Backlog.builder()
+                .nbIncidents(incidents[0])
+                .nbIncidentsLow(incidents[1])
+                .nbIncidentsMedium(incidents[2])
+                .nbIncidentsHigh(incidents[3])
+                .nbIncidentsHighest(incidents[4])
+                .nbIncidentsCreated(getCreated(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT))
+                .nbIncidentsResolved(getResolved(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT))
+                .nbIncidentsInProgress(getInProgress(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT))
+                .nbBugs(bugs[0])
+                .nbBugsLow(bugs[1])
+                .nbBugsMedium(bugs[2])
+                .nbBugsHigh(bugs[3])
+                .nbBugsHighest(bugs[4])
+                .nbBugsCreated(getCreated(NB_DAYS_BACKLOG, PROJECT_NAME, ISSUE_BUG))
+                .nbBugsResolved(getResolved(NB_DAYS_BACKLOG, PROJECT_NAME, ISSUE_BUG))
+                .nbBugsInProgress(getInProgress(NB_DAYS_BACKLOG, PROJECT_NAME, ISSUE_BUG))
+                .build();
     }
 
-    public static HashMap<String, Retrospective> callJiraRestrospectiveAPI() {
+    public static HashMap<String, Retrospective> callJiraRetrospectiveAPI() {
         HashMap<String, Retrospective> retrospectives = new HashMap<>();
-        ArrayList<Sprint> sprints = getLastlyClosedSprints(NB_SPRINTS_RETROSPECTIVE);
-        HashMap<String, Team> teams = getTeams(REQUESTS_SPRINT);
-        Sprint[] s = new Sprint[sprints.size()];
-        for (Sprint sprint : sprints) {
-            double[] commitment = getCommitment(sprint, BOARD_ID_ALPHA_SP);
+        ArrayList<SprintCommitment> sprints = getLastlyClosedSprints(NB_SPRINTS_RETROSPECTIVE);
+        SprintCommitment[] s = new SprintCommitment[sprints.size()];
+        int i = 0;
+        for (SprintCommitment sprint : sprints) {
+            double[] commitment = getCommitment(sprint, BOARD_ID_BETA_SP);
             sprint.setInitialCommitment(commitment[0]);
             sprint.setFinalCommitment(commitment[1]);
             sprint.setAddedWork(commitment[2]);
             sprint.setCompletedWork(commitment[3]);
-        }
-        int i = 0;
-        for (Sprint sprint : sprints) {
             s[i] = sprint;
             i++;
         }
-        Retrospective r = new Retrospective();
-        r.setTeamName(teams.get("alpha").getName());
-        r.setSprints(s);
+        Retrospective r = Retrospective.builder()
+                .teamName("alpha")
+                .sprints(s)
+                .build();
         retrospectives.put(r.getTeamName(), r);
         return retrospectives;
     }
@@ -259,231 +277,18 @@ public class JiraAPI {
     DEBUT - Méthodes pour appeler l'API, les services externes et stocker ces données
      */
 
-    /* Main method : Returns in an HashMap all collaborators (+ unassigned) given an array of request containing assignees
-     * accountId
-     */
     public static HashMap<String, Collaborator> getCollaborators(String[] requests) {
         HashMap<String, Collaborator> collaborators = new HashMap<>();
+        Collaborator c;
         for (String request : requests) {
-            /*
-            Variables
-             */
-            int timespent = 0, estimated = 0, remaining = 0;
-            double spTotal = 0;
-            double spAQualifier = 0;
-            double spBacAffinage = 0;
-            double spEnAttente = 0;
-            double spAFaire = 0;
-            double spEnCours = 0;
-            double spAbandonne = 0;
-            double spDevTermine = 0;
-            double spAvalider = 0;
-            double spAlivrer = 0;
-            double spATester = 0;
-            double spRefuseEnRecette = 0;
-            double spValideEnRecette = 0;
-            double spLivre = 0;
-            double spTermine = 0;
-            int ticketsDone = 0;
-            int ticketsInProgress = 0;
-            int ticketsToDo = 0;
-            int ticketsDevDone = 0;
-            int ticketsEnCoursDevTermine = 0;
-            int ticketsAtester = 0;
-            String accountId = "";
-            String emailAddress = "";
-            String nom = "";
-            String prenom = "";
-            JSONObject issue;
-            JSONObject fields;
-            JSONObject status;
-            JSONArray issues;
-            int total;
-            String statut;
-            HttpResponse<JsonNode> response = Unirest.get(request)
-                    .basicAuth(USERNAME, API_TOKEN)
-                    .header("Accept", "application/json")
-                    .asJson();
-            JSONObject myObj = response.getBody().getObject();
-            total = myObj.getInt("total");
-            issues = myObj.getJSONArray(JSON_ISSUES);
-            if (request.contains("null")) {
-                List<Collaborator> collabs = getUnassignedPerTeam();
-                for (Collaborator c : collabs) {
-                    collaborators.put(c.getAccountId(), c);
-                }
+            if ((c = getCollaborator(request)) != null){
+                collaborators.put(c.getAccountId(), c);
             }
-            if (total == 0) {
-                continue;
-            }
-            for (int j = 0; j < issues.length(); j++) {
-                issue = issues.getJSONObject(j);
-                fields = issue.getJSONObject(JSON_FIELDS);
-                status = fields.getJSONObject(JSON_STATUS);
-                // Collaborator information
-                if (request.contains("null")) {
-                    prenom = "Non";
-                    nom = "Assigné";
-                } else {
-                    JSONObject assignee = fields.getJSONObject("assignee");
-                    if (accountId.isEmpty()) {
-                        accountId = assignee.getString("accountId");
-                    }
-                    if (emailAddress.isEmpty() && assignee.has("emailAddress")) {
-                        emailAddress = assignee.getString("emailAddress");
-                        int indexDot = emailAddress.indexOf(".");
-                        int indexAt = emailAddress.indexOf("@");
-                        prenom = emailAddress.substring(0, indexDot);
-                        nom = emailAddress.substring(indexDot + 1, indexAt);
-                    } else if (nom.isEmpty() && prenom.isEmpty()) {
-                        String fullName = assignee.getString("displayName");
-                        int fullNameLength = fullName.length();
-                        int indexSpace = fullName.indexOf(" ");
-                        if (indexSpace < 0) {
-                            prenom = fullName;
-                        } else {
-                            prenom = fullName.substring(0, indexSpace);
-                            nom = fullName.substring(indexSpace + 1, fullNameLength);
-                        }
-                    }
-                }
-                statut = status.getString("name");
-                // Setting Tickets
-                if (DONE.contains(statut)) {
-                    ticketsDone++;
-                } else if (IN_PROGRESS.contains(statut)) {
-                    if (DEV_DONE.contains(statut)) {
-                        ticketsDevDone++;
-                    } else {
-                        ticketsInProgress++;
-                    }
-                } else {
-                    ticketsToDo++;
-                }
-                if (DEV_DONE_EN_COURS.contains(statut)) {
-                    ticketsEnCoursDevTermine++;
-                }
-                if (A_TESTER.contains(statut)) {
-                    ticketsAtester++;
-                }
-                // Setting working time
-                if (!fields.isNull(JSON_KEY_TIMEESTIMATE)) {
-                    remaining += (fields.getInt(JSON_KEY_TIMEESTIMATE) / 3600);
-                }
-                if (!fields.isNull(JSON_KEY_TIMEORIGINALESTIMATE)) {
-                    estimated += (fields.getInt(JSON_KEY_TIMEORIGINALESTIMATE) / 3600);
-                }
-                if (!fields.isNull(JSON_KEY_TIMESPENT)) {
-                    timespent += (fields.getInt(JSON_KEY_TIMESPENT) / 3600);
-                }
-
-                //Attribution des story points
-                if (!fields.isNull(JSON_KEY_STORYPOINTS)) {
-                    double curStoryPoints = fields.getDouble(JSON_KEY_STORYPOINTS);
-                    switch (statut) {
-                        case "A qualifier":
-                            spTotal += curStoryPoints;
-                            spAQualifier += curStoryPoints;
-                            break;
-                        case "Bac d'affinage":
-                            spTotal += curStoryPoints;
-                            spBacAffinage += curStoryPoints;
-                            break;
-                        case "En attente":
-                            spTotal += curStoryPoints;
-                            spEnAttente += curStoryPoints;
-                            break;
-                        case "A Faire":
-                            spTotal += curStoryPoints;
-                            spAFaire += curStoryPoints;
-                            break;
-                        case "En cours":
-                            spTotal += curStoryPoints;
-                            spEnCours += curStoryPoints;
-                            break;
-                        case "Abandonné":
-                            spTotal += curStoryPoints;
-                            spAbandonne += curStoryPoints;
-                            break;
-                        case "Dév terminé":
-                            spTotal += curStoryPoints;
-                            spDevTermine += curStoryPoints;
-                            break;
-                        case "A valider":
-                            spTotal += curStoryPoints;
-                            spAvalider += curStoryPoints;
-                            break;
-                        case "A Livrer":
-                            spTotal += curStoryPoints;
-                            spAlivrer += curStoryPoints;
-                            break;
-                        case "A tester":
-                            spTotal += curStoryPoints;
-                            spATester += curStoryPoints;
-                            break;
-                        case "Refusé en recette":
-                            spTotal += curStoryPoints;
-                            spRefuseEnRecette += curStoryPoints;
-                            break;
-                        case "Validé en recette":
-                            spTotal += curStoryPoints;
-                            spValideEnRecette += curStoryPoints;
-                            break;
-                        case "Livré":
-                            spTotal += curStoryPoints;
-                            spLivre += curStoryPoints;
-                            break;
-                        case "Terminé":
-                            spTotal += curStoryPoints;
-                            spTermine += curStoryPoints;
-                            break;
-                        default:
-                            spTotal += curStoryPoints;
-                    }
-                }
-            }
-            //Attribution du role
-            String role = ID_COLLABS.get(accountId);
-
-            //Création d'un objet Collaborateur
-            Collaborator c = Collaborator.builder()
-                    .accountId(accountId)
-                    .emailAddress(emailAddress)
-                    .name(nom)
-                    .firstName(prenom)
-                    .role(role)
-                    .loggedTime(timespent)
-                    .estimatedTime(estimated)
-                    .remainingTime(remaining)
-                    .nbTickets(total)
-                    .nbDone(ticketsDone)
-                    .nbDevDone(ticketsDevDone)
-                    .nbInProgress(ticketsInProgress)
-                    .nbToDo(ticketsToDo)
-                    .nbATester(ticketsAtester)
-                    .nbEnCoursDevTermine(ticketsEnCoursDevTermine)
-                    .spTotal(spTotal)
-                    .spAqualifier(spAQualifier)
-                    .spBacAffinage(spBacAffinage)
-                    .spEnAttente(spEnAttente)
-                    .spAfaire(spAFaire)
-                    .spEncours(spEnCours)
-                    .spAbandonne(spAbandonne)
-                    .spDevTermine(spDevTermine)
-                    .spAvalider(spAvalider)
-                    .spAlivrer(spAlivrer)
-                    .spATester(spATester)
-                    .spRefuseEnRecette(spRefuseEnRecette)
-                    .spValideEnRecette(spValideEnRecette)
-                    .spLivre(spLivre)
-                    .spTermine(spTermine)
-                    .build();
-            collaborators.put(c.getAccountId(), c);
         }
         HashMap<String, Float[]> planning = getPlanning(PLANNING_PATH);
         for (String s : planning.keySet()) {
             if (collaborators.containsKey(s)) {
-                Collaborator c = collaborators.get(s);
+                c = collaborators.get(s);
                 c.setTotalWorkingTime(planning.get(s)[0]);
                 c.setAvailableTime(planning.get(s)[1]);
                 collaborators.put(s, c);
@@ -492,175 +297,392 @@ public class JiraAPI {
         return collaborators;
     }
 
+    /* Main method : Returns a collaborator if it has at least one ticket
+     * else return null
+     */
+    public static Collaborator getCollaborator(String request) {
+            /*
+            Variables
+             */
+        int timespent = 0, estimated = 0, remaining = 0;
+        double spTotal = 0;
+        double spAQualifier = 0;
+        double spBacAffinage = 0;
+        double spEnAttente = 0;
+        double spAFaire = 0;
+        double spEnCours = 0;
+        double spAbandonne = 0;
+        double spDevTermine = 0;
+        double spAvalider = 0;
+        double spAlivrer = 0;
+        double spATester = 0;
+        double spRefuseEnRecette = 0;
+        double spValideEnRecette = 0;
+        double spLivre = 0;
+        double spTermine = 0;
+        int ticketsDone = 0;
+        int ticketsInProgress = 0;
+        int ticketsToDo = 0;
+        int ticketsDevDone = 0;
+        int ticketsEnCoursDevTermine = 0;
+        int ticketsAtester = 0;
+        String accountId = "";
+        String emailAddress = "";
+        String nom = "";
+        String prenom = "";
+        JSONObject issue;
+        JSONObject fields;
+        JSONObject status;
+        JSONArray issues;
+        int total;
+        String statut;
+        HttpResponse<JsonNode> response = Unirest.get(request)
+                .basicAuth(USERNAME, API_TOKEN)
+                .header("Accept", "application/json")
+                .asJson();
+        JSONObject myObj = response.getBody().getObject();
+        total = myObj.getInt("total");
+        issues = myObj.getJSONArray(JSON_ISSUES);
+        if (total == 0) {
+            return null;
+        }
+        for (int j = 0; j < issues.length(); j++) {
+            issue = issues.getJSONObject(j);
+            fields = issue.getJSONObject(JSON_FIELDS);
+            status = fields.getJSONObject(JSON_STATUS);
+            // Collaborator information
+            if (request.contains("null")) {
+                prenom = "Non";
+                nom = "Assigné";
+            } else {
+                JSONObject assignee = fields.getJSONObject("assignee");
+                if (accountId.isEmpty()) {
+                    accountId = assignee.getString("accountId");
+                }
+                if (emailAddress.isEmpty() && assignee.has("emailAddress")) {
+                    emailAddress = assignee.getString("emailAddress");
+                    int indexDot = emailAddress.indexOf(".");
+                    int indexAt = emailAddress.indexOf("@");
+                    prenom = emailAddress.substring(0, indexDot);
+                    nom = emailAddress.substring(indexDot + 1, indexAt);
+                } else if (nom.isEmpty() && prenom.isEmpty()) {
+                    String fullName = assignee.getString("displayName");
+                    int fullNameLength = fullName.length();
+                    int indexSpace = fullName.indexOf(" ");
+                    if (indexSpace < 0) {
+                        prenom = fullName;
+                    } else {
+                        prenom = fullName.substring(0, indexSpace);
+                        nom = fullName.substring(indexSpace + 1, fullNameLength);
+                    }
+                }
+            }
+            statut = status.getString("name");
+            // Setting Tickets
+            if (DONE.contains(statut)) {
+                ticketsDone++;
+            } else if (IN_PROGRESS.contains(statut)) {
+                if (DEV_DONE.contains(statut)) {
+                    ticketsDevDone++;
+                } else {
+                    ticketsInProgress++;
+                }
+            } else {
+                ticketsToDo++;
+            }
+            if (DEV_DONE_EN_COURS.contains(statut)) {
+                ticketsEnCoursDevTermine++;
+            }
+            if (A_TESTER.contains(statut)) {
+                ticketsAtester++;
+            }
+            // Setting working time
+            if (!fields.isNull(JSON_KEY_TIMEESTIMATE)) {
+                remaining += (fields.getInt(JSON_KEY_TIMEESTIMATE) / 3600);
+            }
+            if (!fields.isNull(JSON_KEY_TIMEORIGINALESTIMATE)) {
+                estimated += (fields.getInt(JSON_KEY_TIMEORIGINALESTIMATE) / 3600);
+            }
+            if (!fields.isNull(JSON_KEY_TIMESPENT)) {
+                timespent += (fields.getInt(JSON_KEY_TIMESPENT) / 3600);
+            }
+
+            //Attribution des story points
+            if (!fields.isNull(JSON_KEY_STORYPOINTS)) {
+                double curStoryPoints = fields.getDouble(JSON_KEY_STORYPOINTS);
+                spTotal += curStoryPoints;
+                switch (statut) {
+                    case "A qualifier":
+                        spAQualifier += curStoryPoints;
+                        break;
+                    case "Bac d'affinage":
+                        spBacAffinage += curStoryPoints;
+                        break;
+                    case EN_ATTENTE:
+                        spEnAttente += curStoryPoints;
+                        break;
+                    case "A Faire":
+                        spAFaire += curStoryPoints;
+                        break;
+                    case EN_COURS:
+                        spEnCours += curStoryPoints;
+                        break;
+                    case ABANDONNE:
+                        spAbandonne += curStoryPoints;
+                        break;
+                    case DEV_TERMINE:
+                        spDevTermine += curStoryPoints;
+                        break;
+                    case A_VALIDER:
+                        spAvalider += curStoryPoints;
+                        break;
+                    case A_LIVRER:
+                        spAlivrer += curStoryPoints;
+                        break;
+                    case A_TESTER:
+                        spATester += curStoryPoints;
+                        break;
+                    case REFUSE_RECETTE:
+                        spRefuseEnRecette += curStoryPoints;
+                        break;
+                    case VALIDE_RECETTE:
+                        spValideEnRecette += curStoryPoints;
+                        break;
+                    case LIVRE:
+                        spLivre += curStoryPoints;
+                        break;
+                    case TERMINE:
+                        spTermine += curStoryPoints;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        //Attribution du role
+        String role = ID_COLLABS.get(accountId);
+
+        //Création d'un objet Collaborateur
+        return Collaborator.builder()
+                .accountId(accountId)
+                .emailAddress(emailAddress)
+                .name(nom)
+                .firstName(prenom)
+                .role(role)
+                .loggedTime(timespent)
+                .estimatedTime(estimated)
+                .remainingTime(remaining)
+                .nbTickets(total)
+                .nbDone(ticketsDone)
+                .nbDevDone(ticketsDevDone)
+                .nbInProgress(ticketsInProgress)
+                .nbToDo(ticketsToDo)
+                .nbATester(ticketsAtester)
+                .nbEnCoursDevTermine(ticketsEnCoursDevTermine)
+                .spTotal(spTotal)
+                .spAqualifier(spAQualifier)
+                .spBacAffinage(spBacAffinage)
+                .spEnAttente(spEnAttente)
+                .spAfaire(spAFaire)
+                .spEncours(spEnCours)
+                .spAbandonne(spAbandonne)
+                .spDevTermine(spDevTermine)
+                .spAvalider(spAvalider)
+                .spAlivrer(spAlivrer)
+                .spATester(spATester)
+                .spRefuseEnRecette(spRefuseEnRecette)
+                .spValideEnRecette(spValideEnRecette)
+                .spLivre(spLivre)
+                .spTermine(spTermine)
+                .build();
+    }
+
     /* Creates Collaborator objects for unassigned assignee (assignee=null)
      * for each team (A MAJ, PAS OPTI)
      */
-    /* Creates Collaborator objects for unassigned assignee (assignee=null)
-     * for each team (A MAJ, PAS OPTI)
-     */
-    public static List<Collaborator> getUnassignedPerTeam() {
-        List<Collaborator> collaborators = new ArrayList<>();
+    public static Collaborator getUnassignedPerTeam(String unassignedAccountId, String label) {
         String request = JIRA_API_URL + "search?jql=project=" + PROJECT_NAME + "+AND+assignee=null+AND+sprint=" +
                 SPRINT_NAME + "&maxResults=" + MAX_RESULTS;
-        //0 : alpha , 1: beta, 2: gamma
-        int[] timespent = new int[3];
-        int[] estimated = new int[3];
-        int[] remaining = new int[3];
-        double[] spTotal = new double[3];
-        int[] ticketsDone = new int[3];
-        int[] ticketsDevDone = new int[3];
-        int[] ticketsInProgress = new int[3];
-        int[] ticketsToDo = new int[3];
-        String[] accountId = new String[3];
-        String[] prenom = new String[3];
-        String[] nom = new String[3];
+        int timespent = 0, estimated = 0, remaining = 0;
+        double spTotal = 0;
+        double spAQualifier = 0;
+        double spBacAffinage = 0;
+        double spEnAttente = 0;
+        double spAFaire = 0;
+        double spEnCours = 0;
+        double spAbandonne = 0;
+        double spDevTermine = 0;
+        double spAvalider = 0;
+        double spAlivrer = 0;
+        double spATester = 0;
+        double spRefuseEnRecette = 0;
+        double spValideEnRecette = 0;
+        double spLivre = 0;
+        double spTermine = 0;
+        int ticketsDone = 0;
+        int ticketsInProgress = 0;
+        int ticketsToDo = 0;
+        int ticketsDevDone = 0;
+        int ticketsEnCoursDevTermine = 0;
+        int ticketsAtester = 0;
+        String accountId = "";
+        String emailAddress = "";
+        String nom = "";
+        String prenom = "";
+        JSONObject issue;
+        JSONObject fields;
+        JSONObject status;
+        int total;
+        String statut;
         HttpResponse<JsonNode> response = Unirest.get(request)
                 .basicAuth(USERNAME, API_TOKEN)
                 .header("Accept", "application/json")
                 .asJson();
         JSONObject myObj = response.getBody().getObject();
         JSONArray issues = myObj.getJSONArray("issues");
+        total = myObj.getInt("total");
         for (int i = 0; i < issues.length(); i++) {
-            JSONObject issue = issues.getJSONObject(i);
-            JSONObject fields = issue.getJSONObject("fields");
-            JSONObject status = fields.getJSONObject("status");
+            issue = issues.getJSONObject(i);
+            fields = issue.getJSONObject("fields");
+            status = fields.getJSONObject("status");
             JSONArray labels = fields.getJSONArray("labels");
             for (int j = 0; j < labels.length(); j++) {
-                if (labels.getString(j).contains("ALPHA")) {
-                    accountId[0] = "unassignedAlpha";
-                    prenom[0] = "Non";
-                    nom[0] = "Assigné (Alpha)";
-                    //Renseignements sur le statut de la demande
-                    String statut = status.getString("name");
-                    //Répartition des tickets
+                if (labels.getString(j).toLowerCase().contains(label.toLowerCase())) {
+                    accountId = unassignedAccountId;
+                    prenom = "Non";
+                    nom = "Assigné (" + label + ")";
+                    statut = status.getString("name");
+                    // Setting Tickets
                     if (DONE.contains(statut)) {
-                        ticketsDone[0]++;
+                        ticketsDone++;
                     } else if (IN_PROGRESS.contains(statut)) {
                         if (DEV_DONE.contains(statut)) {
-                            ticketsDevDone[0]++;
+                            ticketsDevDone++;
                         } else {
-                            ticketsInProgress[0]++;
+                            ticketsInProgress++;
                         }
                     } else {
-                        ticketsToDo[0]++;
+                        ticketsToDo++;
                     }
-                    //Attribution du temps de travail
+                    if (DEV_DONE_EN_COURS.contains(statut)) {
+                        ticketsEnCoursDevTermine++;
+                    }
+                    if (A_TESTER.contains(statut)) {
+                        ticketsAtester++;
+                    }
+                    // Setting working time
+                    if (!fields.isNull(JSON_KEY_TIMEESTIMATE)) {
+                        remaining += (fields.getInt(JSON_KEY_TIMEESTIMATE) / 3600);
+                    }
+                    if (!fields.isNull(JSON_KEY_TIMEORIGINALESTIMATE)) {
+                        estimated += (fields.getInt(JSON_KEY_TIMEORIGINALESTIMATE) / 3600);
+                    }
+                    if (!fields.isNull(JSON_KEY_TIMESPENT)) {
+                        timespent += (fields.getInt(JSON_KEY_TIMESPENT) / 3600);
+                    }
 
-                    if (!fields.isNull("timeestimate")) {
-                        remaining[0] += (fields.getInt("timeestimate") / 3600);
-                    }
-                    if (!fields.isNull("timeoriginalestimate")) {
-                        estimated[0] += (fields.getInt("timeoriginalestimate") / 3600);
-                    }
-                    if (!fields.isNull("aggregatetimespent")) {
-                        timespent[0] += (fields.getInt("aggregatetimespent") / 3600);
-                    }
                     //Attribution des story points
-                    if (!fields.isNull("customfield_10005")) {
-                        double curStoryPoints = fields.getDouble("customfield_10005");
-                        spTotal[0] += curStoryPoints;
-                    }
-
-                }
-                if (labels.getString(j).contains("BETA")) {
-                    accountId[1] = "unassignedBeta";
-                    prenom[1] = "Non";
-                    nom[1] = "Assigné (Beta)";
-                    //Renseignements sur le statut de la demande
-                    String statut = status.getString("name");
-                    //Répartition des tickets
-                    if (DONE.contains(statut)) {
-                        ticketsDone[1]++;
-                    } else if (IN_PROGRESS.contains(statut)) {
-                        if (DEV_DONE.contains(statut)) {
-                            ticketsDevDone[1]++;
-                        } else {
-                            ticketsInProgress[1]++;
+                    if (!fields.isNull(JSON_KEY_STORYPOINTS)) {
+                        double curStoryPoints = fields.getDouble(JSON_KEY_STORYPOINTS);
+                        spTotal += curStoryPoints;
+                        switch (statut) {
+                            case "A qualifier":
+                                spAQualifier += curStoryPoints;
+                                break;
+                            case "Bac d'affinage":
+                                spBacAffinage += curStoryPoints;
+                                break;
+                            case EN_ATTENTE:
+                                spEnAttente += curStoryPoints;
+                                break;
+                            case "A Faire":
+                                spAFaire += curStoryPoints;
+                                break;
+                            case EN_COURS:
+                                spEnCours += curStoryPoints;
+                                break;
+                            case ABANDONNE:
+                                spAbandonne += curStoryPoints;
+                                break;
+                            case DEV_TERMINE:
+                                spDevTermine += curStoryPoints;
+                                break;
+                            case A_VALIDER:
+                                spAvalider += curStoryPoints;
+                                break;
+                            case A_LIVRER:
+                                spAlivrer += curStoryPoints;
+                                break;
+                            case A_TESTER:
+                                spATester += curStoryPoints;
+                                break;
+                            case REFUSE_RECETTE:
+                                spRefuseEnRecette += curStoryPoints;
+                                break;
+                            case VALIDE_RECETTE:
+                                spValideEnRecette += curStoryPoints;
+                                break;
+                            case LIVRE:
+                                spLivre += curStoryPoints;
+                                break;
+                            case TERMINE:
+                                spTermine += curStoryPoints;
+                                break;
+                            default:
+                                break;
                         }
-                    } else {
-                        ticketsToDo[1]++;
                     }
-                    //Attribution du temps de travail
-
-                    if (!fields.isNull("timeestimate")) {
-                        remaining[1] += (fields.getInt("timeestimate") / 3600);
-                    }
-                    if (!fields.isNull("timeoriginalestimate")) {
-                        estimated[1] += (fields.getInt("timeoriginalestimate") / 3600);
-                    }
-                    if (!fields.isNull("aggregatetimespent")) {
-                        timespent[1] += (fields.getInt("aggregatetimespent") / 3600);
-                    }
-                    //Attribution des story points
-                    if (!fields.isNull("customfield_10005")) {
-                        double curStoryPoints = fields.getDouble("customfield_10005");
-                        spTotal[1] += curStoryPoints;
-                    }
-                }
-                if (labels.getString(j).contains("GAMMA") || labels.getString(j).contains("GAMA")) {
-                    accountId[2] = "unassignedGamma";
-                    prenom[2] = "Non";
-                    nom[2] = "Assigné (Gamma)";
-                    //Renseignements sur le statut de la demande
-                    String statut = status.getString("name");
-                    //Répartition des tickets
-                    if (DONE.contains(statut)) {
-                        ticketsDone[2]++;
-                    } else if (IN_PROGRESS.contains(statut)) {
-                        if (DEV_DONE.contains(statut)) {
-                            ticketsDevDone[2]++;
-                        } else {
-                            ticketsInProgress[2]++;
-                        }
-                    } else {
-                        ticketsToDo[2]++;
-                    }
-                    //Attribution du temps de travail
-
-                    if (!fields.isNull("timeestimate")) {
-                        remaining[2] += (fields.getInt("timeestimate") / 3600);
-                    }
-                    if (!fields.isNull("timeoriginalestimate")) {
-                        estimated[2] += (fields.getInt("timeoriginalestimate") / 3600);
-                    }
-                    if (!fields.isNull("aggregatetimespent")) {
-                        timespent[2] += (fields.getInt("aggregatetimespent") / 3600);
-                    }
-                    //Attribution des story points
-                    if (!fields.isNull("customfield_10005")) {
-                        double curStoryPoints = fields.getDouble("customfield_10005");
-                        spTotal[2] += curStoryPoints;
-                    }
+                    break;
                 }
             }
         }
-        for (int i = 0; i < 3; i++) {
-            int totalTickets = ticketsDone[i] + ticketsInProgress[i] + ticketsToDo[i];
-            Collaborator c = Collaborator.builder()
-                    .accountId(accountId[i])
-                    .name(nom[i])
-                    .firstName(prenom[i])
-                    .loggedTime(timespent[i])
-                    .estimatedTime(estimated[i])
-                    .nbTickets(totalTickets)
-                    .nbDone(ticketsDone[i])
-                    .nbDevDone(ticketsDevDone[i])
-                    .nbInProgress(ticketsInProgress[i])
-                    .nbToDo(ticketsToDo[i])
-                    .remainingTime(remaining[i])
-                    .spTotal(spTotal[i])
-                    .build();
-            collaborators.add(c);
-        }
-        return collaborators;
+        //Création d'un objet Collaborateur
+        return Collaborator.builder()
+                .accountId(accountId)
+                .emailAddress(emailAddress)
+                .name(nom)
+                .firstName(prenom)
+                .loggedTime(timespent)
+                .estimatedTime(estimated)
+                .remainingTime(remaining)
+                .nbTickets(total)
+                .nbDone(ticketsDone)
+                .nbDevDone(ticketsDevDone)
+                .nbInProgress(ticketsInProgress)
+                .nbToDo(ticketsToDo)
+                .nbATester(ticketsAtester)
+                .nbEnCoursDevTermine(ticketsEnCoursDevTermine)
+                .spTotal(spTotal)
+                .role("none")
+                .spAqualifier(spAQualifier)
+                .spBacAffinage(spBacAffinage)
+                .spEnAttente(spEnAttente)
+                .spAfaire(spAFaire)
+                .spEncours(spEnCours)
+                .spAbandonne(spAbandonne)
+                .spDevTermine(spDevTermine)
+                .spAvalider(spAvalider)
+                .spAlivrer(spAlivrer)
+                .spATester(spATester)
+                .spRefuseEnRecette(spRefuseEnRecette)
+                .spValideEnRecette(spValideEnRecette)
+                .spLivre(spLivre)
+                .spTermine(spTermine)
+                .build();
     }
-
 
     /* Call getCollaborator() and assign each collaborator to its team
      * returning a HashMap of size nbTeams
      */
     public static HashMap<String, Team> getTeams(String[] requests) {
         HashMap<String, Collaborator> collaborators = getCollaborators(requests);
+        Collaborator uAlpha = getUnassignedPerTeam(UNASSIGNED_ALPHA, TEAM_NAME_ALPHA);
+        Collaborator uBeta = getUnassignedPerTeam(UNASSIGNED_BETA, TEAM_NAME_BETA);
+        Collaborator uGamma = getUnassignedPerTeam(UNASSIGNED_GAMMA, TEAM_NAME_GAMMA);
+        collaborators.put(uAlpha.getAccountId(), uAlpha);
+        collaborators.put(uBeta.getAccountId(), uBeta);
+        collaborators.put(uGamma.getAccountId(), uGamma);
+
         HashMap<String, Team> teams = new HashMap<>();
         List<Collaborator> collaboratorsAlpha = new ArrayList<>();
         List<Collaborator> collaboratorsBeta = new ArrayList<>();
@@ -674,102 +696,33 @@ public class JiraAPI {
                 collaboratorsGamma.add(c);
             }
         }
-        Team alpha = new Team("alpha", collaboratorsAlpha);
-        Team beta = new Team("beta", collaboratorsBeta);
-        Team gamma = new Team("gamma", collaboratorsGamma);
+        Team alpha = Team.builder()
+                .name("alpha")
+                .collaborators(collaboratorsAlpha)
+                .build();
+        Team beta = Team.builder()
+                .name("beta")
+                .collaborators(collaboratorsBeta)
+                .build();
+        Team gamma = Team.builder()
+                .name("gamma")
+                .collaborators(collaboratorsGamma)
+                .build();
         teams.put(alpha.getName(), alpha);
         teams.put(beta.getName(), beta);
         teams.put(gamma.getName(), gamma);
         return teams;
     }
 
-    /* Returns a backlog object containing information on bugs since project's creation (number and priority)
+    /* Returns an array of integer containing information on bugs/incidents since project's creation (number and priority)
      * A bug is active when NOT in following jira states : Terminé, Livré
      */
-    public static Backlog getProjectBugs(String projectName) {
-        /*
-        Variables
-         */
-        Backlog backlog = new Backlog();
-        int nbBugs = 0;
-        int nbBugsLow = 0;
-        int nbBugsMedium = 0;
-        int nbBugsHigh = 0;
-        int nbBugsHighest = 0;
-        int startAt = 0;
-        JSONObject myObj;
-        JSONArray issues;
-        JSONObject issue;
-        JSONObject fields;
-        JSONObject priority;
-        JSONObject status;
-        String statut;
-        String request = JIRA_API_URL + "search?jql=project=" + projectName +
-                "+AND+issuetype='Bug'" + "&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
-
-        /*
-        Logic
-         */
-        HttpResponse<JsonNode> response = Unirest.get(request)
-                .basicAuth(USERNAME, API_TOKEN)
-                .header("Accept", "application/json")
-                .asJson();
-        myObj = response.getBody().getObject();
-        issues = myObj.getJSONArray(JSON_ISSUES);
-        int total = myObj.getInt("total");
-        while (startAt < total) {
-            for (int j = 0; j < issues.length(); j++) {
-                //Ensemble des objets JSON utiles
-                issue = issues.getJSONObject(j);
-                fields = issue.getJSONObject(JSON_FIELDS);
-                priority = fields.getJSONObject(JSON_PRIORITY);
-                status = fields.getJSONObject(JSON_STATUS);
-                statut = status.getString("name");
-                if (!DONE_BUGS.contains(statut)) {
-                    nbBugs++;
-                    switch (priority.getString("name")) {
-                        case "Low":
-                            nbBugsLow++;
-                            break;
-                        case "Medium":
-                            nbBugsMedium++;
-                            break;
-                        case "High":
-                            nbBugsHigh++;
-                            break;
-                        case "Highest":
-                            nbBugsHighest++;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-            }
-            startAt += MAX_RESULTS;
-            request = JIRA_API_URL + "search?jql=project=" + projectName +
-                    "+AND+issuetype='Bug'" + "&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
-            response = Unirest.get(request)
-                    .basicAuth(USERNAME, API_TOKEN)
-                    .header("Accept", "application/json")
-                    .asJson();
-            myObj = response.getBody().getObject();
-            issues = myObj.getJSONArray("issues");
-        }
-        backlog.setProjectName(projectName);
-        backlog.setNbBugs(nbBugs);
-        backlog.setNbBugsLow(nbBugsLow);
-        backlog.setNbBugsMedium(nbBugsMedium);
-        backlog.setNbBugsHigh(nbBugsHigh);
-        backlog.setNbBugsHighest(nbBugsHighest);
-        return backlog;
-    }
-    public static int[] getProjectIncident(String projectName, String issueType){
+    public static int[] getProjectIncidentBug(String projectName, String issueType) {
         /*
         Variables
          */
         // 0 : total, 1: low, 2: medium, 3: high, 4: highest
-        int[] incidents = new int[5];
+        int[] incidentsBugs = new int[5];
         int startAt = 0;
         JSONObject myObj;
         JSONArray issues;
@@ -799,19 +752,19 @@ public class JiraAPI {
                 status = fields.getJSONObject(JSON_STATUS);
                 statut = status.getString("name");
                 if (!DONE_BUGS.contains(statut)) {
-                    incidents[0]++;
+                    incidentsBugs[0]++;
                     switch (priority.getString("name")) {
                         case "Low":
-                            incidents[1]++;
+                            incidentsBugs[1]++;
                             break;
                         case "Medium":
-                            incidents[2]++;
+                            incidentsBugs[2]++;
                             break;
                         case "High":
-                            incidents[3]++;
+                            incidentsBugs[3]++;
                             break;
                         case "Highest":
-                            incidents[4]++;
+                            incidentsBugs[4]++;
                             break;
                         default:
                             break;
@@ -821,7 +774,7 @@ public class JiraAPI {
             }
             startAt += MAX_RESULTS;
             request = JIRA_API_URL + "search?jql=project=" + projectName +
-                    "+AND+issuetype='Bug'" + "&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+                    "+AND+issuetype='" + issueType + "'&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
             response = Unirest.get(request)
                     .basicAuth(USERNAME, API_TOKEN)
                     .header("Accept", "application/json")
@@ -829,7 +782,7 @@ public class JiraAPI {
             myObj = response.getBody().getObject();
             issues = myObj.getJSONArray("issues");
         }
-        return incidents;
+        return incidentsBugs;
     }
 
     /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug/incident created
@@ -898,7 +851,7 @@ public class JiraAPI {
         LocalDate ldtBug;
         int days;
         String today = LocalDateTime.now().format(dtfLocalDate);
-        String request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType+ "'+AND+updated" +
+        String request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+updated" +
                 URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
         JSONObject myObj;
         JSONArray issues;
@@ -1004,13 +957,11 @@ public class JiraAPI {
 
     /* Returns an array of size (nbSprints) of the lastly closed sprints including the lastly active sprint
      */
-    public static ArrayList<Sprint> getLastlyClosedSprints(int nbSprints) {
+    public static ArrayList<SprintCommitment> getLastlyClosedSprints(int nbSprints) {
         /*
         Variables
          */
-        ArrayList<Sprint> sprints = new ArrayList<>(nbSprints);
-        String startDate;
-        String endDate;
+        ArrayList<SprintCommitment> sprints = new ArrayList<>(nbSprints);
         String sprintName;
         int sprintId;
         JSONObject myObj;
@@ -1030,7 +981,7 @@ public class JiraAPI {
         values = myObj.getJSONArray("values");
         for (int i = 0; i < values.length(); i++) {
             value = values.getJSONObject(i);
-            if (value.getString("state").equals("closed") && value.getString("name").equals("Sprint 30")) {
+            if (value.getString("state").equals("active")) {
                 lastlyActiveSprintIndex = i;
             }
         }
@@ -1038,14 +989,11 @@ public class JiraAPI {
         while (i < nbSprints) {
             value = values.getJSONObject(lastlyActiveSprintIndex - i);
             sprintName = value.getString("name");
-            startDate = value.getString("startDate");
-            endDate = value.getString("endDate");
             sprintId = parseInt(value.getString("id"));
-            Sprint s = new Sprint();
-            s.setName(sprintName);
-            s.setId(sprintId);
-            s.setStartDate(Sprint.toLocalDateTime(startDate));
-            s.setEndDate(Sprint.toLocalDateTime(endDate));
+            SprintCommitment s = SprintCommitment.builder()
+                    .name(sprintName)
+                    .id(sprintId)
+                    .build();
             sprints.add(s);
             i++;
         }
@@ -1058,7 +1006,7 @@ public class JiraAPI {
      * 2: addedWork
      * 3: completedWork
      */
-    public static double[] getCommitment(Sprint s, String boardId) {
+    public static double[] getCommitment(SprintCommitment s, String boardId) {
         /*
         Variables
          */
@@ -1184,10 +1132,10 @@ public class JiraAPI {
             }
             dates = csvReader.readNext();
             for (int i = 0; i < dates.length; i++) {
-                if (START_DAY_SPRINT.equals(dates[i])) {
+                if (SPRINT_ACTIF.getStartDate().format(dtf).equals(dates[i])) {
                     startIndex = i;
                 }
-                if (END_DAY_SPRINT.equals(dates[i])) {
+                if (SPRINT_ACTIF.getEndDate().format(dtf).equals(dates[i])) {
                     endIndex = i;
                 }
                 if (TODAY.equals(dates[i])) {

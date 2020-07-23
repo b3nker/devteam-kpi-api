@@ -1,24 +1,11 @@
 package com.jiraReportTest.jiraReportTest.Model;
 
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
 public class Retrospective{
     private String teamName;
-    private Sprint[] sprints;
-
-    public Retrospective() {}
-
-    public String getTeamName() {
-        return teamName;
-    }
-
-    public void setTeamName(String teamName) {
-        this.teamName = teamName;
-    }
-
-    public Sprint[] getSprints() {
-        return sprints;
-    }
-
-    public void setSprints(Sprint[] sprints) {
-        this.sprints = sprints;
-    }
+    private SprintCommitment[] sprints;
 }
