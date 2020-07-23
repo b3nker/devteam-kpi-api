@@ -1,7 +1,8 @@
 package com.jiraReportTest.jiraReportTest.Dao;
 
+import com.jiraReportTest.jiraReportTest.Dao.API.API;
+import com.jiraReportTest.jiraReportTest.Dao.API.JiraAPI;
 import com.jiraReportTest.jiraReportTest.Model.Backlog;
-import com.jiraReportTest.jiraReportTest.Model.Sprint;
 import org.springframework.stereotype.Repository;
 
 import java.io.UnsupportedEncodingException;
@@ -12,7 +13,7 @@ public class BacklogDao {
 
     static{
         try {
-            backlog = JiraAPI.callJiraBacklogAPI();
+            backlog = API.callJiraBacklogAPI();
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }

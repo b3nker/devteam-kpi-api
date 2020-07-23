@@ -1,17 +1,16 @@
 package com.jiraReportTest.jiraReportTest.Dao;
 
+import com.jiraReportTest.jiraReportTest.Dao.API.API;
+import com.jiraReportTest.jiraReportTest.Dao.API.JiraAPI;
 import com.jiraReportTest.jiraReportTest.Model.Sprint;
-import com.jiraReportTest.jiraReportTest.Model.Team;
 import org.springframework.stereotype.Repository;
-
-import java.util.HashMap;
 
 @Repository
 public class SprintDao {
     private static Sprint sprint;
 
     static{
-        sprint = JiraAPI.callJiraSprintAPI();
+        sprint = API.callJiraSprintAPI();
 
     }
 

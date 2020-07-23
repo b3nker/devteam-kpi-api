@@ -1,5 +1,7 @@
 package com.jiraReportTest.jiraReportTest.Dao;
 
+import com.jiraReportTest.jiraReportTest.Dao.API.API;
+import com.jiraReportTest.jiraReportTest.Dao.API.JiraAPI;
 import com.jiraReportTest.jiraReportTest.Model.Collaborator;
 import org.springframework.stereotype.Repository;
 
@@ -11,24 +13,12 @@ import static org.apache.http.client.methods.RequestBuilder.put;
 public class CollaboratorDao {
 
     private static HashMap<String,Collaborator> collaboratorsSprint;
-    /*
-    private static HashMap<String,Collaborator> collaboratorsWeek;
-     */
-    static{
-        collaboratorsSprint = JiraAPI.callJiraCollabSprintAPI();
-        /*
-        collaboratorsWeek = JiraAPI.callJiraCollabWeekAPI();
 
-         */
+    static{
+        collaboratorsSprint = API.callJiraCollabSprintAPI();
     }
 
     public Collection<Collaborator> getAllCollaboratorsPerSprint(){
         return this.collaboratorsSprint.values();
     }
-    /*
-    public Collection<Collaborator> getAllCollaboratorsPerWeek(){
-        return this.collaboratorsWeek.values();
-    }
-
-     */
 }

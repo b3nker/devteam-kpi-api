@@ -1,4 +1,4 @@
-package com.jiraReportTest.jiraReportTest.Dao;
+package com.jiraReportTest.jiraReportTest.Dao.API;
 
 import com.jiraReportTest.jiraReportTest.Model.*;
 import com.opencsv.CSVParser;
@@ -20,36 +20,14 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import static com.jiraReportTest.jiraReportTest.Dao.API.API.*;
 import static java.lang.Float.parseFloat;
 import static java.lang.Integer.parseInt;
 import static java.time.temporal.ChronoUnit.DAYS;
 
 @Repository
 public class JiraAPI {
-    /*
-    DEBUT - Déclaration et définition des variables globales
-     */
-    final static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yy");
-    final static DateTimeFormatter dtfLocalDate = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    final static String USERNAME = "benjamin.kermani@neo9.fr";
-    final static String API_TOKEN = "sqjFnTAVspNM4NxLd1QZC5CB";
-    final static String PLANNING_PATH = "planning.csv";
-    // Project global variables
-    final static String BOARD_ID = "391";
-    final static String BOARD_ID_ALPHA_SP = "451";
-    final static String BOARD_ID_BETA_SP = "443";
-    final static String PROJECT_NAME = "BMKP";
-    final static String RUN_PROJECT_NAME = "RMKP";
-    final static int MAX_RESULTS = 100;
-    final static int NB_SPRINTS_RETROSPECTIVE = 4;
-    final static int NB_DAYS_BACKLOG = 20;
-    final static String TEAM_NAME_ALPHA = "alpha";
-    final static String TEAM_NAME_BETA = "beta";
-    final static String TEAM_NAME_GAMMA = "gamma";
-    final static ArrayList<String> TEAM_NAMES = new ArrayList<>(Arrays.asList(TEAM_NAME_ALPHA, TEAM_NAME_BETA, TEAM_NAME_GAMMA));
     final static String JIRA_API_URL = "https://apriltechnologies.atlassian.net/rest/api/3/";
-    final static String JIRA_AGILEAPI_URL = "https://apriltechnologies.atlassian.net/rest/agile/1.0/";
-    final static String JIRA_GREENHOPPER_URL = "https://apriltechnologies.atlassian.net/rest/greenhopper/1.0/";
     // JSONObject and JSONArray names in JIRA API's response
     final static String JSON_ISSUES = "issues";
     final static String JSON_FIELDS = "fields";
@@ -60,72 +38,7 @@ public class JiraAPI {
     final static String JSON_KEY_TIMEORIGINALESTIMATE = "timeoriginalestimate";
     final static String JSON_KEY_TIMESPENT = "timespent";
     final static String JSON_KEY_STORYPOINTS = "customfield_10005";
-    // Sprint variables
-    final static Sprint SPRINT_ACTIF = Sprint.builder().build();
-
-    static {
-        String startDate = "";
-        String endDate = "";
-        String sprintName = "";
-        int sprintId = 0;
-        HttpResponse<JsonNode> response = Unirest.get("https://apriltechnologies.atlassian.net/rest/agile/1.0/board/" + BOARD_ID + "/sprint")
-                .basicAuth(USERNAME, API_TOKEN)
-                .header("Accept", "application/json")
-                .asJson();
-        JSONObject myObj = response.getBody().getObject();
-        JSONArray values = myObj.getJSONArray("values");
-        for (int i = 0; i < values.length(); i++) {
-            JSONObject value = values.getJSONObject(i);
-            //Condition à modifier quand il n'y aura qu'un seul sprint actif
-            if (value.getString("state").equals("active")) {
-                sprintName = value.getString("name");
-                startDate = value.getString("startDate");
-                endDate = value.getString("endDate");
-                sprintId = parseInt(value.getString("id"));
-            }
-        }
-        SPRINT_ACTIF.setId(sprintId);
-        SPRINT_ACTIF.setName(sprintName);
-        SPRINT_ACTIF.setStartDate(Sprint.toLocalDateTime(startDate));
-        SPRINT_ACTIF.setEndDate(Sprint.toLocalDateTime(endDate));
-    }
-    final static String UNASSIGNED_ALPHA = "unassignedAlpha";
-    final static String UNASSIGNED_BETA = "unassignedBeta";
-    final static String UNASSIGNED_GAMMA = "unassignedGamma";
-
-    final static String SPRINT_NAME = "'" + SPRINT_ACTIF.getName() + "'";
-    final static String TODAY = LocalDateTime.now().format(dtf);
-    final static String TODAY_LD = LocalDateTime.now().format(dtfLocalDate);
-    final static ArrayList<String> TEAM_ALPHA = new ArrayList<>(Arrays.asList(
-            "5c17b4599f443a65fecae3ca", // Julien Mosset
-            "5a9ebe1c4af2372a88a0656b", // Nicolas Ovejero
-            "5bcd8282607ed038040177bb", // Pape Thiam
-            "5cf921f6b06c540e82580cbd", // Valentin Pierrel
-            "5ed76cdf2fdc580b88f3bbef", // Alex Cheuko
-            "5a9ebdf74af2372a88a06565", // Gabriel Roquigny
-            UNASSIGNED_ALPHA
-
-    ));
-    final static ArrayList<String> TEAM_BETA = new ArrayList<>(Arrays.asList(
-            "5cb45bb34064460e407eabe4", // Guillermo Garcès
-            "5a2181081594706402dee482", // Etienne Bourgouin
-            "5afe92f251d0b7540b43de81", // Malick Diagne
-            "5d6e32e06e3e1f0d9623cb5a", // Pierre Tomasina
-            "5ed64583620b1d0c168d4e36", // Anthony Hernandez
-            "5ef1afd6561e0e0aae904914", // Yong Ma
-            "5e98521a3a8b910c085d6a28", // Kévin Youna
-            UNASSIGNED_BETA
-    ));
-    final static ArrayList<String> TEAM_GAMMA = new ArrayList<>(Arrays.asList(
-            "5e285008ee264b0e74591993", // Eric Coupal
-            "5ed76cc1be03220ab32183be", // Thibault Foucault
-            "557058:87b17037-8a69-4b38-8dab-b4cf904e960a", // Pierre Thevenet
-            "5d9b0573ea65c10c3fdbaab2", // Maxime Fourt
-            "5a8155f0cad06b353733bae8", // Guillaume Coppens
-            "5dfd11b39422830cacaa8a79", // Carthy Marie Joseph
-            UNASSIGNED_GAMMA
-    ));
-    // JIRA STATUS
+    // JIRA STATUS & CUSTOM STATUS
     final static String TERMINE = "Terminé";
     final static String LIVRE = "Livré";
     final static String VALIDE_RECETTE = "Validé en recette";
@@ -138,164 +51,11 @@ public class JiraAPI {
     final static String A_LIVRER = "A Livrer";
     final static String A_TESTER = "A tester";
     final static String A_VALIDER = "A valider";
-    /*To define */
-    final static ArrayList<String> JIRA_DONE = new ArrayList<>(Arrays.asList(ABANDONNE, LIVRE, TERMINE, VALIDE));
-    final static ArrayList<String> JIRA_IN_PROGRESS = new ArrayList<>(Arrays.asList());
     final static ArrayList<String> DONE = new ArrayList<>(Arrays.asList(LIVRE, TERMINE, VALIDE, VALIDE_RECETTE));
     final static ArrayList<String> DONE_BUGS = new ArrayList<>(Arrays.asList(LIVRE, TERMINE, VALIDE_RECETTE, ABANDONNE));
     final static ArrayList<String> IN_PROGRESS = new ArrayList<>(Arrays.asList(EN_COURS, DEV_TERMINE, REFUSE_RECETTE, EN_ATTENTE, A_TESTER, A_LIVRER));
     final static ArrayList<String> DEV_DONE = new ArrayList<>(Arrays.asList(A_TESTER, A_LIVRER));
     final static ArrayList<String> DEV_DONE_EN_COURS = new ArrayList<>(Arrays.asList(DEV_TERMINE, EN_COURS));
-    // JIRA ISSUETYPE
-    final static String ISSUE_BUG = "Bug";
-    final static String ISSUE_INCIDENT = "Incident";
-    final static HashMap<String, String> ID_COLLABS = new HashMap<>();
-
-    static {
-        ID_COLLABS.put("5c17b4599f443a65fecae3ca", "middle lead dev"); // Julien Mosset
-        ID_COLLABS.put("5a9ebe1c4af2372a88a0656b", "front lead dev"); // Nicolas Ovejero
-        ID_COLLABS.put("5bcd8282607ed038040177bb", "middle"); // Pape Thiam
-        ID_COLLABS.put("5cf921f6b06c540e82580cbd", "front"); // Valentin Pierrel
-        ID_COLLABS.put("5ed76cdf2fdc580b88f3bbef", "middle"); // Alex Cheuko
-        ID_COLLABS.put("5ed64583620b1d0c168d4e36", "middle"); // Anthony Hernandez
-        ID_COLLABS.put("5cb45bb34064460e407eabe4", "middle lead dev"); // Guillermo Garcès
-        ID_COLLABS.put("5a9ebdf74af2372a88a06565", "middle lead dev"); // Gabriel Roquigny
-        ID_COLLABS.put("5a2181081594706402dee482", "front lead dev"); // Etienne Bourgouin
-        ID_COLLABS.put("5afe92f251d0b7540b43de81", "middle"); // Malick Diagne
-        ID_COLLABS.put("5e98521a3a8b910c085d6a28", "middle"); // Kévin Youna
-        ID_COLLABS.put("5d6e32e06e3e1f0d9623cb5a", "middle"); // Pierre Tomasina
-        ID_COLLABS.put("5e285008ee264b0e74591993", "middle lead dev"); // Eric Coupal
-        ID_COLLABS.put("5ed76cc1be03220ab32183be", "front lead dev"); // Thibault Foucault
-        ID_COLLABS.put("557058:87b17037-8a69-4b38-8dab-b4cf904e960a", "middle"); // Pierre Thevenet
-        ID_COLLABS.put("5d9b0573ea65c10c3fdbaab2", "middle"); // Maxime Fourt
-        ID_COLLABS.put("5a8155f0cad06b353733bae8", "middle"); // Guillaume Coppens
-        ID_COLLABS.put("5dfd11b39422830cacaa8a79", "front"); // Carthy Marie Joseph
-        ID_COLLABS.put("5ef1afd6561e0e0aae904914", "middle"); // Yong Ma
-        ID_COLLABS.put("5aafb6012235812a6233652d", "scrum"); //Lionel Sjarbi
-        ID_COLLABS.put("5ed754b0f93b230ba59a3d38", "scrum"); // Nicolas Beucler
-        ID_COLLABS.put("557058:1f318bba-6336-4f60-a3b1-67e03a32a3dc", "transverse"); // Kévin Labesse
-        ID_COLLABS.put("5ef5ec9a7e95e80a8126e509", "scrum"); // Pierre-Yves Garic
-        ID_COLLABS.put("5b97bc461b4803467d26fd6e", "transverse"); // Xavier Michel
-        ID_COLLABS.put("5e787dfb2466490c495f2a85", "transverse"); // Maxime Ancellin
-        ID_COLLABS.put("5a96abe5e9dc0033a7af8cfb", "transverse"); // Joël Royer
-        ID_COLLABS.put("5db2f070af604e0db364eb12", "transverse"); // David Boucard Planel
-        ID_COLLABS.put("5a27b9ed466b4a37eec61268", "transverse"); // Pierre Bertin
-        ID_COLLABS.put("557058:d8f506a1-fa47-4681-9ab1-7214a062c264", "transverse"); // Vincent Martin
-        ID_COLLABS.put("557058:834cbf83-d227-4823-bfdf-db62c8672ad1", "transverse"); // Victor Dumesny
-        ID_COLLABS.put("557058:df17bf30-7843-415e-985d-151faba64429", "transverse"); // Philippe Fleur
-        ID_COLLABS.put(null, ""); // unassigned
-    }
-
-    final static String[] REQUESTS_SPRINT = new String[ID_COLLABS.size()];
-
-    static {
-        int i = 0;
-        for (String s : ID_COLLABS.keySet()) {
-            REQUESTS_SPRINT[i] = JIRA_API_URL + "search?jql=project=" + PROJECT_NAME + "+AND+assignee=" + s +
-                    "+AND+sprint=" + SPRINT_NAME + "&maxResults=" + MAX_RESULTS;
-            i++;
-        }
-    }
-
-    /*
-    FIN - Déclaration et définition des variables globales
-     */
-
-
-    /*
-    DEBUT - Méthodes utilisés pour obtenir les informations sur la couche données (DAO)
-     */
-    //Retourne les informations sur le sprint actif
-    public static Sprint callJiraSprintAPI() {
-        HashMap<String, Team> hmTeams = getTeams(REQUESTS_SPRINT);
-        Team[] teams = new Team[hmTeams.size()];
-        int i = 0;
-        for (String s : hmTeams.keySet()) {
-            teams[i] = hmTeams.get(s);
-            i++;
-        }
-        SPRINT_ACTIF.setTeams(teams);
-        SPRINT_ACTIF.setTotalTime(Sprint.durationOfSprint(SPRINT_ACTIF.getStartDate(), SPRINT_ACTIF.getEndDate()));
-        SPRINT_ACTIF.setTimeLeft(Sprint.timeLeftOnSprint(SPRINT_ACTIF.getEndDate()));
-        return SPRINT_ACTIF;
-    }
-
-    //Retourne la liste des collaborateurs en prenant en compte les tickets sur le sprint actif
-    public static HashMap<String, Collaborator> callJiraCollabSprintAPI() {
-        return getCollaborators(REQUESTS_SPRINT);
-    }
-
-    public static Backlog callJiraBacklogAPI() throws UnsupportedEncodingException {
-        int[] incidents = getProjectIncidentBug(RUN_PROJECT_NAME, ISSUE_INCIDENT);
-        int[] bugs = getProjectIncidentBug(PROJECT_NAME, ISSUE_BUG);
-        return Backlog.builder()
-                .nbIncidents(incidents[0])
-                .nbIncidentsLow(incidents[1])
-                .nbIncidentsMedium(incidents[2])
-                .nbIncidentsHigh(incidents[3])
-                .nbIncidentsHighest(incidents[4])
-                .nbIncidentsCreated(getCreated(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT))
-                .nbIncidentsResolved(getResolved(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT))
-                .nbIncidentsInProgress(getInProgress(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT))
-                .nbBugs(bugs[0])
-                .nbBugsLow(bugs[1])
-                .nbBugsMedium(bugs[2])
-                .nbBugsHigh(bugs[3])
-                .nbBugsHighest(bugs[4])
-                .nbBugsCreated(getCreated(NB_DAYS_BACKLOG, PROJECT_NAME, ISSUE_BUG))
-                .nbBugsResolved(getResolved(NB_DAYS_BACKLOG, PROJECT_NAME, ISSUE_BUG))
-                .nbBugsInProgress(getInProgress(NB_DAYS_BACKLOG, PROJECT_NAME, ISSUE_BUG))
-                .build();
-    }
-
-    public static HashMap<String, Retrospective> callJiraRetrospectiveAPI() {
-        HashMap<String, Retrospective> retrospectives = new HashMap<>();
-        ArrayList<SprintCommitment> sprints = getLastlyClosedSprints(NB_SPRINTS_RETROSPECTIVE);
-        SprintCommitment[] s = new SprintCommitment[sprints.size()];
-        int i = 0;
-        for (SprintCommitment sprint : sprints) {
-            double[] commitment = getCommitment(sprint, BOARD_ID_BETA_SP);
-            sprint.setInitialCommitment(commitment[0]);
-            sprint.setFinalCommitment(commitment[1]);
-            sprint.setAddedWork(commitment[2]);
-            sprint.setCompletedWork(commitment[3]);
-            s[i] = sprint;
-            i++;
-        }
-        Retrospective r = Retrospective.builder()
-                .teamName("alpha")
-                .sprints(s)
-                .build();
-        retrospectives.put(r.getTeamName(), r);
-        return retrospectives;
-    }
-    /*
-     FIN - Méthodes utilisés pour obtenir les informations sur la couche données (DAO)
-     */
-
-    /*
-    DEBUT - Méthodes pour appeler l'API, les services externes et stocker ces données
-     */
-
-    public static HashMap<String, Collaborator> getCollaborators(String[] requests) {
-        HashMap<String, Collaborator> collaborators = new HashMap<>();
-        Collaborator c;
-        for (String request : requests) {
-            if ((c = getCollaborator(request)) != null){
-                collaborators.put(c.getAccountId(), c);
-            }
-        }
-        HashMap<String, Float[]> planning = getPlanning(PLANNING_PATH);
-        for (String s : planning.keySet()) {
-            if (collaborators.containsKey(s)) {
-                c = collaborators.get(s);
-                c.setTotalWorkingTime(planning.get(s)[0]);
-                c.setAvailableTime(planning.get(s)[1]);
-                collaborators.put(s, c);
-            }
-        }
-        return collaborators;
-    }
 
     /* Main method : Returns a collaborator if it has at least one ticket
      * else return null
@@ -671,49 +431,6 @@ public class JiraAPI {
                 .build();
     }
 
-    /* Call getCollaborator() and assign each collaborator to its team
-     * returning a HashMap of size nbTeams
-     */
-    public static HashMap<String, Team> getTeams(String[] requests) {
-        HashMap<String, Collaborator> collaborators = getCollaborators(requests);
-        Collaborator uAlpha = getUnassignedPerTeam(UNASSIGNED_ALPHA, TEAM_NAME_ALPHA);
-        Collaborator uBeta = getUnassignedPerTeam(UNASSIGNED_BETA, TEAM_NAME_BETA);
-        Collaborator uGamma = getUnassignedPerTeam(UNASSIGNED_GAMMA, TEAM_NAME_GAMMA);
-        collaborators.put(uAlpha.getAccountId(), uAlpha);
-        collaborators.put(uBeta.getAccountId(), uBeta);
-        collaborators.put(uGamma.getAccountId(), uGamma);
-
-        HashMap<String, Team> teams = new HashMap<>();
-        List<Collaborator> collaboratorsAlpha = new ArrayList<>();
-        List<Collaborator> collaboratorsBeta = new ArrayList<>();
-        List<Collaborator> collaboratorsGamma = new ArrayList<>();
-        for (Collaborator c : collaborators.values()) {
-            if (TEAM_ALPHA.contains(c.getAccountId())) {
-                collaboratorsAlpha.add(c);
-            } else if (TEAM_BETA.contains(c.getAccountId())) {
-                collaboratorsBeta.add(c);
-            } else if (TEAM_GAMMA.contains(c.getAccountId())) {
-                collaboratorsGamma.add(c);
-            }
-        }
-        Team alpha = Team.builder()
-                .name("alpha")
-                .collaborators(collaboratorsAlpha)
-                .build();
-        Team beta = Team.builder()
-                .name("beta")
-                .collaborators(collaboratorsBeta)
-                .build();
-        Team gamma = Team.builder()
-                .name("gamma")
-                .collaborators(collaboratorsGamma)
-                .build();
-        teams.put(alpha.getName(), alpha);
-        teams.put(beta.getName(), beta);
-        teams.put(gamma.getName(), gamma);
-        return teams;
-    }
-
     /* Returns an array of integer containing information on bugs/incidents since project's creation (number and priority)
      * A bug is active when NOT in following jira states : Terminé, Livré
      */
@@ -955,115 +672,6 @@ public class JiraAPI {
         return inProgress;
     }
 
-    /* Returns an array of size (nbSprints) of the lastly closed sprints including the lastly active sprint
-     */
-    public static ArrayList<SprintCommitment> getLastlyClosedSprints(int nbSprints) {
-        /*
-        Variables
-         */
-        ArrayList<SprintCommitment> sprints = new ArrayList<>(nbSprints);
-        String sprintName;
-        int sprintId;
-        JSONObject myObj;
-        JSONArray values;
-        JSONObject value;
-        String request = JIRA_AGILEAPI_URL + "/board/" + BOARD_ID + "/sprint";
-        int lastlyActiveSprintIndex = -1;
-
-        /*
-        Logic
-         */
-        HttpResponse<JsonNode> response = Unirest.get(request)
-                .basicAuth(USERNAME, API_TOKEN)
-                .header("Accept", "application/json")
-                .asJson();
-        myObj = response.getBody().getObject();
-        values = myObj.getJSONArray("values");
-        for (int i = 0; i < values.length(); i++) {
-            value = values.getJSONObject(i);
-            if (value.getString("state").equals("active")) {
-                lastlyActiveSprintIndex = i;
-            }
-        }
-        int i = 0;
-        while (i < nbSprints) {
-            value = values.getJSONObject(lastlyActiveSprintIndex - i);
-            sprintName = value.getString("name");
-            sprintId = parseInt(value.getString("id"));
-            SprintCommitment s = SprintCommitment.builder()
-                    .name(sprintName)
-                    .id(sprintId)
-                    .build();
-            sprints.add(s);
-            i++;
-        }
-        return sprints;
-    }
-
-    /* Returns 4 information on a sprint
-     * 0: initialCommitment
-     * 1: finalCommitment
-     * 2: addedWork
-     * 3: completedWork
-     */
-    public static double[] getCommitment(SprintCommitment s, String boardId) {
-        /*
-        Variables
-         */
-        double[] commitment = new double[4];
-        double initialCommitment = 0;
-        double finalCommitment = 0;
-        double addedWork = 0;
-        double completedWork = 0;
-        String request = JIRA_GREENHOPPER_URL + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
-        /*
-        Logic
-         */
-        HttpResponse<JsonNode> response = Unirest.get(request)
-                .basicAuth(USERNAME, API_TOKEN)
-                .header("Accept", "application/json")
-                .asJson();
-        JSONObject myObj = response.getBody().getObject();
-        JSONObject contents = myObj.getJSONObject("contents");
-        JSONObject addedIssues = contents.getJSONObject("issueKeysAddedDuringSprint");
-        // Completed Issues
-        JSONObject completedIssuesEstimateSum = contents.getJSONObject("completedIssuesEstimateSum");
-        JSONObject completedIssuesInitialEstimateSum = contents.getJSONObject("completedIssuesInitialEstimateSum");
-        // Not Completed Issues
-        JSONObject issuesNotCompletedEstimateSum = contents.getJSONObject("issuesNotCompletedEstimateSum");
-        JSONObject issuesNotCompletedInitialEstimateSum = contents.getJSONObject("issuesNotCompletedInitialEstimateSum");
-        //All issues
-        JSONObject allIssuesEstimateSum = contents.getJSONObject("allIssuesEstimateSum");
-
-        if (completedIssuesEstimateSum.has("value")) {
-            completedWork += completedIssuesEstimateSum.getInt("value");
-            initialCommitment += completedIssuesEstimateSum.getInt("value");
-        }
-        if (completedIssuesInitialEstimateSum.has("value")) {
-            initialCommitment += completedIssuesInitialEstimateSum.getInt("value");
-        }
-        if (issuesNotCompletedEstimateSum.has("value")) {
-            initialCommitment += issuesNotCompletedEstimateSum.getInt("value");
-        }
-        if (issuesNotCompletedInitialEstimateSum.has("value")) {
-            initialCommitment += issuesNotCompletedInitialEstimateSum.getInt("value");
-        }
-        if (allIssuesEstimateSum.has("value")) {
-            finalCommitment += allIssuesEstimateSum.getInt("value");
-        }
-        //Added issues
-        Iterator<String> keys = addedIssues.keys();
-        while (keys.hasNext()) {
-            String issueID = keys.next();
-            addedWork += getStoryPoint(issueID);
-        }
-        commitment[0] = initialCommitment;
-        commitment[1] = finalCommitment;
-        commitment[2] = addedWork;
-        commitment[3] = completedWork;
-        return commitment;
-    }
-
     /* Method that returns the number of story points assigned to an issue.
      * Used to retrieve story points linked to added tickets in getCommitment()
      */
@@ -1098,87 +706,14 @@ public class JiraAPI {
         return spIssue;
     }
 
-    /* Method that reads a CSV (planning/absences) which is located at PLANNING_PATH
-     * Returns in a HashMap two floats (values), the totalWorkingTime and availableTime
-     * The key being accountId
-     */
-    public static HashMap<String, Float[]> getPlanning(String PLANNING_PATH) {
-        /*
-         Variables
-         */
-        HashMap<String, Float[]> planning = new HashMap<>();
-        float totalWorkingTime;
-        float availableTime;
-        String accountId;
-        int startIndex = -1;
-        int endIndex = -1;
-        int todayIndex = -1;
-        //Two constants giving the column containing information about accountId and the 1st date
-        final int INDEX_ACC_ID = 2;
-        int FIRST_ROW = 4;
-        Float[] workTime = new Float[2];
-        String[] dates;
-        /*
-        Logic
-         */
-        try {
-            FileReader filereader = new FileReader(PLANNING_PATH);
-            CSVParser parser = new CSVParserBuilder().withSeparator(',').build();
-            CSVReader csvReader = new CSVReaderBuilder(filereader)
-                    .withCSVParser(parser)
-                    .build();
-            for (int i = 0; i < 4; i++) {
-                csvReader.readNext();
-            }
-            dates = csvReader.readNext();
-            for (int i = 0; i < dates.length; i++) {
-                if (SPRINT_ACTIF.getStartDate().format(dtf).equals(dates[i])) {
-                    startIndex = i;
-                }
-                if (SPRINT_ACTIF.getEndDate().format(dtf).equals(dates[i])) {
-                    endIndex = i;
-                }
-                if (TODAY.equals(dates[i])) {
-                    todayIndex = i;
-                }
-            }
-            // When the initial date is not contained in the CSV
-            if (startIndex < 0) {
-                startIndex = FIRST_ROW;
-            }
-            //On saute une ligne
-            csvReader.readNext();
-            String[] infos;
-            while ((infos = csvReader.readNext()) != null) {
-                if (!infos[INDEX_ACC_ID].isEmpty()) {
-                    accountId = infos[INDEX_ACC_ID];
-                    totalWorkingTime = 8 * (endIndex - startIndex + 1);
-                    availableTime = 8 * (endIndex - todayIndex + 1);
-                    for (int i = startIndex; i <= endIndex; i++) {
-                        if (!infos[i].isEmpty()) {
-                            totalWorkingTime -= parseFloat(infos[i]) * 8;
-                        }
-                    }
-                    for (int i = todayIndex; i <= endIndex; i++) {
-                        if (!infos[i].isEmpty()) {
-                            availableTime -= parseFloat(infos[i]) * 8;
-                        }
-                    }
-                    workTime[0] = totalWorkingTime;
-                    workTime[1] = availableTime;
-                    planning.put(accountId, workTime);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+    public static String[] getSprintRequests(){
+        String [] sprintRequests = new String[ID_COLLABS.size()];
+        int i = 0;
+        for (String s : ID_COLLABS.keySet()) {
+            sprintRequests[i] = JIRA_API_URL + "search?jql=project=" + PROJECT_NAME + "+AND+assignee=" + s +
+                    "+AND+sprint=" + SPRINT_NAME + "&maxResults=" + MAX_RESULTS;
+            i++;
         }
-        return planning;
+        return sprintRequests;
     }
-    /*
-    FIN - Méthodes pour appeler l'API, les services externes et stocker ces données
-     */
 }
-
-
-
-
