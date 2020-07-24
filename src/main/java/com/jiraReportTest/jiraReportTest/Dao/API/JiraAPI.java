@@ -38,6 +38,7 @@ public class JiraAPI {
     final static String JSON_KEY_TIMEORIGINALESTIMATE = "timeoriginalestimate";
     final static String JSON_KEY_TIMESPENT = "timespent";
     final static String JSON_KEY_STORYPOINTS = "customfield_10005";
+    final static String JSON_KEY_ASSIGNEE = "assignee";
     // JIRA STATUS & CUSTOM STATUS
     final static String TERMINE = "Terminé";
     final static String LIVRE = "Livré";
@@ -57,7 +58,7 @@ public class JiraAPI {
     final static ArrayList<String> DEV_DONE = new ArrayList<>(Arrays.asList(A_TESTER, A_LIVRER));
     final static ArrayList<String> DEV_DONE_EN_COURS = new ArrayList<>(Arrays.asList(DEV_TERMINE, EN_COURS));
 
-    /* Main method : Returns a collaborator if it has at least one ticket
+    /* Main method : Returns a Collaborator object if it has at least one ticket
      * else return null
      */
     public static Collaborator getCollaborator(String request) {
@@ -115,7 +116,7 @@ public class JiraAPI {
                 prenom = "Non";
                 nom = "Assigné";
             } else {
-                JSONObject assignee = fields.getJSONObject("assignee");
+                JSONObject assignee = fields.getJSONObject(JSON_KEY_ASSIGNEE);
                 if (accountId.isEmpty()) {
                     accountId = assignee.getString("accountId");
                 }
@@ -257,7 +258,7 @@ public class JiraAPI {
                 .build();
     }
 
-    /* Creates Collaborator objects for unassigned assignee (assignee=null)
+    /* Creates a Collaborator object for unassigned assignee (assignee=null)
      * for each team (A MAJ, PAS OPTI)
      */
     public static Collaborator getUnassignedPerTeam(String unassignedAccountId, String label) {
@@ -706,6 +707,9 @@ public class JiraAPI {
         return spIssue;
     }
 
+    /* Method that return an array of string.
+     * Requests are filtered by project, assignee and sprint
+     */
     public static String[] getSprintRequests(){
         String [] sprintRequests = new String[ID_COLLABS.size()];
         int i = 0;

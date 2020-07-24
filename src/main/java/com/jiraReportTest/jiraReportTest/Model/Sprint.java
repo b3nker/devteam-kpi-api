@@ -53,9 +53,7 @@ public class Sprint {
         return LocalDateTime.of(year, month, dayOfMonth, hours, minutes, seconds);
     }
 
-    /*
-    Hypothesis : There are 2 weekends during a sprint
-     */
+
     public static int durationOfSprint(LocalDateTime start, LocalDateTime end){
         int workingDays = Sprint.getWorkingDays(start, end);
         int hours = workingDays*8;

@@ -1,6 +1,7 @@
 package com.jiraReportTest.jiraReportTest.Dao.API;
 
 import com.jiraReportTest.jiraReportTest.Model.*;
+
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -15,9 +16,11 @@ public class API {
     //Project's variables
     final static String USERNAME = "benjamin.kermani@neo9.fr";
     final static String API_TOKEN = "sqjFnTAVspNM4NxLd1QZC5CB";
+    final static String API_TOKEN_TEMPO = "J1eKPcvcMlCvMjNBvXyJmn0vMPvGs0";
     final static String BOARD_ID = "391";
     final static String BOARD_ID_ALPHA_SP = "451";
     final static String BOARD_ID_BETA_SP = "443";
+    final static String BOARD_ID_GAMMA_SP = "450";
     final static String PROJECT_NAME = "BMKP";
     final static String RUN_PROJECT_NAME = "RMKP";
     final static int MAX_RESULTS = 100;
@@ -30,6 +33,12 @@ public class API {
     final static String UNASSIGNED_ALPHA = "unassignedAlpha";
     final static String UNASSIGNED_BETA = "unassignedBeta";
     final static String UNASSIGNED_GAMMA = "unassignedGamma";
+    final static HashMap<String,String> TEAM_PAIR = new HashMap<>();
+    static {
+        TEAM_PAIR.put(TEAM_NAME_ALPHA, BOARD_ID_ALPHA_SP);
+        TEAM_PAIR.put(TEAM_NAME_BETA, BOARD_ID_BETA_SP);
+        TEAM_PAIR.put(TEAM_NAME_GAMMA, BOARD_ID_GAMMA_SP);
+    }
     final static HashMap<String, String> ID_COLLABS = new HashMap<>();
     static {
         ID_COLLABS.put("5c17b4599f443a65fecae3ca", "middle lead dev"); // Julien Mosset
@@ -93,7 +102,6 @@ public class API {
             "5dfd11b39422830cacaa8a79", // Carthy Marie Joseph
             UNASSIGNED_GAMMA
     ));
-
     // Sprint Data
     final static Sprint SPRINT_ACTIF = JiraAgileAPI.getLastlyActiveSprint();
     final static String SPRINT_NAME = "'" + SPRINT_ACTIF.getName() + "'";
@@ -166,23 +174,24 @@ public class API {
      */
     public static HashMap<String, Retrospective> callJiraRetrospectiveAPI() {
         HashMap<String, Retrospective> retrospectives = new HashMap<>();
-        ArrayList<SprintCommitment> sprints = JiraAgileAPI.getLastlyClosedSprints(NB_SPRINTS_RETROSPECTIVE);
-        SprintCommitment[] s = new SprintCommitment[sprints.size()];
+        SprintCommitment[] sprints = JiraAgileAPI.getLastlyClosedSprints(NB_SPRINTS_RETROSPECTIVE);
         int i = 0;
-        for (SprintCommitment sprint : sprints) {
-            double[] commitment = JiraGreenhopperAPI.getCommitment(sprint, BOARD_ID_BETA_SP);
-            sprint.setInitialCommitment(commitment[0]);
-            sprint.setFinalCommitment(commitment[1]);
-            sprint.setAddedWork(commitment[2]);
-            sprint.setCompletedWork(commitment[3]);
-            s[i] = sprint;
-            i++;
+        for (String s : TEAM_PAIR.keySet()){
+            SprintCommitment[] sprintsTeam = sprints;
+            for (SprintCommitment sprint : sprints) {
+                double[] commitment = JiraGreenhopperAPI.getCommitment(sprint, TEAM_PAIR.get(s));
+                sprint.setInitialCommitment(commitment[0]);
+                sprint.setFinalCommitment(commitment[1]);
+                sprint.setAddedWork(commitment[2]);
+                sprint.setCompletedWork(commitment[3]);
+                i++;
+            }
+            Retrospective r = Retrospective.builder()
+                    .teamName(s)
+                    .sprints(sprints)
+                    .build();
+            retrospectives.put(r.getTeamName(), r);
         }
-        Retrospective r = Retrospective.builder()
-                .teamName("alpha")
-                .sprints(s)
-                .build();
-        retrospectives.put(r.getTeamName(), r);
         return retrospectives;
     }
 

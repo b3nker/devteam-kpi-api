@@ -15,14 +15,15 @@ import static java.lang.Integer.parseInt;
 
 public class JiraAgileAPI {
     final static String JIRA_AGILE_API_URL = "https://apriltechnologies.atlassian.net/rest/agile/1.0/";
+    final static String ACTIVE_SPRINT = "active";
 
     /* Returns an array of size (nbSprints) of the lastly closed sprints including the lastly active sprint
      */
-    public static ArrayList<SprintCommitment> getLastlyClosedSprints(int nbSprints) {
+    public static SprintCommitment[] getLastlyClosedSprints(int nbSprints) {
         /*
         Variables
          */
-        ArrayList<SprintCommitment> sprints = new ArrayList<>(nbSprints);
+        SprintCommitment[] sc = new SprintCommitment[nbSprints];
         String sprintName;
         int sprintId;
         JSONObject myObj;
@@ -46,30 +47,61 @@ public class JiraAgileAPI {
                 lastlyActiveSprintIndex = i;
             }
         }
-        int i = 0;
-        while (i < nbSprints) {
+        for (int i = 0; i < nbSprints; i++){
             value = values.getJSONObject(lastlyActiveSprintIndex - i);
             sprintName = value.getString("name");
             sprintId = parseInt(value.getString("id"));
-            SprintCommitment s = SprintCommitment.builder()
+            sc[i] = SprintCommitment.builder()
                     .name(sprintName)
                     .id(sprintId)
                     .build();
-            sprints.add(s);
-            i++;
         }
-        return sprints;
+        return sc;
     }
 
     /* Method that returns the lastly active sprint in JIRA Agile API
-     *
+     * A sprint is active if
      */
     public static Sprint getLastlyActiveSprint() {
         String startDate = "";
         String endDate = "";
         String sprintName = "";
         int sprintId = 0;
-        HttpResponse<JsonNode> response = Unirest.get(JIRA_AGILE_API_URL + "board/" + BOARD_ID + "/sprint")
+        String request = JIRA_AGILE_API_URL + "board/" + BOARD_ID + "/sprint";
+        HttpResponse<JsonNode> response = Unirest.get(request)
+                .basicAuth(USERNAME, API_TOKEN)
+                .header("Accept", "application/json")
+                .asJson();
+        JSONObject myObj = response.getBody().getObject();
+        JSONArray values = myObj.getJSONArray("values");
+        for (int i = 0; i < values.length(); i++) {
+            JSONObject value = values.getJSONObject(i);
+            if (value.getString("state").equals("active")) {
+                sprintName = value.getString("name");
+                startDate = value.getString("startDate");
+                endDate = value.getString("endDate");
+                sprintId = parseInt(value.getString("id"));
+                break;
+            }
+        }
+        return Sprint.builder()
+                .id(sprintId)
+                .name(sprintName)
+                .startDate(Sprint.toLocalDateTime(startDate))
+                .endDate(Sprint.toLocalDateTime(endDate))
+                .build();
+    }
+
+    /* Method that returns the lastly active sprint that contains teamName in its name
+     *
+     */
+    public static Sprint getLastlyActiveTeamSprint(String teamName){
+        String startDate = "";
+        String endDate = "";
+        String sprintName = "";
+        int sprintId = 0;
+        String request = JIRA_AGILE_API_URL + "board/" + BOARD_ID + "/sprint";
+        HttpResponse<JsonNode> response = Unirest.get(request)
                 .basicAuth(USERNAME, API_TOKEN)
                 .header("Accept", "application/json")
                 .asJson();
@@ -78,8 +110,7 @@ public class JiraAgileAPI {
         mainLoop:
         for (int i = 0; i < values.length(); i++) {
             JSONObject value = values.getJSONObject(i);
-            //Condition à modifier quand il n'y aura qu'un seul sprint actif
-            if (value.getString("state").equals("active")) {
+            if (ACTIVE_SPRINT.equals(value.getString("state")) && teamName.toLowerCase().contains(value.getString("name").toLowerCase())) {
                 sprintName = value.getString("name");
                 startDate = value.getString("startDate");
                 endDate = value.getString("endDate");
