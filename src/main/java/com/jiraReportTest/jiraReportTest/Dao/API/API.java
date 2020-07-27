@@ -30,6 +30,7 @@ public class API {
     final static String TEAM_NAME_GAMMA = "gamma";
     final static String UNASSIGNED = "unassigned";
     final static HashMap<String, String> TEAM_PAIR = new HashMap<>();
+
     static {
         TEAM_PAIR.put(TEAM_NAME_ALPHA, BOARD_ID_ALPHA_SP);
         TEAM_PAIR.put(TEAM_NAME_BETA, BOARD_ID_BETA_SP);
@@ -102,7 +103,8 @@ public class API {
             UNASSIGNED
     ));
     final static HashMap<String, ArrayList<String>> TEAMS = new HashMap<>();
-    static{
+
+    static {
         TEAMS.put(TEAM_NAME_ALPHA, TEAM_ALPHA);
         TEAMS.put(TEAM_NAME_BETA, TEAM_BETA);
         TEAMS.put(TEAM_NAME_GAMMA, TEAM_GAMMA);
@@ -115,16 +117,19 @@ public class API {
     final static Sprint SPRINT_ACTIF_BETA = JiraAgileAPI.getLastlyActiveTeamSprint(TEAM_NAME_BETA);
     final static Sprint SPRINT_ACTIF_GAMMA = JiraAgileAPI.getLastlyActiveSprint();
     final static HashMap<String, Sprint> SPRINTS = new HashMap<>();
-    static{
+
+    static {
         SPRINTS.put(TEAM_NAME_ALPHA, SPRINT_ACTIF_ALPHA);
         SPRINTS.put(TEAM_NAME_BETA, SPRINT_ACTIF_BETA);
         SPRINTS.put(TEAM_NAME_GAMMA, SPRINT_ACTIF_GAMMA);
     }
-    final static String[] REQUESTS_SPRINT_ALPHA = JiraAPI.getSprintRequests(SPRINT_ACTIF_ALPHA.getName());
-    final static String[] REQUESTS_SPRINT_BETA = JiraAPI.getSprintRequests(SPRINT_ACTIF_BETA.getName());
-    final static String[] REQUESTS_SPRINT_GAMMA = JiraAPI.getSprintRequests(SPRINT_ACTIF_GAMMA.getName());
+
+    final static String[] REQUESTS_SPRINT_ALPHA = JiraAPI.getSprintRequests(SPRINT_ACTIF_ALPHA.getId());
+    final static String[] REQUESTS_SPRINT_BETA = JiraAPI.getSprintRequests(SPRINT_ACTIF_BETA.getId());
+    final static String[] REQUESTS_SPRINT_GAMMA = JiraAPI.getSprintRequests(SPRINT_ACTIF_GAMMA.getId());
     final static HashMap<String, String[]> TEAMS_REQUESTS = new HashMap<>();
-    static{
+
+    static {
         TEAMS_REQUESTS.put(TEAM_NAME_ALPHA, REQUESTS_SPRINT_ALPHA);
         TEAMS_REQUESTS.put(TEAM_NAME_BETA, REQUESTS_SPRINT_BETA);
         TEAMS_REQUESTS.put(TEAM_NAME_GAMMA, REQUESTS_SPRINT_GAMMA);
@@ -148,13 +153,11 @@ public class API {
      */
     public static Collection<Sprint> callJiraSprintAPI() {
         Collection<Sprint> sprints = new ArrayList<>();
-        for(String label: TEAMS_REQUESTS.keySet()){
+        for (String label : TEAMS_REQUESTS.keySet()) {
             Team t = getTeam(TEAMS_REQUESTS.get(label), label);
             SPRINTS.get(label).setTeam(t);
         }
-        for(Sprint s: SPRINTS.values()){
-            sprints.add(s);
-        }
+        sprints.addAll(SPRINTS.values());
         return sprints;
     }
 
@@ -163,9 +166,12 @@ public class API {
      */
     public static HashMap<String, Collaborator> callJiraCollabSprintAPI() {
         HashMap<String, Collaborator> collaborators = new HashMap<>();
-        for(String label: TEAMS_REQUESTS.keySet()){
+        for (String label : TEAMS_REQUESTS.keySet()) {
             HashMap<String, Collaborator> c = getCollaboratorsPerTeam(TEAMS_REQUESTS.get(label), label);
-            c.get(UNASSIGNED).setAccountId(UNASSIGNED + " " + label);
+            Collaborator unassigned = c.get(UNASSIGNED);
+            unassigned.setAccountId(unassigned.getAccountId() + ' ' + label);
+            c.remove(UNASSIGNED);
+            c.put(unassigned.getAccountId(), unassigned);
             collaborators.putAll(c);
         }
         return collaborators;
@@ -223,32 +229,6 @@ public class API {
         return retrospectives;
     }
 
-    /* Method that call getCollaborator() method from JiraAPI
-     * Fills a HashMap <AccountID, Collaborator> and use ExternalFiles to fill their working time and
-     * available time
-     */
-    /*
-    public static HashMap<String, Collaborator> getCollaborators(String[] requests) {
-        HashMap<String, Collaborator> collaborators = new HashMap<>();
-        Collaborator c;
-        for (String request : requests) {
-            if ((c = JiraAPI.getCollaborator(request)) != null) {
-                collaborators.put(c.getAccountId(), c);
-            }
-        }
-        HashMap<String, Float[]> planning = ExternalFiles.getPlanning(PLANNING_PATH);
-        for (String s : planning.keySet()) {
-            if (collaborators.containsKey(s)) {
-                c = collaborators.get(s);
-                c.setTotalWorkingTime(planning.get(s)[0]);
-                c.setAvailableTime(planning.get(s)[1]);
-                collaborators.put(s, c);
-            }
-        }
-        return collaborators;
-    }
-     */
-
     public static HashMap<String, Collaborator> getCollaboratorsPerTeam(String[] requests, String label) {
         HashMap<String, Collaborator> collaborators = new HashMap<>();
         Collaborator c;
@@ -276,8 +256,8 @@ public class API {
         HashMap<String, Collaborator> collaborators = getCollaboratorsPerTeam(requests, label);
         ArrayList<String> team = TEAMS.get(label);
         List<Collaborator> c = new ArrayList<>();
-        for(String key: collaborators.keySet()){
-            if(team.contains(key)){
+        for (String key : collaborators.keySet()) {
+            if (team.contains(key)) {
                 c.add(collaborators.get(key));
             }
         }
