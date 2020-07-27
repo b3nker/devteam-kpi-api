@@ -1,28 +1,21 @@
 package com.jiraReportTest.jiraReportTest.Dao.API;
 
 import com.jiraReportTest.jiraReportTest.Model.*;
-import com.opencsv.CSVParser;
-import com.opencsv.CSVParserBuilder;
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.Unirest;
 import kong.unirest.json.JSONArray;
 import kong.unirest.json.JSONObject;
-import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Repository;
 
 import java.io.*;
 import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static com.jiraReportTest.jiraReportTest.Dao.API.API.*;
-import static java.lang.Float.parseFloat;
-import static java.lang.Integer.parseInt;
+
 import static java.time.temporal.ChronoUnit.DAYS;
 
 @Repository
@@ -61,10 +54,10 @@ public class JiraAPI {
     /* Main method : Returns a Collaborator object if it has at least one ticket
      * else return null
      */
-    public static Collaborator getCollaborator(String request) {
-            /*
-            Variables
-             */
+    public static Collaborator getCollaborator(String request, String label) {
+        /*
+        Variables
+        */
         int timespent = 0, estimated = 0, remaining = 0;
         double spTotal = 0;
         double spAQualifier = 0;
@@ -91,10 +84,12 @@ public class JiraAPI {
         String emailAddress = "";
         String nom = "";
         String prenom = "";
+        String labelLC = label.toLowerCase();
         JSONObject issue;
         JSONObject fields;
         JSONObject status;
         JSONArray issues;
+        JSONArray labels;
         int total;
         String statut;
         HttpResponse<JsonNode> response = Unirest.get(request)
@@ -111,112 +106,119 @@ public class JiraAPI {
             issue = issues.getJSONObject(j);
             fields = issue.getJSONObject(JSON_FIELDS);
             status = fields.getJSONObject(JSON_STATUS);
-            // Collaborator information
-            if (request.contains("null")) {
-                prenom = "Non";
-                nom = "Assigné";
-            } else {
-                JSONObject assignee = fields.getJSONObject(JSON_KEY_ASSIGNEE);
-                if (accountId.isEmpty()) {
-                    accountId = assignee.getString("accountId");
-                }
-                if (emailAddress.isEmpty() && assignee.has("emailAddress")) {
-                    emailAddress = assignee.getString("emailAddress");
-                    int indexDot = emailAddress.indexOf(".");
-                    int indexAt = emailAddress.indexOf("@");
-                    prenom = emailAddress.substring(0, indexDot);
-                    nom = emailAddress.substring(indexDot + 1, indexAt);
-                } else if (nom.isEmpty() && prenom.isEmpty()) {
-                    String fullName = assignee.getString("displayName");
-                    int fullNameLength = fullName.length();
-                    int indexSpace = fullName.indexOf(" ");
-                    if (indexSpace < 0) {
-                        prenom = fullName;
+            labels = fields.getJSONArray("labels");
+            for (int k = 0; k < labels.length(); k++) {
+                if (labels.getString(k).toLowerCase().equals(labelLC)) {
+                    // Collaborator information
+                    if (request.contains("null")) {
+                        prenom = "Non";
+                        nom = "Assigné";
+                        accountId= "unassigned";
                     } else {
-                        prenom = fullName.substring(0, indexSpace);
-                        nom = fullName.substring(indexSpace + 1, fullNameLength);
+                        JSONObject assignee = fields.getJSONObject(JSON_KEY_ASSIGNEE);
+                        if (accountId.isEmpty()) {
+                            accountId = assignee.getString("accountId");
+                        }
+                        if (emailAddress.isEmpty() && assignee.has("emailAddress")) {
+                            emailAddress = assignee.getString("emailAddress");
+                            int indexDot = emailAddress.indexOf(".");
+                            int indexAt = emailAddress.indexOf("@");
+                            prenom = emailAddress.substring(0, indexDot);
+                            nom = emailAddress.substring(indexDot + 1, indexAt);
+                        } else if (nom.isEmpty() && prenom.isEmpty()) {
+                            String fullName = assignee.getString("displayName");
+                            int fullNameLength = fullName.length();
+                            int indexSpace = fullName.indexOf(" ");
+                            if (indexSpace < 0) {
+                                prenom = fullName;
+                            } else {
+                                prenom = fullName.substring(0, indexSpace);
+                                nom = fullName.substring(indexSpace + 1, fullNameLength);
+                            }
+                        }
                     }
-                }
-            }
-            statut = status.getString("name");
-            // Setting Tickets
-            if (DONE.contains(statut)) {
-                ticketsDone++;
-            } else if (IN_PROGRESS.contains(statut)) {
-                if (DEV_DONE.contains(statut)) {
-                    ticketsDevDone++;
-                } else {
-                    ticketsInProgress++;
-                }
-            } else {
-                ticketsToDo++;
-            }
-            if (DEV_DONE_EN_COURS.contains(statut)) {
-                ticketsEnCoursDevTermine++;
-            }
-            if (A_TESTER.contains(statut)) {
-                ticketsAtester++;
-            }
-            // Setting working time
-            if (!fields.isNull(JSON_KEY_TIMEESTIMATE)) {
-                remaining += (fields.getInt(JSON_KEY_TIMEESTIMATE) / 3600);
-            }
-            if (!fields.isNull(JSON_KEY_TIMEORIGINALESTIMATE)) {
-                estimated += (fields.getInt(JSON_KEY_TIMEORIGINALESTIMATE) / 3600);
-            }
-            if (!fields.isNull(JSON_KEY_TIMESPENT)) {
-                timespent += (fields.getInt(JSON_KEY_TIMESPENT) / 3600);
-            }
+                    statut = status.getString("name");
+                    // Setting Tickets
+                    if (DONE.contains(statut)) {
+                        ticketsDone++;
+                    } else if (IN_PROGRESS.contains(statut)) {
+                        if (DEV_DONE.contains(statut)) {
+                            ticketsDevDone++;
+                        } else {
+                            ticketsInProgress++;
+                        }
+                    } else {
+                        ticketsToDo++;
+                    }
+                    if (DEV_DONE_EN_COURS.contains(statut)) {
+                        ticketsEnCoursDevTermine++;
+                    }
+                    if (A_TESTER.contains(statut)) {
+                        ticketsAtester++;
+                    }
+                    // Setting working time
+                    if (!fields.isNull(JSON_KEY_TIMEESTIMATE)) {
+                        remaining += (fields.getInt(JSON_KEY_TIMEESTIMATE) / 3600);
+                    }
+                    if (!fields.isNull(JSON_KEY_TIMEORIGINALESTIMATE)) {
+                        estimated += (fields.getInt(JSON_KEY_TIMEORIGINALESTIMATE) / 3600);
+                    }
+                    if (!fields.isNull(JSON_KEY_TIMESPENT)) {
+                        timespent += (fields.getInt(JSON_KEY_TIMESPENT) / 3600);
+                    }
 
-            //Attribution des story points
-            if (!fields.isNull(JSON_KEY_STORYPOINTS)) {
-                double curStoryPoints = fields.getDouble(JSON_KEY_STORYPOINTS);
-                spTotal += curStoryPoints;
-                switch (statut) {
-                    case "A qualifier":
-                        spAQualifier += curStoryPoints;
-                        break;
-                    case "Bac d'affinage":
-                        spBacAffinage += curStoryPoints;
-                        break;
-                    case EN_ATTENTE:
-                        spEnAttente += curStoryPoints;
-                        break;
-                    case "A Faire":
-                        spAFaire += curStoryPoints;
-                        break;
-                    case EN_COURS:
-                        spEnCours += curStoryPoints;
-                        break;
-                    case ABANDONNE:
-                        spAbandonne += curStoryPoints;
-                        break;
-                    case DEV_TERMINE:
-                        spDevTermine += curStoryPoints;
-                        break;
-                    case A_VALIDER:
-                        spAvalider += curStoryPoints;
-                        break;
-                    case A_LIVRER:
-                        spAlivrer += curStoryPoints;
-                        break;
-                    case A_TESTER:
-                        spATester += curStoryPoints;
-                        break;
-                    case REFUSE_RECETTE:
-                        spRefuseEnRecette += curStoryPoints;
-                        break;
-                    case VALIDE_RECETTE:
-                        spValideEnRecette += curStoryPoints;
-                        break;
-                    case LIVRE:
-                        spLivre += curStoryPoints;
-                        break;
-                    case TERMINE:
-                        spTermine += curStoryPoints;
-                        break;
-                    default:
-                        break;
+                    //Attribution des story points
+                    if (!fields.isNull(JSON_KEY_STORYPOINTS)) {
+                        double curStoryPoints = fields.getDouble(JSON_KEY_STORYPOINTS);
+                        spTotal += curStoryPoints;
+                        switch (statut) {
+                            case "A qualifier":
+                                spAQualifier += curStoryPoints;
+                                break;
+                            case "Bac d'affinage":
+                                spBacAffinage += curStoryPoints;
+                                break;
+                            case EN_ATTENTE:
+                                spEnAttente += curStoryPoints;
+                                break;
+                            case "A Faire":
+                                spAFaire += curStoryPoints;
+                                break;
+                            case EN_COURS:
+                                spEnCours += curStoryPoints;
+                                break;
+                            case ABANDONNE:
+                                spAbandonne += curStoryPoints;
+                                break;
+                            case DEV_TERMINE:
+                                spDevTermine += curStoryPoints;
+                                break;
+                            case A_VALIDER:
+                                spAvalider += curStoryPoints;
+                                break;
+                            case A_LIVRER:
+                                spAlivrer += curStoryPoints;
+                                break;
+                            case A_TESTER:
+                                spATester += curStoryPoints;
+                                break;
+                            case REFUSE_RECETTE:
+                                spRefuseEnRecette += curStoryPoints;
+                                break;
+                            case VALIDE_RECETTE:
+                                spValideEnRecette += curStoryPoints;
+                                break;
+                            case LIVRE:
+                                spLivre += curStoryPoints;
+                                break;
+                            case TERMINE:
+                                spTermine += curStoryPoints;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    break;
                 }
             }
         }
@@ -261,6 +263,7 @@ public class JiraAPI {
     /* Creates a Collaborator object for unassigned assignee (assignee=null)
      * for each team (A MAJ, PAS OPTI)
      */
+    /*
     public static Collaborator getUnassignedPerTeam(String unassignedAccountId, String label) {
         String request = JIRA_API_URL + "search?jql=project=" + PROJECT_NAME + "+AND+assignee=null+AND+sprint='" +
                 SPRINT_NAME + "'&maxResults=" + MAX_RESULTS;
@@ -431,6 +434,7 @@ public class JiraAPI {
                 .spTermine(spTermine)
                 .build();
     }
+     */
 
     /* Returns an array of integer containing information on bugs/incidents since project's creation (number and priority)
      * A bug is active when NOT in following jira states : Terminé, Livré

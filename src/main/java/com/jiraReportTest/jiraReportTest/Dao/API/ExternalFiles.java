@@ -9,7 +9,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 
-import static com.jiraReportTest.jiraReportTest.Dao.API.API.SPRINT_ACTIF_BETA;
+import static com.jiraReportTest.jiraReportTest.Dao.API.API.SPRINT_ACTIF;
 import static com.jiraReportTest.jiraReportTest.Dao.API.API.TODAY;
 import static com.jiraReportTest.jiraReportTest.Dao.API.API.dtf;
 import static java.lang.Float.parseFloat;
@@ -49,10 +49,10 @@ public class ExternalFiles {
             }
             dates = csvReader.readNext();
             for (int i = 0; i < dates.length; i++) {
-                if (SPRINT_ACTIF_BETA.getStartDate().format(dtf).equals(dates[i])) {
+                if (SPRINT_ACTIF.getStartDate().format(dtf).equals(dates[i])) {
                     startIndex = i;
                 }
-                if (SPRINT_ACTIF_BETA.getEndDate().format(dtf).equals(dates[i])) {
+                if (SPRINT_ACTIF.getEndDate().format(dtf).equals(dates[i])) {
                     endIndex = i;
                 }
                 if (TODAY.equals(dates[i])) {

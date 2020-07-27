@@ -8,6 +8,7 @@ import kong.unirest.Unirest;
 import kong.unirest.json.JSONArray;
 import kong.unirest.json.JSONObject;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 import static com.jiraReportTest.jiraReportTest.Dao.API.API.*;
@@ -84,11 +85,16 @@ public class JiraAgileAPI {
                 break;
             }
         }
+        LocalDateTime ldStart = Sprint.toLocalDateTime(startDate);
+        LocalDateTime ldEnd = Sprint.toLocalDateTime(endDate);
+
         return Sprint.builder()
                 .id(sprintId)
                 .name(sprintName)
-                .startDate(Sprint.toLocalDateTime(startDate))
-                .endDate(Sprint.toLocalDateTime(endDate))
+                .startDate(ldStart)
+                .endDate(ldEnd)
+                .timeLeft(Sprint.timeLeftOnSprint(ldEnd))
+                .totalTime(Sprint.durationOfSprint(ldStart, ldEnd))
                 .build();
     }
 

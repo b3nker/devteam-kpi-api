@@ -1,21 +1,22 @@
 package com.jiraReportTest.jiraReportTest.Dao;
 
 import com.jiraReportTest.jiraReportTest.Dao.API.API;
-import com.jiraReportTest.jiraReportTest.Dao.API.JiraAPI;
 import com.jiraReportTest.jiraReportTest.Model.Sprint;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
+
 @Repository
 public class SprintDao {
-    private static Sprint sprint;
+    private static Collection<Sprint> sprints;
 
     static{
-        sprint = API.callJiraSprintAPI();
+        sprints = API.callJiraSprintAPI();
 
     }
 
-    public Sprint getSprint(){
-        return this.sprint;
+    public Collection<Sprint> getSprint(){
+        return this.sprints;
     }
 
 }
