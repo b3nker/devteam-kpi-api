@@ -100,6 +100,7 @@ public class JiraAgileAPI {
         String endDate = "";
         String sprintName = "";
         int sprintId = 0;
+        String teamNameLC = teamName.toLowerCase();
         String request = JIRA_AGILE_API_URL + "board/" + BOARD_ID + "/sprint";
         HttpResponse<JsonNode> response = Unirest.get(request)
                 .basicAuth(USERNAME, API_TOKEN)
@@ -110,7 +111,8 @@ public class JiraAgileAPI {
         mainLoop:
         for (int i = 0; i < values.length(); i++) {
             JSONObject value = values.getJSONObject(i);
-            if (ACTIVE_SPRINT.equals(value.getString("state")) && teamName.toLowerCase().contains(value.getString("name").toLowerCase())) {
+            String name = value.getString("name").toLowerCase();
+            if (ACTIVE_SPRINT.equals(value.getString("state")) && name.contains(teamNameLC)) {
                 sprintName = value.getString("name");
                 startDate = value.getString("startDate");
                 endDate = value.getString("endDate");

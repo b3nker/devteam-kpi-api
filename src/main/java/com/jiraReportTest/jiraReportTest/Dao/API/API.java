@@ -33,13 +33,16 @@ public class API {
     final static String UNASSIGNED_ALPHA = "unassignedAlpha";
     final static String UNASSIGNED_BETA = "unassignedBeta";
     final static String UNASSIGNED_GAMMA = "unassignedGamma";
-    final static HashMap<String,String> TEAM_PAIR = new HashMap<>();
+    final static HashMap<String, String> TEAM_PAIR = new HashMap<>();
+
     static {
         TEAM_PAIR.put(TEAM_NAME_ALPHA, BOARD_ID_ALPHA_SP);
         TEAM_PAIR.put(TEAM_NAME_BETA, BOARD_ID_BETA_SP);
         TEAM_PAIR.put(TEAM_NAME_GAMMA, BOARD_ID_GAMMA_SP);
     }
+
     final static HashMap<String, String> ID_COLLABS = new HashMap<>();
+
     static {
         ID_COLLABS.put("5c17b4599f443a65fecae3ca", "middle lead dev"); // Julien Mosset
         ID_COLLABS.put("5a9ebe1c4af2372a88a0656b", "front lead dev"); // Nicolas Ovejero
@@ -74,6 +77,7 @@ public class API {
         ID_COLLABS.put("557058:df17bf30-7843-415e-985d-151faba64429", "transverse"); // Philippe Fleur
         ID_COLLABS.put(null, ""); // unassigned
     }
+
     final static ArrayList<String> TEAM_ALPHA = new ArrayList<>(Arrays.asList(
             "5c17b4599f443a65fecae3ca", // Julien Mosset
             "5a9ebe1c4af2372a88a0656b", // Nicolas Ovejero
@@ -103,9 +107,14 @@ public class API {
             UNASSIGNED_GAMMA
     ));
     // Sprint Data
-    final static Sprint SPRINT_ACTIF = JiraAgileAPI.getLastlyActiveSprint();
-    final static String SPRINT_NAME = "'" + SPRINT_ACTIF.getName() + "'";
-    final static String[] REQUESTS_SPRINT = JiraAPI.getSprintRequests();
+    /* Each sprint has its own name (ex: Sprint 31 - BETA) but when querying Jira with 'Sprint 31' results correspond to
+     * each issue that contains 'Sprint 31' in its name.
+     */
+    final static Sprint SPRINT_ACTIF_ALPHA = JiraAgileAPI.getLastlyActiveSprint();
+    final static Sprint SPRINT_ACTIF_BETA = JiraAgileAPI.getLastlyActiveTeamSprint(TEAM_NAME_BETA);
+    final static Sprint SPRINT_ACTIF_GAMMA = JiraAgileAPI.getLastlyActiveSprint();
+    final static String SPRINT_NAME = SPRINT_ACTIF_ALPHA.getName();
+    final static String[] REQUESTS_SPRINT = JiraAPI.getSprintRequests(SPRINT_NAME);
     // ExternalData
     final static String PLANNING_PATH = "planning.csv";
     // Queries variables
@@ -129,10 +138,10 @@ public class API {
             teams[i] = hmTeams.get(s);
             i++;
         }
-        SPRINT_ACTIF.setTeams(teams);
-        SPRINT_ACTIF.setTotalTime(Sprint.durationOfSprint(SPRINT_ACTIF.getStartDate(), SPRINT_ACTIF.getEndDate()));
-        SPRINT_ACTIF.setTimeLeft(Sprint.timeLeftOnSprint(SPRINT_ACTIF.getEndDate()));
-        return SPRINT_ACTIF;
+        SPRINT_ACTIF_BETA.setTeams(teams);
+        SPRINT_ACTIF_BETA.setTotalTime(Sprint.durationOfSprint(SPRINT_ACTIF_BETA.getStartDate(), SPRINT_ACTIF_BETA.getEndDate()));
+        SPRINT_ACTIF_BETA.setTimeLeft(Sprint.timeLeftOnSprint(SPRINT_ACTIF_BETA.getEndDate()));
+        return SPRINT_ACTIF_BETA;
     }
 
     /* Method that calls getCollaborators() and return a HashMap<AccountID, collaborator>
@@ -174,10 +183,9 @@ public class API {
      */
     public static HashMap<String, Retrospective> callJiraRetrospectiveAPI() {
         HashMap<String, Retrospective> retrospectives = new HashMap<>();
-        SprintCommitment[] sprints = JiraAgileAPI.getLastlyClosedSprints(NB_SPRINTS_RETROSPECTIVE);
         int i = 0;
-        for (String s : TEAM_PAIR.keySet()){
-            SprintCommitment[] sprintsTeam = sprints;
+        for (String s : TEAM_PAIR.keySet()) {
+            SprintCommitment[] sprints = JiraAgileAPI.getLastlyClosedSprints(NB_SPRINTS_RETROSPECTIVE);
             for (SprintCommitment sprint : sprints) {
                 double[] commitment = JiraGreenhopperAPI.getCommitment(sprint, TEAM_PAIR.get(s));
                 sprint.setInitialCommitment(commitment[0]);
@@ -203,7 +211,7 @@ public class API {
         HashMap<String, Collaborator> collaborators = new HashMap<>();
         Collaborator c;
         for (String request : requests) {
-            if ((c = JiraAPI.getCollaborator(request)) != null){
+            if ((c = JiraAPI.getCollaborator(request)) != null) {
                 collaborators.put(c.getAccountId(), c);
             }
         }

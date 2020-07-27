@@ -262,8 +262,8 @@ public class JiraAPI {
      * for each team (A MAJ, PAS OPTI)
      */
     public static Collaborator getUnassignedPerTeam(String unassignedAccountId, String label) {
-        String request = JIRA_API_URL + "search?jql=project=" + PROJECT_NAME + "+AND+assignee=null+AND+sprint=" +
-                SPRINT_NAME + "&maxResults=" + MAX_RESULTS;
+        String request = JIRA_API_URL + "search?jql=project=" + PROJECT_NAME + "+AND+assignee=null+AND+sprint='" +
+                SPRINT_NAME + "'&maxResults=" + MAX_RESULTS;
         int timespent = 0, estimated = 0, remaining = 0;
         double spTotal = 0;
         double spAQualifier = 0;
@@ -710,12 +710,12 @@ public class JiraAPI {
     /* Method that return an array of string.
      * Requests are filtered by project, assignee and sprint
      */
-    public static String[] getSprintRequests(){
-        String [] sprintRequests = new String[ID_COLLABS.size()];
+    public static String[] getSprintRequests(String sprintName) {
+        String[] sprintRequests = new String[ID_COLLABS.size()];
         int i = 0;
         for (String s : ID_COLLABS.keySet()) {
             sprintRequests[i] = JIRA_API_URL + "search?jql=project=" + PROJECT_NAME + "+AND+assignee=" + s +
-                    "+AND+sprint=" + SPRINT_NAME + "&maxResults=" + MAX_RESULTS;
+                    "+AND+sprint='" + sprintName + "'&maxResults=" + MAX_RESULTS;
             i++;
         }
         return sprintRequests;
