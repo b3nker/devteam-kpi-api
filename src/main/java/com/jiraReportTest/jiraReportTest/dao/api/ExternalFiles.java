@@ -1,20 +1,32 @@
 package com.jiraReportTest.jiraReportTest.dao.api;
 
+import com.jiraReportTest.jiraReportTest.model.Release;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 import static com.jiraReportTest.jiraReportTest.dao.api.API.SPRINT_ACTIF;
 import static com.jiraReportTest.jiraReportTest.dao.api.API.TODAY;
 import static com.jiraReportTest.jiraReportTest.dao.api.API.dtf;
+import static java.lang.Double.parseDouble;
 import static java.lang.Float.parseFloat;
+import static java.lang.Integer.parseInt;
 
 public class ExternalFiles {
+    final static Character SEPARATOR = ',';
+    final static SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
 
     /* Reads "planning.csv" and extract two data, the working time and the available time per collaborator
      * HashMap <AccountID,[workingTime, availableTime]>
@@ -40,7 +52,7 @@ public class ExternalFiles {
          */
         try {
             FileReader filereader = new FileReader(PLANNING_PATH);
-            CSVParser parser = new CSVParserBuilder().withSeparator(',').build();
+            CSVParser parser = new CSVParserBuilder().withSeparator(SEPARATOR).build();
             CSVReader csvReader = new CSVReaderBuilder(filereader)
                     .withCSVParser(parser)
                     .build();
@@ -90,5 +102,36 @@ public class ExternalFiles {
             e.printStackTrace();
         }
         return planning;
+    }
+
+    public static List<Release> getReleases(String path) throws IOException, ParseException {
+        int nbLinesToSkip = 2;
+        List<Release> releases = new ArrayList<>();
+        FileReader filereader = new FileReader(path);
+        CSVParser parser = new CSVParserBuilder().withSeparator(SEPARATOR).build();
+        CSVReader csvReader = new CSVReaderBuilder(filereader)
+                .withCSVParser(parser)
+                .build();
+        for (int i = 0; i < nbLinesToSkip; i++) {
+            csvReader.readNext();
+        }
+        String[] infos;
+        while ((infos = csvReader.readNext()) != null) {
+            Date startDate = formatter.parse(infos[1]);
+            Date endDate = formatter.parse(infos[2]);
+            Double nbWorkingDays = parseDouble(infos[4]);
+            Release r = Release.builder()
+                    .name(infos[0])
+                    .startDate(startDate)
+                    .endDate(endDate)
+                    .nbOpenDays(parseInt(infos[3]))
+                    .nbWorkingDays(nbWorkingDays)
+                    .buildCapacityFront(parseDouble(infos[5]))
+                    .buildCapacityMiddle(parseDouble(infos[6]))
+                    .buildCapacityTotal(parseDouble(infos[7]))
+                    .build();
+            releases.add(r);
+        }
+        return releases;
     }
 }

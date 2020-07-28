@@ -2,7 +2,9 @@ package com.jiraReportTest.jiraReportTest.dao.api;
 
 import com.jiraReportTest.jiraReportTest.model.*;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -127,6 +129,7 @@ public class API {
     }
     // ExternalData
     final static String PLANNING_PATH = "planning.csv";
+    final static String RELEASE_PATH = "release.csv";
     // Queries variables
     final static String ISSUE_BUG = "Bug";
     final static String ISSUE_INCIDENT = "Incident";
@@ -217,6 +220,12 @@ public class API {
         return retrospectives;
     }
 
+    /* Method that calls getReleases() from ExternalFiles class
+     * Returns a list of Release object
+     */
+    public static List<Release> getReleases() throws IOException, ParseException {
+        return ExternalFiles.getReleases(RELEASE_PATH);
+    }
     public static HashMap<String, Collaborator> getCollaboratorsPerTeam(String[] requests, String label) {
         HashMap<String, Collaborator> collaborators = new HashMap<>();
         Collaborator c;
