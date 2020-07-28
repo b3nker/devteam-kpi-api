@@ -14,11 +14,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/")
 public class RetrospectiveController {
+    private final static String ORIGINS = "http://localhost:4200";
     @Autowired
     private RetrospectiveService retrospectiveService;
 
     @RequestMapping(value = "/retrospective",method = RequestMethod.GET)
-    @CrossOrigin(origins ="http://localhost:4200")
+    @CrossOrigin(origins = ORIGINS)
     public Collection<Retrospective> getRetrospectives(){
         return this.retrospectiveService.getRetrospectives();
     }

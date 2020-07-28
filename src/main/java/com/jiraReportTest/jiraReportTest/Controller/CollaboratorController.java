@@ -9,13 +9,14 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/")
 public class CollaboratorController {
+    private final static String ORIGINS = "http://localhost:4200";
 
     @Autowired
     private CollaboratorService collaboratorService;
 
 
     @RequestMapping(value = "/sprint/all",method = RequestMethod.GET)
-    @CrossOrigin(origins ="http://localhost:4200")
+    @CrossOrigin(origins = ORIGINS)
     public Collection<Collaborator> getAllCollaboratorsPerSprint(){
         return this.collaboratorService.getAllCollaboratorsPerSprint();
     }

@@ -14,12 +14,12 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/")
 public class BacklogController {
-
+    private final static String ORIGINS = "http://localhost:4200";
     @Autowired
     private BacklogService backlogService;
 
     @RequestMapping(value = "/backlog",method = RequestMethod.GET)
-    @CrossOrigin(origins ="http://localhost:4200")
+    @CrossOrigin(origins = ORIGINS)
     public Backlog getBacklog(){
         return this.backlogService.getBacklog();
     }
