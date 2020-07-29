@@ -1,4 +1,4 @@
-library('pipeline@refactor/docker-image-squash')
+library('pipeline@v10.8.0')
 
 HelmPipeline {
   repository = "eu.gcr.io/neo9-software-factory/n9-images"
