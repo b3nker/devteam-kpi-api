@@ -6,7 +6,7 @@ HelmPipeline {
   k8sConfigID = "xxx-eks"
   chartVersion = "0.11.0"
   chartName = "n9/java-api"
-  releaseName = "april-devteam-kpi"
+  releaseName = "april-devteam-kpi-api"
   continuousDelivery = [
   ]
   target = "builder"
