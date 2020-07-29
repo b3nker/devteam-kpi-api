@@ -1,8 +1,5 @@
 ,,,,,,,
-Sprint #,Date début,Date fin,"Nb
- jours ouvrés","Nb jours équipe
-(3 équipes)",Capacité Build Front,Capacité Build Middle,"Capacité Build
-Totale"
+Sprint #,Date début,Date fin,"Nb jours ouvrés","Nb jours équipe(3 équipes)",Capacité Build Front,Capacité Build Middle,"Capacité Build Totale"
 Release 3.1,24/06/2020,21/07/2020,19,"223,50","37,43","103,20","140,63"
 Release 3.2,22/07/2020,18/08/2020,20,"176,00","31,87","74,80","106,67"
 Release 3.3,19/08/2020,15/09/2020,20,"219,20","37,12","116,64","153,76"

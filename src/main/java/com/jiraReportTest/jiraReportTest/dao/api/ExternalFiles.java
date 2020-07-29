@@ -119,16 +119,15 @@ public class ExternalFiles {
         while ((infos = csvReader.readNext()) != null) {
             Date startDate = formatter.parse(infos[1]);
             Date endDate = formatter.parse(infos[2]);
-            Double nbWorkingDays = parseDouble(infos[4]);
             Release r = Release.builder()
                     .name(infos[0])
                     .startDate(startDate)
                     .endDate(endDate)
                     .nbOpenDays(parseInt(infos[3]))
-                    .nbWorkingDays(nbWorkingDays)
-                    .buildCapacityFront(parseDouble(infos[5]))
-                    .buildCapacityMiddle(parseDouble(infos[6]))
-                    .buildCapacityTotal(parseDouble(infos[7]))
+                    .nbWorkingDays(parseDouble(infos[4].replace(",",".")))
+                    .buildCapacityFront(parseDouble(infos[5].replace(",",".")))
+                    .buildCapacityMiddle(parseDouble(infos[6].replace(",",".")))
+                    .buildCapacityTotal(parseDouble(infos[7].replace(",",".")))
                     .build();
             releases.add(r);
         }
