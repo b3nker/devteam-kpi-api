@@ -15,7 +15,14 @@
 	<description>Reporting Project using Jira API</description>
 
 	<properties>
-		<java.version>1.8</java.version>
+		<java.version>11</java.version>
+
+		<sonar.java.source>11</sonar.java.source>
+		<sonar.jacoco.reportPaths />
+		<sonar.coverage.jacoco.xmlReportPaths>
+			${project.build.directory}/site/jacoco/jacoco.xml
+		</sonar.coverage.jacoco.xmlReportPaths>
+		<sonar-maven-plugin.version>3.7.0.1746</sonar-maven-plugin.version>
 	</properties>
 
 	<dependencies>
@@ -53,6 +60,15 @@
 	</dependencies>
 
 	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.sonarsource.scanner.maven</groupId>
+					<artifactId>sonar-maven-plugin</artifactId>
+					<version>${sonar-maven-plugin.version}</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
