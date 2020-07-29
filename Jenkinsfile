@@ -1,4 +1,4 @@
-library('pipeline@refactor/docker-image-squash')
+library('pipeline@v10.8.0')
 
 HelmPipeline {
   repository = "eu.gcr.io/neo9-software-factory/n9-images"
@@ -6,10 +6,10 @@ HelmPipeline {
   k8sConfigID = "xxx-eks"
   chartVersion = "0.11.0"
   chartName = "n9/java-api"
-  releaseName = "april-devteam-kpi"
+  releaseName = "april-devteam-kpi-api"
   continuousDelivery = [
   ]
   target = "builder"
   sonarCommand = "mvn -gs ./settings.xml compile test sonar:sonar"
-  notifications = [email: 'xavier.michel@neo9.fr']
+  notifications = [email: 'april@neo9.fr']
 }
