@@ -16,13 +16,11 @@ public class SprintController {
     private SprintService sprintService;
 
     @RequestMapping(value = "/sprint", method = RequestMethod.GET)
-    @CrossOrigin(origins = ORIGINS)
     public Collection<Sprint> getSprintTeam(){
         return this.sprintService.getSprint();
     }
 
     @RequestMapping(value = "/sprint/{teamName}", method = RequestMethod.GET)
-    @CrossOrigin(origins = ORIGINS)
     public Sprint getCollaboratorsPerTeamDuringSprint(@PathVariable("teamName") String teamName){
         return this.sprintService.getSprintTeam(teamName);
     }

@@ -18,7 +18,6 @@ public class RetrospectiveController {
     private RetrospectiveService retrospectiveService;
 
     @RequestMapping(value = "/retrospective",method = RequestMethod.GET)
-    @CrossOrigin(origins = ORIGINS)
     public Collection<Retrospective> getRetrospectives(){
         return this.retrospectiveService.getRetrospectives();
     }

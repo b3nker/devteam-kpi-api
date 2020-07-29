@@ -16,7 +16,6 @@ public class BacklogController {
     private BacklogService backlogService;
 
     @RequestMapping(value = "/backlog",method = RequestMethod.GET)
-    @CrossOrigin(origins = ORIGINS)
     public Backlog getBacklog(){
         return this.backlogService.getBacklog();
     }

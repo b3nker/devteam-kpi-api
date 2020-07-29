@@ -69,7 +69,7 @@ public class API {
         ID_COLLABS.put("557058:d8f506a1-fa47-4681-9ab1-7214a062c264", "transverse"); // Vincent Martin
         ID_COLLABS.put("557058:834cbf83-d227-4823-bfdf-db62c8672ad1", "transverse"); // Victor Dumesny
         ID_COLLABS.put("557058:df17bf30-7843-415e-985d-151faba64429", "transverse"); // Philippe Fleur
-        ID_COLLABS.put(null, ""); // unassigned
+        ID_COLLABS.put(null, "none"); // unassigned
     }
     final static ArrayList<String> TEAM_ALPHA = new ArrayList<>(Arrays.asList(
             "5c17b4599f443a65fecae3ca", // Julien Mosset
@@ -147,6 +147,8 @@ public class API {
         Collection<Sprint> sprints = new ArrayList<>();
         for (String label : TEAMS_REQUESTS.keySet()) {
             Team t = getTeam(TEAMS_REQUESTS.get(label), label);
+            for(Collaborator c: t.getCollaborators()){
+            }
             SPRINTS.get(label).setTeam(t);
         }
         return SPRINTS;
@@ -158,7 +160,7 @@ public class API {
     public static HashMap<String, Collaborator> callJiraCollabSprintAPI() {
         HashMap<String, Collaborator> collaborators = new HashMap<>();
         for (String label : TEAMS_REQUESTS.keySet()) {
-            HashMap<String, Collaborator> c = getCollaboratorsPerTeam(TEAMS_REQUESTS.get(label), label);
+            HashMap<String, Collaborator> c = getCollaboratorsPerTeam(TEAMS_REQUESTS.get(label));
             Collaborator unassigned = c.get(UNASSIGNED);
             unassigned.setAccountId(unassigned.getAccountId() + ' ' + label);
             c.remove(UNASSIGNED);
@@ -226,7 +228,7 @@ public class API {
     public static List<Release> getReleases() throws IOException, ParseException {
         return ExternalFiles.getReleases(RELEASE_PATH);
     }
-    public static HashMap<String, Collaborator> getCollaboratorsPerTeam(String[] requests, String label) {
+    public static HashMap<String, Collaborator> getCollaboratorsPerTeam(String[] requests) {
         HashMap<String, Collaborator> collaborators = new HashMap<>();
         Collaborator c;
         for (String request : requests) {
@@ -250,7 +252,7 @@ public class API {
      * returning a HashMap of size nbTeams
      */
     public static Team getTeam(String[] requests, String label) {
-        HashMap<String, Collaborator> collaborators = getCollaboratorsPerTeam(requests, label);
+        HashMap<String, Collaborator> collaborators = getCollaboratorsPerTeam(requests);
         ArrayList<String> team = TEAMS.get(label);
         List<Collaborator> c = new ArrayList<>();
         for (String key : collaborators.keySet()) {

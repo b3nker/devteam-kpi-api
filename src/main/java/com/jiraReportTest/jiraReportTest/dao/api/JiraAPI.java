@@ -1,5 +1,8 @@
 package com.jiraReportTest.jiraReportTest.dao.api;
 
+import com.jiraReportTest.jiraReportTest.dto.jiraApi.AssigneeDto;
+import com.jiraReportTest.jiraReportTest.dto.jiraApi.CollaboratorDto;
+import com.jiraReportTest.jiraReportTest.dto.jiraApi.IssueDto;
 import com.jiraReportTest.jiraReportTest.model.*;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
@@ -7,6 +10,8 @@ import kong.unirest.Unirest;
 import kong.unirest.json.JSONArray;
 import kong.unirest.json.JSONObject;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.*;
 import java.net.URLEncoder;
@@ -58,7 +63,9 @@ public class JiraAPI {
         /*
         Variables
         */
-        int timespent = 0, estimated = 0, remaining = 0;
+        int timespent = 0;
+        int estimated = 0;
+        int remaining = 0;
         double spTotal = 0;
         double spAQualifier = 0;
         double spBacAffinage = 0;
@@ -84,48 +91,41 @@ public class JiraAPI {
         String emailAddress = "";
         String nom = "";
         String prenom = "";
-        String role = "";
-        JSONObject issue;
-        JSONObject fields;
-        JSONObject status;
-        JSONArray issues;
-        JSONArray labels;
+        String role;
         int total;
         String statut;
-        HttpResponse<JsonNode> response = Unirest.get(request)
-                .basicAuth(USERNAME, API_TOKEN)
-                .header("Accept", "application/json")
-                .asJson();
-        JSONObject myObj = response.getBody().getObject();
-        total = myObj.getInt("total");
-        issues = myObj.getJSONArray(JSON_ISSUES);
+        WebClient webClient = WebClient.builder()
+                .filter(ExchangeFilterFunctions.basicAuthentication(USERNAME, API_TOKEN))
+                .defaultHeader("Accept", "application/json")
+                .build();
+        CollaboratorDto c = webClient
+                .get()
+                .uri(request)
+                .retrieve()
+                .bodyToMono(CollaboratorDto.class)
+                .block();
+        /* New logic with web client
+         *
+         */
+        total = c.getTotal();
+        // When assignee has no tickets assigned
         if (total == 0) {
             return null;
         }
-        if (request.contains("null")) {
-            prenom = "Non";
-            nom = "Assigné";
-            accountId = UNASSIGNED;
-        }
-        for (int j = 0; j < issues.length(); j++) {
-            issue = issues.getJSONObject(j);
-            fields = issue.getJSONObject(JSON_FIELDS);
-            status = fields.getJSONObject(JSON_STATUS);
-            labels = fields.getJSONArray("labels");
-            // Collaborator information
-            if (!request.contains("null")) {
-                JSONObject assignee = fields.getJSONObject(JSON_KEY_ASSIGNEE);
-                if (accountId.isEmpty()) {
-                    accountId = assignee.getString("accountId");
-                }
-                if (emailAddress.isEmpty() && assignee.has("emailAddress")) {
-                    emailAddress = assignee.getString("emailAddress");
+        //Setting assignee's personal information
+        for (IssueDto i : c.getIssues()) {
+            statut = i.getFields().getStatus().getName();
+            if(i.getFields().getAssignee() != null){
+                AssigneeDto assignee = i.getFields().getAssignee();
+                accountId = assignee.getAccountId();
+                if (emailAddress.isEmpty() && assignee.getEmailAddress() != null) {
+                    emailAddress = assignee.getEmailAddress();
                     int indexDot = emailAddress.indexOf(".");
                     int indexAt = emailAddress.indexOf("@");
                     prenom = emailAddress.substring(0, indexDot);
                     nom = emailAddress.substring(indexDot + 1, indexAt);
                 } else if (nom.isEmpty() && prenom.isEmpty()) {
-                    String fullName = assignee.getString("displayName");
+                    String fullName = assignee.getDisplayName();
                     int fullNameLength = fullName.length();
                     int indexSpace = fullName.indexOf(" ");
                     if (indexSpace < 0) {
@@ -136,8 +136,6 @@ public class JiraAPI {
                     }
                 }
             }
-            statut = status.getString("name");
-            // Setting Tickets
             if (DONE.contains(statut)) {
                 ticketsDone++;
             } else if (IN_PROGRESS.contains(statut)) {
@@ -156,75 +154,68 @@ public class JiraAPI {
                 ticketsAtester++;
             }
             // Setting working time
-            if (!fields.isNull(JSON_KEY_TIMEESTIMATE)) {
-                remaining += (fields.getInt(JSON_KEY_TIMEESTIMATE) / 3600);
-            }
-            if (!fields.isNull(JSON_KEY_TIMEORIGINALESTIMATE)) {
-                estimated += (fields.getInt(JSON_KEY_TIMEORIGINALESTIMATE) / 3600);
-            }
-            if (!fields.isNull(JSON_KEY_TIMESPENT)) {
-                timespent += (fields.getInt(JSON_KEY_TIMESPENT) / 3600);
-            }
-
-            //Attribution des story points
-            if (!fields.isNull(JSON_KEY_STORYPOINTS)) {
-                double curStoryPoints = fields.getDouble(JSON_KEY_STORYPOINTS);
-                spTotal += curStoryPoints;
-                switch (statut) {
-                    case "A qualifier":
-                        spAQualifier += curStoryPoints;
-                        break;
-                    case "Bac d'affinage":
-                        spBacAffinage += curStoryPoints;
-                        break;
-                    case EN_ATTENTE:
-                        spEnAttente += curStoryPoints;
-                        break;
-                    case "A Faire":
-                        spAFaire += curStoryPoints;
-                        break;
-                    case EN_COURS:
-                        spEnCours += curStoryPoints;
-                        break;
-                    case ABANDONNE:
-                        spAbandonne += curStoryPoints;
-                        break;
-                    case DEV_TERMINE:
-                        spDevTermine += curStoryPoints;
-                        break;
-                    case A_VALIDER:
-                        spAvalider += curStoryPoints;
-                        break;
-                    case A_LIVRER:
-                        spAlivrer += curStoryPoints;
-                        break;
-                    case A_TESTER:
-                        spATester += curStoryPoints;
-                        break;
-                    case REFUSE_RECETTE:
-                        spRefuseEnRecette += curStoryPoints;
-                        break;
-                    case VALIDE_RECETTE:
-                        spValideEnRecette += curStoryPoints;
-                        break;
-                    case LIVRE:
-                        spLivre += curStoryPoints;
-                        break;
-                    case TERMINE:
-                        spTermine += curStoryPoints;
-                        break;
-                    default:
-                        break;
-                }
+            remaining += i.getFields().getTimeestimate() / 3600;
+            estimated += i.getFields().getTimeoriginalestimate() / 3600;
+            timespent += i.getFields().getTimespent() / 3600;
+            //Setting story points
+            double curStoryPoints = i.getFields().getCustomfield_10005();
+            spTotal += curStoryPoints;
+            switch (statut) {
+                case "A qualifier":
+                    spAQualifier += curStoryPoints;
+                    break;
+                case "Bac d'affinage":
+                    spBacAffinage += curStoryPoints;
+                    break;
+                case EN_ATTENTE:
+                    spEnAttente += curStoryPoints;
+                    break;
+                case "A Faire":
+                    spAFaire += curStoryPoints;
+                    break;
+                case EN_COURS:
+                    spEnCours += curStoryPoints;
+                    break;
+                case ABANDONNE:
+                    spAbandonne += curStoryPoints;
+                    break;
+                case DEV_TERMINE:
+                    spDevTermine += curStoryPoints;
+                    break;
+                case A_VALIDER:
+                    spAvalider += curStoryPoints;
+                    break;
+                case A_LIVRER:
+                    spAlivrer += curStoryPoints;
+                    break;
+                case A_TESTER:
+                    spATester += curStoryPoints;
+                    break;
+                case REFUSE_RECETTE:
+                    spRefuseEnRecette += curStoryPoints;
+                    break;
+                case VALIDE_RECETTE:
+                    spValideEnRecette += curStoryPoints;
+                    break;
+                case LIVRE:
+                    spLivre += curStoryPoints;
+                    break;
+                case TERMINE:
+                    spTermine += curStoryPoints;
+                    break;
+                default:
+                    break;
             }
         }
-        //Attribution du role
+        // When assignee is null
         if (request.contains("null")) {
+            prenom = "Non";
+            nom = "Assigné";
+            accountId = UNASSIGNED;
             role = "none";
-        } else {
+        }else{
             role = ID_COLLABS.get(accountId);
         }
-
         //Création d'un objet Collaborateur
         return Collaborator.builder()
                 .accountId(accountId)

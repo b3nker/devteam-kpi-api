@@ -18,7 +18,6 @@ public class ReleaseController {
     private ReleaseService releaseService;
 
     @RequestMapping(value = "/release",method = RequestMethod.GET)
-    @CrossOrigin(origins = ORIGINS)
     public Collection<Release> getRelease(){
         return this.releaseService.getRelease();
     }

@@ -16,18 +16,7 @@ public class CollaboratorController {
 
 
     @RequestMapping(value = "/sprint/all",method = RequestMethod.GET)
-    @CrossOrigin(origins = ORIGINS)
     public Collection<Collaborator> getAllCollaboratorsPerSprint(){
         return this.collaboratorService.getAllCollaboratorsPerSprint();
     }
-    /*
-
-
-    @RequestMapping(value = "/all/week",method = RequestMethod.GET)
-    @CrossOrigin(origins ="http://localhost:4200")
-    public Collection<Collaborator> getAllCollaboratorsPerWeek(){
-        return this.collaboratorService.getAllCollaboratorsPerWeek();
-    }
-
-     */
 }
