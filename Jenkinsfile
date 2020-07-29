@@ -11,5 +11,5 @@ HelmPipeline {
   ]
   target = "builder"
   sonarCommand = "mvn -gs ./settings.xml compile test sonar:sonar"
-  notifications = [email: 'xavier.michel@neo9.fr']
+  notifications = [email: 'april@neo9.fr']
 }
