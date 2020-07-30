@@ -5,9 +5,9 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class CollaboratorDto {
+public class JiraDto {
     private int startAt;
     private int maxResults;
     private int total;
-    private List<IssueDto> issues;
+    private IssueDto[] issues;
 }

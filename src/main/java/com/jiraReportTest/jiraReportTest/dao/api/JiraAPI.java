@@ -1,8 +1,6 @@
 package com.jiraReportTest.jiraReportTest.dao.api;
 
-import com.jiraReportTest.jiraReportTest.dto.jiraApi.AssigneeDto;
-import com.jiraReportTest.jiraReportTest.dto.jiraApi.CollaboratorDto;
-import com.jiraReportTest.jiraReportTest.dto.jiraApi.IssueDto;
+import com.jiraReportTest.jiraReportTest.dto.jiraApi.*;
 import com.jiraReportTest.jiraReportTest.model.*;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
@@ -15,6 +13,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.*;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -32,11 +31,7 @@ public class JiraAPI {
     final static String JSON_STATUS = "status";
     final static String JSON_PRIORITY = "priority";
     // JSONObject's keys
-    final static String JSON_KEY_TIMEESTIMATE = "timeestimate";
-    final static String JSON_KEY_TIMEORIGINALESTIMATE = "timeoriginalestimate";
-    final static String JSON_KEY_TIMESPENT = "timespent";
     final static String JSON_KEY_STORYPOINTS = "customfield_10005";
-    final static String JSON_KEY_ASSIGNEE = "assignee";
     // JIRA STATUS & CUSTOM STATUS
     final static String TERMINE = "Terminé";
     final static String LIVRE = "Livré";
@@ -96,16 +91,7 @@ public class JiraAPI {
         String role;
         int total;
         String statut;
-        WebClient webClient = WebClient.builder()
-                .filter(ExchangeFilterFunctions.basicAuthentication(USERNAME, API_TOKEN))
-                .defaultHeader("Accept", "application/json")
-                .build();
-        CollaboratorDto c = webClient
-                .get()
-                .uri(request)
-                .retrieve()
-                .bodyToMono(CollaboratorDto.class)
-                .block();
+        JiraDto c = JiraAPI.connectToJiraAPI(request);
         /* New logic with web client
          *
          */
@@ -156,11 +142,11 @@ public class JiraAPI {
                 ticketsAtester++;
             }
             // Setting working time
-            remaining += i.getFields().getTimeestimate() / 3600;
-            estimated += i.getFields().getTimeoriginalestimate() / 3600;
-            timespent += i.getFields().getTimespent() / 3600;
+            remaining += i.getFields().getTimeestimate() / (double) 3600;
+            estimated += i.getFields().getTimeoriginalestimate() / (double)3600;
+            timespent += i.getFields().getTimespent() / (double)3600;
             //Setting story points
-            double curStoryPoints = i.getFields().getCustomfield_10005();
+            double curStoryPoints = i.getFields().getStoryPoints();
             spTotal += curStoryPoints;
             switch (statut) {
                 case "A qualifier":
@@ -329,7 +315,7 @@ public class JiraAPI {
     /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug/incident created
      *  Index i represent the number of bugs created (nbDays-i) ago
      */
-    public static int[] getCreated(int nbDays, String projectName, String issueType) throws UnsupportedEncodingException {
+    public static int[] getCreated(int nbDays, String projectName, String issueType) {
         /*
         Variables
          */
@@ -343,7 +329,7 @@ public class JiraAPI {
         JSONObject fields;
         LocalDate ldtBug;
         String request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+created" +
-                URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+                URLEncoder.encode(">=", StandardCharsets.UTF_8) + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
         /*
         Logic
          */
@@ -367,7 +353,7 @@ public class JiraAPI {
             //on incrémente du nombre de résultats dans la requête
             startAt += MAX_RESULTS;
             request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+created" +
-                    URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+                    URLEncoder.encode(">=", StandardCharsets.UTF_8) + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
             response = Unirest.get(request)
                     .basicAuth(USERNAME, API_TOKEN)
                     .header("Accept", "application/json")
@@ -528,5 +514,18 @@ public class JiraAPI {
             }
         }
         return spIssue;
+    }
+
+    public static JiraDto connectToJiraAPI(String request){
+        WebClient webClient = WebClient.builder()
+                .filter(ExchangeFilterFunctions.basicAuthentication(USERNAME, API_TOKEN))
+                .defaultHeader("Accept", "application/json")
+                .build();
+        return webClient
+                .get()
+                .uri(request)
+                .retrieve()
+                .bodyToMono(JiraDto.class)
+                .block();
     }
 }

@@ -23,7 +23,7 @@ public class API {
     final static String BOARD_ID_GAMMA_SP = "450";
     final static String PROJECT_NAME = "BMKP";
     final static String RUN_PROJECT_NAME = "RMKP";
-    final static int MAX_RESULTS = 100;
+    final static int MAX_RESULTS = 50;
     final static int NB_SPRINTS_RETROSPECTIVE = 4;
     final static int NB_DAYS_BACKLOG = 20;
     //Collaborator & team information

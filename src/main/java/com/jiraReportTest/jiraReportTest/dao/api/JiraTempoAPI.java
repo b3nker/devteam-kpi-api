@@ -1,13 +1,7 @@
 package com.jiraReportTest.jiraReportTest.dao.api;
 
-import com.jiraReportTest.jiraReportTest.dto.jiraApi.CollaboratorDto;
 import com.jiraReportTest.jiraReportTest.dto.tempo.ResultsDto;
 import com.jiraReportTest.jiraReportTest.dto.tempo.TempoDto;
-import kong.unirest.HttpResponse;
-import kong.unirest.JsonNode;
-import kong.unirest.Unirest;
-import kong.unirest.json.JSONObject;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import static com.jiraReportTest.jiraReportTest.dao.api.API.*;

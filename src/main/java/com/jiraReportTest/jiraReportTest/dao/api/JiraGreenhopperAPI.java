@@ -1,12 +1,19 @@
 package com.jiraReportTest.jiraReportTest.dao.api;
 
+import com.jiraReportTest.jiraReportTest.dto.jiraAgileApi.AgileDto;
+import com.jiraReportTest.jiraReportTest.dto.jiraGreenhopper.ContentsDto;
+import com.jiraReportTest.jiraReportTest.dto.jiraGreenhopper.JiraGreenHopperDto;
 import com.jiraReportTest.jiraReportTest.model.SprintCommitment;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
 import kong.unirest.Unirest;
 import kong.unirest.json.JSONObject;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import static com.jiraReportTest.jiraReportTest.dao.api.API.API_TOKEN;
 import static com.jiraReportTest.jiraReportTest.dao.api.API.USERNAME;
@@ -34,43 +41,32 @@ public class JiraGreenhopperAPI {
         /*
         Logic
          */
-        HttpResponse<JsonNode> response = Unirest.get(request)
-                .basicAuth(USERNAME, API_TOKEN)
-                .header("Accept", "application/json")
-                .asJson();
-        JSONObject myObj = response.getBody().getObject();
-        JSONObject contents = myObj.getJSONObject("contents");
-        JSONObject addedIssues = contents.getJSONObject("issueKeysAddedDuringSprint");
-        // Completed Issues
-        JSONObject completedIssuesEstimateSum = contents.getJSONObject("completedIssuesEstimateSum");
-        JSONObject completedIssuesInitialEstimateSum = contents.getJSONObject("completedIssuesInitialEstimateSum");
-        // Not Completed Issues
-        JSONObject issuesNotCompletedEstimateSum = contents.getJSONObject("issuesNotCompletedEstimateSum");
-        JSONObject issuesNotCompletedInitialEstimateSum = contents.getJSONObject("issuesNotCompletedInitialEstimateSum");
-        //All issues
-        JSONObject allIssuesEstimateSum = contents.getJSONObject("allIssuesEstimateSum");
-
-        if (completedIssuesEstimateSum.has("value")) {
-            completedWork += completedIssuesEstimateSum.getInt("value");
-            initialCommitment += completedIssuesEstimateSum.getInt("value");
-        }
-        if (completedIssuesInitialEstimateSum.has("value")) {
-            initialCommitment += completedIssuesInitialEstimateSum.getInt("value");
-        }
-        if (issuesNotCompletedEstimateSum.has("value")) {
-            initialCommitment += issuesNotCompletedEstimateSum.getInt("value");
-        }
-        if (issuesNotCompletedInitialEstimateSum.has("value")) {
-            initialCommitment += issuesNotCompletedInitialEstimateSum.getInt("value");
-        }
-        if (allIssuesEstimateSum.has("value")) {
-            finalCommitment += allIssuesEstimateSum.getInt("value");
-        }
+        WebClient webClient = WebClient.builder()
+                .filter(ExchangeFilterFunctions.basicAuthentication(USERNAME, API_TOKEN))
+                .defaultHeader("Accept", "application/json")
+                .build();
+        JiraGreenHopperDto greenHopperDto = webClient
+                .get()
+                .uri(request)
+                .retrieve()
+                .bodyToMono(JiraGreenHopperDto.class)
+                .block();
+        ContentsDto contents = greenHopperDto.getContents();
+        Set<String> addedIssues = contents.getIssueKeysAddedDuringSprint().keySet();
+        int completedIssuesEstimateSum = contents.getCompletedIssuesEstimateSum().getValue();
+        int completedIssuesInitialEstimateSum = contents.getCompletedIssuesInitialEstimateSum().getValue();
+        int issuesNotCompletedEstimateSum = contents.getIssuesNotCompletedEstimateSum().getValue();
+        int issuesNotCompletedInitialEstimateSum = contents.getIssuesNotCompletedInitialEstimateSum().getValue();
+        int allIssuesEstimateSum = contents.getAllIssuesEstimateSum().getValue();
+        completedWork += completedIssuesEstimateSum;
+        initialCommitment += completedIssuesEstimateSum;
+        initialCommitment += completedIssuesInitialEstimateSum;
+        initialCommitment += issuesNotCompletedEstimateSum;
+        initialCommitment += issuesNotCompletedInitialEstimateSum;
+        finalCommitment += allIssuesEstimateSum;
         //Added issues
-        Iterator<String> keys = addedIssues.keys();
-        while (keys.hasNext()) {
-            String issueID = keys.next();
-            addedWork += JiraAPI.getStoryPoint(issueID);
+        for (String issueKey: addedIssues) {
+            addedWork += JiraAPI.getStoryPoint(issueKey);
         }
         commitment[0] = initialCommitment;
         commitment[1] = finalCommitment;
