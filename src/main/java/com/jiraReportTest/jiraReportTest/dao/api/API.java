@@ -17,7 +17,7 @@ public class API {
     final static String USERNAME = "benjamin.kermani@neo9.fr";
     final static String API_TOKEN = "sqjFnTAVspNM4NxLd1QZC5CB";
     final static String API_TOKEN_TEMPO = "J1eKPcvcMlCvMjNBvXyJmn0vMPvGs0";
-    final static String BOARD_ID = "391";
+    final static String PROJECT_BOARD_ID = "391";
     final static String BOARD_ID_ALPHA_SP = "451";
     final static String BOARD_ID_BETA_SP = "443";
     final static String BOARD_ID_GAMMA_SP = "450";

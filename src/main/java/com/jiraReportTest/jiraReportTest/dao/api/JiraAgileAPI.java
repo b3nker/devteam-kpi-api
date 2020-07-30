@@ -1,17 +1,15 @@
 package com.jiraReportTest.jiraReportTest.dao.api;
 
+import com.jiraReportTest.jiraReportTest.dto.jiraAgileApi.AgileDto;
+import com.jiraReportTest.jiraReportTest.dto.jiraAgileApi.SprintDto;
 import com.jiraReportTest.jiraReportTest.model.Sprint;
 import com.jiraReportTest.jiraReportTest.model.SprintCommitment;
 import kong.unirest.HttpResponse;
 import kong.unirest.JsonNode;
-import kong.unirest.Unirest;
-import kong.unirest.json.JSONArray;
-import kong.unirest.json.JSONObject;
-
+import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
+import org.springframework.web.reactive.function.client.WebClient;
 import java.time.LocalDateTime;
-
 import static com.jiraReportTest.jiraReportTest.dao.api.API.*;
-import static java.lang.Integer.parseInt;
 
 public class JiraAgileAPI {
     final static String JIRA_AGILE_API_URL = "https://apriltechnologies.atlassian.net/rest/agile/1.0/";
@@ -26,31 +24,23 @@ public class JiraAgileAPI {
         SprintCommitment[] sc = new SprintCommitment[nbSprints];
         String sprintName;
         int sprintId;
-        JSONObject myObj;
-        JSONArray values;
-        JSONObject value;
-        String request = JIRA_AGILE_API_URL + "/board/" + BOARD_ID + "/sprint";
+        String request = JIRA_AGILE_API_URL + "/board/" + PROJECT_BOARD_ID + "/sprint";
         int lastlyActiveSprintIndex = -1;
-
         /*
         Logic
          */
-        HttpResponse<JsonNode> response = Unirest.get(request)
-                .basicAuth(USERNAME, API_TOKEN)
-                .header("Accept", "application/json")
-                .asJson();
-        myObj = response.getBody().getObject();
-        values = myObj.getJSONArray("values");
-        for (int i = 0; i < values.length(); i++) {
-            value = values.getJSONObject(i);
-            if (value.getString("state").equals("active")) {
+        AgileDto agileDto = JiraAgileAPI.connectToJiraAgileAPI(request);
+        assert agileDto != null;
+        SprintDto[] sprintsDto = agileDto.getValues();
+        for (int i = 0; i < sprintsDto.length; i++) {
+            if (ACTIVE_SPRINT.equals(sprintsDto[i].getState())) {
                 lastlyActiveSprintIndex = i;
             }
         }
         for (int i = 0; i < nbSprints; i++){
-            value = values.getJSONObject(lastlyActiveSprintIndex - i);
-            sprintName = value.getString("name");
-            sprintId = parseInt(value.getString("id"));
+            SprintDto s = sprintsDto[lastlyActiveSprintIndex-i];
+            sprintName = s.getName();
+            sprintId = s.getId();
             sc[i] = SprintCommitment.builder()
                     .name(sprintName)
                     .id(sprintId)
@@ -67,26 +57,21 @@ public class JiraAgileAPI {
         String endDate = "";
         String sprintName = "";
         int sprintId = 0;
-        String request = JIRA_AGILE_API_URL + "board/" + BOARD_ID + "/sprint";
-        HttpResponse<JsonNode> response = Unirest.get(request)
-                .basicAuth(USERNAME, API_TOKEN)
-                .header("Accept", "application/json")
-                .asJson();
-        JSONObject myObj = response.getBody().getObject();
-        JSONArray values = myObj.getJSONArray("values");
-        for (int i = 0; i < values.length(); i++) {
-            JSONObject value = values.getJSONObject(i);
-            if (value.getString("state").equals("active")) {
-                sprintName = value.getString("name");
-                startDate = value.getString("startDate");
-                endDate = value.getString("endDate");
-                sprintId = parseInt(value.getString("id"));
+        String request = JIRA_AGILE_API_URL + "board/" + PROJECT_BOARD_ID + "/sprint";
+        AgileDto agileDto = JiraAgileAPI.connectToJiraAgileAPI(request);
+        assert agileDto != null;
+        SprintDto[] sprintsDto = agileDto.getValues();
+        for (SprintDto s: sprintsDto) {
+            if (s.getState().contains(ACTIVE_SPRINT)) {
+                sprintName = s.getName();
+                startDate = s.getStartDate();
+                endDate = s.getEndDate();
+                sprintId = s.getId();
                 break;
             }
         }
         LocalDateTime ldStart = Sprint.toLocalDateTime(startDate);
         LocalDateTime ldEnd = Sprint.toLocalDateTime(endDate);
-
         return Sprint.builder()
                 .id(sprintId)
                 .name(sprintName)
@@ -105,24 +90,20 @@ public class JiraAgileAPI {
         String endDate = "";
         String sprintName = "";
         int sprintId = 0;
+        String name;
         String teamNameLC = teamName.toLowerCase();
-        String request = JIRA_AGILE_API_URL + "board/" + BOARD_ID + "/sprint";
-        HttpResponse<JsonNode> response = Unirest.get(request)
-                .basicAuth(USERNAME, API_TOKEN)
-                .header("Accept", "application/json")
-                .asJson();
-        JSONObject myObj = response.getBody().getObject();
-        JSONArray values = myObj.getJSONArray("values");
-        mainLoop:
-        for (int i = 0; i < values.length(); i++) {
-            JSONObject value = values.getJSONObject(i);
-            String name = value.getString("name").toLowerCase();
-            if (ACTIVE_SPRINT.equals(value.getString("state")) && name.contains(teamNameLC)) {
-                sprintName = value.getString("name");
-                startDate = value.getString("startDate");
-                endDate = value.getString("endDate");
-                sprintId = parseInt(value.getString("id"));
-                break mainLoop;
+        String request = JIRA_AGILE_API_URL + "board/" + PROJECT_BOARD_ID + "/sprint";
+        AgileDto agileDto = JiraAgileAPI.connectToJiraAgileAPI(request);
+        assert agileDto != null;
+        SprintDto[] sprintsDto = agileDto.getValues();
+        for (SprintDto s: sprintsDto) {
+            name = s.getName().toLowerCase();
+            if (ACTIVE_SPRINT.equals(s.getState()) && name.contains(teamNameLC)) {
+                sprintName = s.getName();
+                startDate = s.getStartDate();
+                endDate = s.getEndDate();
+                sprintId = s.getId();
+                break;
             }
         }
         return Sprint.builder()
@@ -131,5 +112,21 @@ public class JiraAgileAPI {
                 .startDate(Sprint.toLocalDateTime(startDate))
                 .endDate(Sprint.toLocalDateTime(endDate))
                 .build();
+    }
+
+    /* Method that connect to Jira Agile API
+     * GET on the given request
+     */
+    public static AgileDto connectToJiraAgileAPI(String request){
+        WebClient webClient = WebClient.builder()
+                .filter(ExchangeFilterFunctions.basicAuthentication(USERNAME, API_TOKEN))
+                .defaultHeader("Accept", "application/json")
+                .build();
+        return webClient
+                .get()
+                .uri(request)
+                .retrieve()
+                .bodyToMono(AgileDto.class)
+                .block();
     }
 }
