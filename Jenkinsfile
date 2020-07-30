@@ -10,6 +10,6 @@ HelmPipeline {
   continuousDelivery = [
   ]
   target = "builder"
-  sonarCommand = "mvn -gs ./settings.xml compile test sonar:sonar"
+  sonarCommand = "mvn -gs ./settings.xml compile test sonar:sonar -Dsonar.projectKey=april-devteam-kpi-api -Dsonar.projectName=april-devteam-kpi-api"
   notifications = [email: 'april@neo9.fr']
 }
