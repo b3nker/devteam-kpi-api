@@ -48,7 +48,7 @@ public class API {
         ID_COLLABS.put("5a9ebdf74af2372a88a06565", "middle lead dev"); // Gabriel Roquigny
         ID_COLLABS.put("5a2181081594706402dee482", "front lead dev"); // Etienne Bourgouin
         ID_COLLABS.put("5afe92f251d0b7540b43de81", "middle"); // Malick Diagne
-        ID_COLLABS.put("5e98521a3a8b910c085d6a28", "middle"); // Kévin Youna
+        ID_COLLABS.put("5e98521a3a8b910c085d6a28", "front"); // Kévin Youna
         ID_COLLABS.put("5d6e32e06e3e1f0d9623cb5a", "middle"); // Pierre Tomasina
         ID_COLLABS.put("5e285008ee264b0e74591993", "middle lead dev"); // Eric Coupal
         ID_COLLABS.put("5ed76cc1be03220ab32183be", "front lead dev"); // Thibault Foucault
@@ -128,7 +128,7 @@ public class API {
     final static DateTimeFormatter dtfLocalDate = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     final static String TODAY = LocalDateTime.now().format(dtf);
     final static String TODAY_LD = LocalDateTime.now().format(dtfLocalDate);
-    
+
     private API(){}
 
     /* Returns a HashMap <TeamName, Sprint> using JiraAPI and getTeams() method
