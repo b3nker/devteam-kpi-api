@@ -18,6 +18,6 @@ public class CollaboratorDao {
     }
 
     public Collection<Collaborator> getAllCollaboratorsPerSprint(){
-        return this.collaboratorsSprint.values();
+        return collaboratorsSprint.values();
     }
 }

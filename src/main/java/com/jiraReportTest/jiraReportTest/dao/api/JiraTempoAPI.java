@@ -19,8 +19,8 @@ public class JiraTempoAPI {
      * String dates should have the following format 'yyyy-dd-mm'
      */
 
-    public static int getWorklogByAccountID(String accountID, String startDate, String endDate){
-        int loggedTime = 0;
+    public static double getWorklogByAccountID(String accountID, String startDate, String endDate){
+        double loggedTime = 0;
         String request = JIRA_TEMPO_API_URL + "/worklogs/user/" + accountID + "?&from=" + startDate + "&to=" + endDate;
         WebClient webClient = WebClient.builder()
                 .defaultHeader("Accept", "application/json")
@@ -33,7 +33,7 @@ public class JiraTempoAPI {
                 .bodyToMono(TempoDto.class)
                 .block();
         for(ResultsDto r: t.getResults()){
-            loggedTime += r.getTimeSpentSeconds();
+            loggedTime += r.getTimeSpentSeconds() / (double)3600;
         }
         return loggedTime;
     }

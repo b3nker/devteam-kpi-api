@@ -13,7 +13,6 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/")
 public class RetrospectiveController {
-    private final static String ORIGINS = "http://localhost:4200";
     @Autowired
     private RetrospectiveService retrospectiveService;
 

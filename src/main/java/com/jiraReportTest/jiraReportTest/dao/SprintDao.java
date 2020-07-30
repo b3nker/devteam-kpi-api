@@ -16,9 +16,9 @@ public class SprintDao {
     }
 
     public Collection<Sprint> getSprints(){
-        return this.sprints.values();
+        return sprints.values();
     }
 
-    public Sprint getSprintTeam(String teamName) { return this.sprints.get(teamName); }
+    public Sprint getSprintTeam(String teamName) { return sprints.get(teamName); }
 
 }

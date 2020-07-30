@@ -20,6 +20,6 @@ public class BacklogDao {
     }
 
     public Backlog getBacklog(){
-        return this.backlog;
+        return backlog;
     }
 }

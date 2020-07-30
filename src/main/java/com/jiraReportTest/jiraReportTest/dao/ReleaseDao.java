@@ -21,6 +21,6 @@ public class ReleaseDao {
     }
 
     public Collection<Release> getReleases(){
-        return this.releases;
+        return releases;
     }
 }

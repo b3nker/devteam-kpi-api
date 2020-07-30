@@ -59,13 +59,15 @@ public class JiraAPI {
     /* Main method : Returns a Collaborator object if it has at least one ticket
      * else return null
      */
-    public static Collaborator getCollaborator(String request) {
+    public static Collaborator getCollaborator(String accId, String label, Sprint s) {
         /*
         Variables
         */
-        int timespent = 0;
-        int estimated = 0;
-        int remaining = 0;
+        String request = JIRA_API_URL + "search?jql=project=" + PROJECT_NAME + "+AND+assignee=" + accId +
+                "+AND+sprint=" + s.getId() + "+AND+labels=" + label + "&maxResults=" + MAX_RESULTS;
+        double timespent = 0;
+        double estimated = 0;
+        double remaining = 0;
         double spTotal = 0;
         double spAQualifier = 0;
         double spBacAffinage = 0;
@@ -215,6 +217,8 @@ public class JiraAPI {
             role = "none";
         }else{
             role = ID_COLLABS.get(accountId);
+            //Calling tempo API
+            timespent = JiraTempoAPI.getWorklogByAccountID(accId, s.getStartDate().format(dtfLocalDate), s.getEndDate().format(dtfLocalDate));
         }
         //Création d'un objet Collaborateur
         return Collaborator.builder()
@@ -524,20 +528,5 @@ public class JiraAPI {
             }
         }
         return spIssue;
-    }
-
-    /* Method that return an array of string.
-     * Requests are filtered by project, assignee and sprint
-     * (and labels, but it will change when sprints will be splitted by team)
-     */
-    public static String[] getSprintRequests(int sprintId, String label) {
-        String[] sprintRequests = new String[ID_COLLABS.size()];
-        int i = 0;
-        for (String s : ID_COLLABS.keySet()) {
-            sprintRequests[i] = JIRA_API_URL + "search?jql=project=" + PROJECT_NAME + "+AND+assignee=" + s +
-                    "+AND+sprint=" + sprintId + "+AND+labels=" + label + "&maxResults=" + MAX_RESULTS;
-            i++;
-        }
-        return sprintRequests;
     }
 }

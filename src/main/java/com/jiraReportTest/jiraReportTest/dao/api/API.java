@@ -1,6 +1,7 @@
 package com.jiraReportTest.jiraReportTest.dao.api;
 
 import com.jiraReportTest.jiraReportTest.model.*;
+import com.jiraReportTest.jiraReportTest.service.TeamService;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -11,7 +12,7 @@ import java.util.*;
 
 
 public class API {
-
+    private API(){}
     //Project's variables
     final static String USERNAME = "benjamin.kermani@neo9.fr";
     final static String API_TOKEN = "sqjFnTAVspNM4NxLd1QZC5CB";
@@ -78,7 +79,7 @@ public class API {
             "5cf921f6b06c540e82580cbd", // Valentin Pierrel
             "5ed76cdf2fdc580b88f3bbef", // Alex Cheuko
             "5a9ebdf74af2372a88a06565", // Gabriel Roquigny
-            UNASSIGNED
+            "null"
     ));
     final static ArrayList<String> TEAM_BETA = new ArrayList<>(Arrays.asList(
             "5cb45bb34064460e407eabe4", // Guillermo Garcès
@@ -88,7 +89,7 @@ public class API {
             "5ed64583620b1d0c168d4e36", // Anthony Hernandez
             "5ef1afd6561e0e0aae904914", // Yong Ma
             "5e98521a3a8b910c085d6a28", // Kévin Youna
-            UNASSIGNED
+            "null"
     ));
     final static ArrayList<String> TEAM_GAMMA = new ArrayList<>(Arrays.asList(
             "5e285008ee264b0e74591993", // Eric Coupal
@@ -97,7 +98,7 @@ public class API {
             "5d9b0573ea65c10c3fdbaab2", // Maxime Fourt
             "5a8155f0cad06b353733bae8", // Guillaume Coppens
             "5dfd11b39422830cacaa8a79", // Carthy Marie Joseph
-            UNASSIGNED
+            "null"
     ));
     final static HashMap<String, ArrayList<String>> TEAMS = new HashMap<>();
     static {
@@ -117,16 +118,6 @@ public class API {
         SPRINTS.put(TEAM_NAME_BETA, SPRINT_ACTIF_BETA);
         SPRINTS.put(TEAM_NAME_GAMMA, SPRINT_ACTIF_GAMMA);
     }
-    final static String[] REQUESTS_SPRINT_ALPHA = JiraAPI.getSprintRequests(SPRINTS.get(TEAM_NAME_ALPHA).getId(), TEAM_NAME_ALPHA);
-    final static String[] REQUESTS_SPRINT_BETA = JiraAPI.getSprintRequests(SPRINTS.get(TEAM_NAME_BETA).getId(), TEAM_NAME_BETA);
-    final static String[] REQUESTS_SPRINT_GAMMA = JiraAPI.getSprintRequests(SPRINTS.get(TEAM_NAME_GAMMA).getId(), TEAM_NAME_GAMMA);
-    final static HashMap<String, String[]> TEAMS_REQUESTS = new HashMap<>();
-    static {
-        TEAMS_REQUESTS.put(TEAM_NAME_ALPHA, REQUESTS_SPRINT_ALPHA);
-        TEAMS_REQUESTS.put(TEAM_NAME_BETA, REQUESTS_SPRINT_BETA);
-        TEAMS_REQUESTS.put(TEAM_NAME_GAMMA, REQUESTS_SPRINT_GAMMA);
-
-    }
     // ExternalData
     final static String PLANNING_PATH = "planning.csv";
     final static String RELEASE_PATH = "release.csv";
@@ -144,11 +135,8 @@ public class API {
      * Retrieve all data from the lastly active sprint
      */
     public static HashMap<String,Sprint> callJiraSprintAPI() {
-        Collection<Sprint> sprints = new ArrayList<>();
-        for (String label : TEAMS_REQUESTS.keySet()) {
-            Team t = getTeam(TEAMS_REQUESTS.get(label), label);
-            for(Collaborator c: t.getCollaborators()){
-            }
+        for (String label : TEAMS.keySet()) {
+            Team t = getTeam(TEAMS.get(label), label);
             SPRINTS.get(label).setTeam(t);
         }
         return SPRINTS;
@@ -159,10 +147,10 @@ public class API {
      */
     public static HashMap<String, Collaborator> callJiraCollabSprintAPI() {
         HashMap<String, Collaborator> collaborators = new HashMap<>();
-        for (String label : TEAMS_REQUESTS.keySet()) {
-            HashMap<String, Collaborator> c = getCollaboratorsPerTeam(TEAMS_REQUESTS.get(label));
+        for (String label : TEAMS.keySet()) {
+            HashMap<String, Collaborator> c = getCollaboratorsPerTeam(TEAMS.get(label), label);
             Collaborator unassigned = c.get(UNASSIGNED);
-            unassigned.setAccountId(unassigned.getAccountId() + ' ' + label);
+            unassigned.setAccountId(UNASSIGNED + ' ' + label);
             c.remove(UNASSIGNED);
             c.put(unassigned.getAccountId(), unassigned);
             collaborators.putAll(c);
@@ -202,7 +190,6 @@ public class API {
      */
     public static HashMap<String, Retrospective> callJiraRetrospectiveAPI() {
         HashMap<String, Retrospective> retrospectives = new HashMap<>();
-        int i = 0;
         for (String s : TEAM_PAIR.keySet()) {
             SprintCommitment[] sprints = JiraAgileAPI.getLastlyClosedSprints(NB_SPRINTS_RETROSPECTIVE);
             for (SprintCommitment sprint : sprints) {
@@ -211,7 +198,6 @@ public class API {
                 sprint.setFinalCommitment(commitment[1]);
                 sprint.setAddedWork(commitment[2]);
                 sprint.setCompletedWork(commitment[3]);
-                i++;
             }
             Retrospective r = Retrospective.builder()
                     .teamName(s)
@@ -228,11 +214,11 @@ public class API {
     public static List<Release> getReleases() throws IOException, ParseException {
         return ExternalFiles.getReleases(RELEASE_PATH);
     }
-    public static HashMap<String, Collaborator> getCollaboratorsPerTeam(String[] requests) {
+    public static HashMap<String, Collaborator> getCollaboratorsPerTeam(ArrayList<String> teamAccId, String teamName) {
         HashMap<String, Collaborator> collaborators = new HashMap<>();
         Collaborator c;
-        for (String request : requests) {
-            if ((c = JiraAPI.getCollaborator(request)) != null) {
+        for (String accId : teamAccId) {
+            if ((c = JiraAPI.getCollaborator(accId, teamName, SPRINTS.get(teamName))) != null) {
                 collaborators.put(c.getAccountId(), c);
             }
         }
@@ -251,15 +237,10 @@ public class API {
     /* Call above method, getCollaborators() and assign each collaborator to its team
      * returning a HashMap of size nbTeams
      */
-    public static Team getTeam(String[] requests, String label) {
-        HashMap<String, Collaborator> collaborators = getCollaboratorsPerTeam(requests);
-        ArrayList<String> team = TEAMS.get(label);
+    public static Team getTeam(ArrayList<String> teamAccId, String label) {
+        HashMap<String, Collaborator> collaborators = getCollaboratorsPerTeam(teamAccId, label);
         List<Collaborator> c = new ArrayList<>();
-        for (String key : collaborators.keySet()) {
-            if (team.contains(key)) {
-                c.add(collaborators.get(key));
-            }
-        }
+        c.addAll(collaborators.values());
         return Team.builder()
                 .name(label)
                 .collaborators(c)

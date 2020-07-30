@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/")
 public class BacklogController {
-    private final static String ORIGINS = "http://localhost:4200";
     @Autowired
     private BacklogService backlogService;
 

@@ -11,7 +11,6 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/")
 public class SprintController {
-    private final static String ORIGINS = "http://localhost:4200";
     @Autowired
     private SprintService sprintService;
 

@@ -16,6 +16,6 @@ public class RetrospectiveDao {
     }
 
     public Collection<Retrospective> getRetrospectives() {
-        return this.retrospectives.values();
+        return retrospectives.values();
     }
 }
