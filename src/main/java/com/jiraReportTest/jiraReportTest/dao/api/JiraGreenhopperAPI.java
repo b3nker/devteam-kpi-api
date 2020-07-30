@@ -11,6 +11,7 @@ import kong.unirest.json.JSONObject;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -22,12 +23,33 @@ import static java.lang.Integer.parseInt;
 public class JiraGreenhopperAPI {
     final static String JIRA_GREENHOPPER_URL = "https://apriltechnologies.atlassian.net/rest/greenhopper/1.0/";
 
+    private JiraGreenhopperAPI(){}
     /* Returns 4 information on a sprint
      * 0: initialCommitment
      * 1: finalCommitment
      * 2: addedWork
      * 3: completedWork
      */
+    public static List<String> getIssueKeys(SprintCommitment s, String boardId){
+        String request = JIRA_GREENHOPPER_URL + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
+        /*
+        Logic
+         */
+        WebClient webClient = WebClient.builder()
+                .filter(ExchangeFilterFunctions.basicAuthentication(USERNAME, API_TOKEN))
+                .defaultHeader("Accept", "application/json")
+                .build();
+        JiraGreenHopperDto greenHopperDto = webClient
+                .get()
+                .uri(request)
+                .retrieve()
+                .bodyToMono(JiraGreenHopperDto.class)
+                .block();
+        assert greenHopperDto != null;
+        Set<String> addedIssues = greenHopperDto.getContents().getIssueKeysAddedDuringSprint().keySet();
+        return new ArrayList<>(addedIssues);
+    }
+
     public static double[] getCommitment(SprintCommitment s, String boardId) {
         /*
         Variables

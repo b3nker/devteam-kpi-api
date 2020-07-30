@@ -3,6 +3,8 @@ package com.jiraReportTest.jiraReportTest.model;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class SprintCommitment {
@@ -12,5 +14,6 @@ public class SprintCommitment {
     private double finalCommitment;
     private double addedWork;
     private double completedWork;
+    private List<String> addedIssueKeys;
 
 }

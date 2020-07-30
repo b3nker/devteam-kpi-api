@@ -28,6 +28,8 @@ public class ExternalFiles {
     final static Character SEPARATOR = ',';
     final static SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
 
+    private ExternalFiles(){}
+
     /* Reads "planning.csv" and extract two data, the working time and the available time per collaborator
      * HashMap <AccountID,[workingTime, availableTime]>
      */

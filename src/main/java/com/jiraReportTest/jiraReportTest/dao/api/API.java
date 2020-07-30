@@ -12,7 +12,6 @@ import java.util.*;
 
 
 public class API {
-    private API(){}
     //Project's variables
     final static String USERNAME = "benjamin.kermani@neo9.fr";
     final static String API_TOKEN = "sqjFnTAVspNM4NxLd1QZC5CB";
@@ -129,13 +128,15 @@ public class API {
     final static DateTimeFormatter dtfLocalDate = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     final static String TODAY = LocalDateTime.now().format(dtf);
     final static String TODAY_LD = LocalDateTime.now().format(dtfLocalDate);
-
+    
+    private API(){}
 
     /* Returns a HashMap <TeamName, Sprint> using JiraAPI and getTeams() method
      * Retrieve all data from the lastly active sprint
      */
     public static HashMap<String,Sprint> callJiraSprintAPI() {
-        for (String label : TEAMS.keySet()) {
+        for (Map.Entry<String, ArrayList<String>> entry: TEAMS.entrySet()) {
+            String label = entry.getKey();
             Team t = getTeam(TEAMS.get(label), label);
             SPRINTS.get(label).setTeam(t);
         }
@@ -147,7 +148,8 @@ public class API {
      */
     public static HashMap<String, Collaborator> callJiraCollabSprintAPI() {
         HashMap<String, Collaborator> collaborators = new HashMap<>();
-        for (String label : TEAMS.keySet()) {
+        for (Map.Entry<String, ArrayList<String>> entry : TEAMS.entrySet()) {
+            String label = entry.getKey();
             HashMap<String, Collaborator> c = getCollaboratorsPerTeam(TEAMS.get(label), label);
             Collaborator unassigned = c.get(UNASSIGNED);
             unassigned.setAccountId(UNASSIGNED + ' ' + label);
@@ -190,17 +192,20 @@ public class API {
      */
     public static HashMap<String, Retrospective> callJiraRetrospectiveAPI() {
         HashMap<String, Retrospective> retrospectives = new HashMap<>();
-        for (String s : TEAM_PAIR.keySet()) {
+        for (Map.Entry<String,String> entry: TEAM_PAIR.entrySet()) {
+            String teamName = entry.getKey();
             SprintCommitment[] sprints = JiraAgileAPI.getLastlyClosedSprints(NB_SPRINTS_RETROSPECTIVE);
             for (SprintCommitment sprint : sprints) {
-                double[] commitment = JiraGreenhopperAPI.getCommitment(sprint, TEAM_PAIR.get(s));
+                double[] commitment = JiraGreenhopperAPI.getCommitment(sprint, TEAM_PAIR.get(teamName));
+                List<String> issueKeys = JiraGreenhopperAPI.getIssueKeys(sprint, TEAM_PAIR.get(teamName));
+                sprint.setAddedIssueKeys(issueKeys);
                 sprint.setInitialCommitment(commitment[0]);
                 sprint.setFinalCommitment(commitment[1]);
                 sprint.setAddedWork(commitment[2]);
                 sprint.setCompletedWork(commitment[3]);
             }
             Retrospective r = Retrospective.builder()
-                    .teamName(s)
+                    .teamName(teamName)
                     .sprints(sprints)
                     .build();
             retrospectives.put(r.getTeamName(), r);
@@ -223,12 +228,13 @@ public class API {
             }
         }
         HashMap<String, Float[]> planning = ExternalFiles.getPlanning(PLANNING_PATH);
-        for (String s : planning.keySet()) {
-            if (collaborators.containsKey(s)) {
-                c = collaborators.get(s);
-                c.setTotalWorkingTime(planning.get(s)[0]);
-                c.setAvailableTime(planning.get(s)[1]);
-                collaborators.put(s, c);
+        for (Map.Entry<String,Float[]> entry : planning.entrySet()) {
+            String accountId = entry.getKey();
+            if (collaborators.containsKey(accountId)) {
+                c = collaborators.get(accountId);
+                c.setTotalWorkingTime(planning.get(accountId)[0]);
+                c.setAvailableTime(planning.get(accountId)[1]);
+                collaborators.put(accountId, c);
             }
         }
         return collaborators;

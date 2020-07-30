@@ -51,6 +51,7 @@ public class JiraAPI {
     final static ArrayList<String> DEV_DONE = new ArrayList<>(Arrays.asList(A_TESTER, A_LIVRER));
     final static ArrayList<String> DEV_DONE_EN_COURS = new ArrayList<>(Arrays.asList(DEV_TERMINE, EN_COURS));
 
+    private JiraAPI(){}
     /* Main method : Returns a Collaborator object if it has at least one ticket
      * else return null
      */
@@ -108,14 +109,14 @@ public class JiraAPI {
                 accountId = assignee.getAccountId();
                 if (emailAddress.isEmpty() && assignee.getEmailAddress() != null) {
                     emailAddress = assignee.getEmailAddress();
-                    int indexDot = emailAddress.indexOf(".");
-                    int indexAt = emailAddress.indexOf("@");
+                    int indexDot = emailAddress.indexOf('.');
+                    int indexAt = emailAddress.indexOf('@');
                     prenom = emailAddress.substring(0, indexDot);
                     nom = emailAddress.substring(indexDot + 1, indexAt);
                 } else if (nom.isEmpty() && prenom.isEmpty()) {
                     String fullName = assignee.getDisplayName();
                     int fullNameLength = fullName.length();
-                    int indexSpace = fullName.indexOf(" ");
+                    int indexSpace = fullName.indexOf(' ');
                     if (indexSpace < 0) {
                         prenom = fullName;
                     } else {

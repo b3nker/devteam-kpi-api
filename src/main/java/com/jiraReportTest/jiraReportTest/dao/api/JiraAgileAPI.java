@@ -15,6 +15,7 @@ public class JiraAgileAPI {
     final static String JIRA_AGILE_API_URL = "https://apriltechnologies.atlassian.net/rest/agile/1.0/";
     final static String ACTIVE_SPRINT = "active";
 
+    private JiraAgileAPI(){}
     /* Returns an array of size (nbSprints) of the lastly closed sprints including the lastly active sprint
      */
     public static SprintCommitment[] getLastlyClosedSprints(int nbSprints) {
