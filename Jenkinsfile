@@ -1,4 +1,4 @@
-library('pipeline@v10.8.0')
+library('pipeline@v10.9.0')
 
 HelmPipeline {
   repository = "eu.gcr.io/neo9-software-factory/n9-images"
@@ -11,5 +11,8 @@ HelmPipeline {
   ]
   target = "builder"
   sonarCommand = "mvn -gs ./settings.xml compile test sonar:sonar -Dsonar.projectKey=april-devteam-kpi-api -Dsonar.projectName=april-devteam-kpi-api"
+  flattening = [
+    strategy: "skip_flattening" // do not squash, as we want to use take the advantage of docker layers
+  ]
   notifications = [email: 'april@neo9.fr']
 }
