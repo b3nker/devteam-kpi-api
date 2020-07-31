@@ -148,10 +148,12 @@ public class API {
         for (Map.Entry<String, ArrayList<String>> entry : TEAMS.entrySet()) {
             String label = entry.getKey();
             Map<String, Collaborator> c = getCollaboratorsPerTeam(TEAMS.get(label), label);
-            Collaborator unassigned = c.get(UNASSIGNED);
-            unassigned.setAccountId(UNASSIGNED + ' ' + label);
-            c.remove(UNASSIGNED);
-            c.put(unassigned.getAccountId(), unassigned);
+            Collaborator unassigned;
+            if((unassigned= c.get(UNASSIGNED)) != null){
+                unassigned.setAccountId(UNASSIGNED + ' ' + label);
+                c.remove(UNASSIGNED);
+                c.put(unassigned.getAccountId(), unassigned);
+            }
             collaborators.putAll(c);
         }
         return collaborators;
