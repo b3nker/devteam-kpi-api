@@ -17,17 +17,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import static com.jiraReportTest.jiraReportTest.dao.api.API.SPRINT_ACTIF;
-import static com.jiraReportTest.jiraReportTest.dao.api.API.TODAY;
-import static com.jiraReportTest.jiraReportTest.dao.api.API.dtf;
+import static com.jiraReportTest.jiraReportTest.dao.api.API.*;
 import static java.lang.Double.parseDouble;
 import static java.lang.Float.parseFloat;
 import static java.lang.Integer.parseInt;
 
 public class ExternalFiles {
     final static Character SEPARATOR = ',';
-    final static SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
-
     private ExternalFiles(){}
 
     /* Reads "planning.csv" and extract two data, the working time and the available time per collaborator
@@ -63,13 +59,13 @@ public class ExternalFiles {
             }
             dates = csvReader.readNext();
             for (int i = 0; i < dates.length; i++) {
-                if (SPRINT_ACTIF.getStartDate().format(dtf).equals(dates[i])) {
+                if (SPRINT_ACTIF.getStartDate().format(dtfEurope).equals(dates[i])) {
                     startIndex = i;
                 }
-                if (SPRINT_ACTIF.getEndDate().format(dtf).equals(dates[i])) {
+                if (SPRINT_ACTIF.getEndDate().format(dtfEurope).equals(dates[i])) {
                     endIndex = i;
                 }
-                if (TODAY.equals(dates[i])) {
+                if (TODAY.format(dtfEurope).equals(dates[i])) {
                     todayIndex = i;
                 }
             }
@@ -87,16 +83,17 @@ public class ExternalFiles {
                     availableTime = 8 * (endIndex - todayIndex + 1);
                     for (int i = startIndex; i <= endIndex; i++) {
                         if (!infos[i].isEmpty()) {
-                            totalWorkingTime -= parseFloat(infos[i]) * 8;
+                            totalWorkingTime -= parseFloat(infos[i].replace(",",".")) * 8;
                         }
                     }
                     for (int i = todayIndex; i <= endIndex; i++) {
                         if (!infos[i].isEmpty()) {
-                            availableTime -= parseFloat(infos[i]) * 8;
+                            availableTime -= parseFloat(infos[i].replace(",",".")) * 8;
                         }
                     }
                     workTime[0] = totalWorkingTime;
                     workTime[1] = availableTime;
+                    System.out.println(accountId + " : " + workTime[1]);
                     planning.put(accountId, workTime);
                 }
             }
@@ -107,6 +104,7 @@ public class ExternalFiles {
     }
 
     public static List<Release> getReleases(String path) throws IOException, ParseException {
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         int nbLinesToSkip = 2;
         List<Release> releases = new ArrayList<>();
         FileReader filereader = new FileReader(path);

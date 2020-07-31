@@ -1,24 +1,17 @@
 package com.jiraReportTest.jiraReportTest.dao.api;
 
-import com.jiraReportTest.jiraReportTest.dto.jiraAgileApi.AgileDto;
 import com.jiraReportTest.jiraReportTest.dto.jiraGreenhopper.ContentsDto;
 import com.jiraReportTest.jiraReportTest.dto.jiraGreenhopper.JiraGreenHopperDto;
 import com.jiraReportTest.jiraReportTest.model.SprintCommitment;
-import kong.unirest.HttpResponse;
-import kong.unirest.JsonNode;
-import kong.unirest.Unirest;
-import kong.unirest.json.JSONObject;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
 import static com.jiraReportTest.jiraReportTest.dao.api.API.API_TOKEN;
 import static com.jiraReportTest.jiraReportTest.dao.api.API.USERNAME;
-import static java.lang.Integer.parseInt;
 
 public class JiraGreenhopperAPI {
     final static String JIRA_GREENHOPPER_URL = "https://apriltechnologies.atlassian.net/rest/greenhopper/1.0/";

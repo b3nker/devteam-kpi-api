@@ -4,11 +4,12 @@ import com.jiraReportTest.jiraReportTest.dto.jiraAgileApi.AgileDto;
 import com.jiraReportTest.jiraReportTest.dto.jiraAgileApi.SprintDto;
 import com.jiraReportTest.jiraReportTest.model.Sprint;
 import com.jiraReportTest.jiraReportTest.model.SprintCommitment;
-import kong.unirest.HttpResponse;
-import kong.unirest.JsonNode;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.jiraReportTest.jiraReportTest.dao.api.API.*;
 
 public class JiraAgileAPI {
@@ -16,36 +17,46 @@ public class JiraAgileAPI {
     final static String ACTIVE_SPRINT = "active";
 
     private JiraAgileAPI(){}
-    /* Returns an array of size (nbSprints) of the lastly closed sprints including the lastly active sprint
-     */
-    public static SprintCommitment[] getLastlyClosedSprints(int nbSprints) {
+
+    public static List<SprintCommitment> getLastlyClosedSprints(int nbSprints, String teamName) {
         /*
         Variables
          */
-        SprintCommitment[] sc = new SprintCommitment[nbSprints];
-        String sprintName;
-        int sprintId;
+        int nbSprintsFound = 0;
+        boolean lastActiveFound = false;
+        String teamNameLC = teamName.toLowerCase();
+        List<SprintCommitment> sc = new ArrayList<>();
         String request = JIRA_AGILE_API_URL + "/board/" + PROJECT_BOARD_ID + "/sprint";
-        int lastlyActiveSprintIndex = -1;
         /*
         Logic
          */
         AgileDto agileDto = JiraAgileAPI.connectToJiraAgileAPI(request);
         assert agileDto != null;
         SprintDto[] sprintsDto = agileDto.getValues();
-        for (int i = 0; i < sprintsDto.length; i++) {
-            if (ACTIVE_SPRINT.equals(sprintsDto[i].getState())) {
-                lastlyActiveSprintIndex = i;
+        for (int i = sprintsDto.length-1; i > 0; i--) {
+            String sprintName = sprintsDto[i].getName();
+            if(!lastActiveFound){
+                if (sprintName.toLowerCase().contains(teamNameLC) && ACTIVE_SPRINT.equals(sprintsDto[i].getState())){
+                    sc.add(SprintCommitment.builder()
+                            .name(sprintsDto[i].getName())
+                            .id(sprintsDto[i].getId())
+                            .build());
+                    nbSprintsFound++;
+                    lastActiveFound = true;
+                }
+            }else{
+                if (sprintsDto[i].getName().toLowerCase().contains(teamNameLC)) {
+                    sc.add(SprintCommitment.builder()
+                            .name(sprintsDto[i].getName())
+                            .id(sprintsDto[i].getId())
+                            .build());
+                    nbSprintsFound++;
+                }
             }
         }
-        for (int i = 0; i < nbSprints; i++){
-            SprintDto s = sprintsDto[lastlyActiveSprintIndex-i];
-            sprintName = s.getName();
-            sprintId = s.getId();
-            sc[i] = SprintCommitment.builder()
-                    .name(sprintName)
-                    .id(sprintId)
-                    .build();
+        while (nbSprintsFound < nbSprints){
+            sc.add(SprintCommitment.builder().build());
+            nbSprintsFound++;
         }
         return sc;
     }

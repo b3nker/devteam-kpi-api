@@ -11,7 +11,6 @@ import org.springframework.stereotype.Repository;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import java.io.*;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -205,7 +204,7 @@ public class JiraAPI {
         }else{
             role = ID_COLLABS.get(accountId);
             //Calling tempo API
-            timespent = JiraTempoAPI.getWorklogByAccountID(accId, s.getStartDate().format(dtfLocalDate), s.getEndDate().format(dtfLocalDate));
+            timespent = JiraTempoAPI.getWorklogByAccountID(accId, s.getStartDate().format(dtfAmerica), s.getEndDate().format(dtfAmerica));
         }
         //Création d'un objet Collaborateur
         return Collaborator.builder()
@@ -348,7 +347,7 @@ public class JiraAPI {
                 fields = issue.getJSONObject(JSON_FIELDS);
                 dateCreation = fields.getString("created").substring(0, 10);
                 ldtBug = LocalDate.parse(dateCreation);
-                days = (int) DAYS.between(ldtBug, LocalDate.parse(TODAY_LD));
+                days = (int) DAYS.between(ldtBug, LocalDate.parse(TODAY.format(dtfAmerica)));
                 bugsCreated[nbDays - days] += 1;
             }
             //on incrémente du nombre de résultats dans la requête
@@ -368,7 +367,7 @@ public class JiraAPI {
     /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug/incident resolved (Jira status "terminé/livré")
      *  Index i represent the number of bugs resolved (nbDays-i) ago
      */
-    public static int[] getResolved(int nbDays, String projectName, String issueType) throws UnsupportedEncodingException {
+    public static int[] getResolved(int nbDays, String projectName, String issueType) {
         /*
         Variables
          */
@@ -378,9 +377,9 @@ public class JiraAPI {
         String updateDate;
         LocalDate ldtBug;
         int days;
-        String today = LocalDateTime.now().format(dtfLocalDate);
+        String today = LocalDateTime.now().format(dtfAmerica);
         String request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+updated" +
-                URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+                URLEncoder.encode(">=", StandardCharsets.UTF_8) + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
         JSONObject myObj;
         JSONArray issues;
         JSONObject issue;
@@ -412,8 +411,8 @@ public class JiraAPI {
                 }
             }
             startAt += MAX_RESULTS;
-            request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='Bug'+AND+updated" +
-                    URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+            request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+updated" +
+                    URLEncoder.encode(">=", StandardCharsets.UTF_8) + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
             response = Unirest.get(request)
                     .basicAuth(USERNAME, API_TOKEN)
                     .header("Accept", "application/json")
@@ -427,7 +426,7 @@ public class JiraAPI {
     /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug/incident in progress (Jira status "terminé/livré")
      *  Index i represent the number of bugs resolved (nbDays-i) ago
      */
-    public static int[] getInProgress(int nbDays, String projectName, String issueType) throws UnsupportedEncodingException {
+    public static int[] getInProgress(int nbDays, String projectName, String issueType) {
         /*
         Variables
          */
@@ -437,9 +436,9 @@ public class JiraAPI {
         String updateDate;
         LocalDate ldtBug;
         int days;
-        String today = LocalDateTime.now().format(dtfLocalDate);
+        String today = LocalDateTime.now().format(dtfAmerica);
         String request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+updated" +
-                URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+                URLEncoder.encode(">=", StandardCharsets.UTF_8) + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
         JSONObject myObj;
         JSONArray issues;
         JSONObject issue;
@@ -471,8 +470,8 @@ public class JiraAPI {
                 }
             }
             startAt += MAX_RESULTS;
-            request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='Bug'+AND+updated" +
-                    URLEncoder.encode(">=", "utf-8") + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+            request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+updated" +
+                    URLEncoder.encode(">=", StandardCharsets.UTF_8) + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
             response = Unirest.get(request)
                     .basicAuth(USERNAME, API_TOKEN)
                     .header("Accept", "application/json")

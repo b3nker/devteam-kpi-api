@@ -1,7 +1,6 @@
 package com.jiraReportTest.jiraReportTest.dao.api;
 
 import com.jiraReportTest.jiraReportTest.model.*;
-import com.jiraReportTest.jiraReportTest.service.TeamService;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -23,7 +22,7 @@ public class API {
     final static String PROJECT_NAME = "BMKP";
     final static String RUN_PROJECT_NAME = "RMKP";
     final static int MAX_RESULTS = 50;
-    final static int NB_SPRINTS_RETROSPECTIVE = 4;
+    final static int NB_SPRINTS_RETROSPECTIVE = 2;
     final static int NB_DAYS_BACKLOG = 20;
     //Collaborator & team information
     final static String TEAM_NAME_ALPHA = "alpha";
@@ -124,10 +123,9 @@ public class API {
     final static String ISSUE_BUG = "Bug";
     final static String ISSUE_INCIDENT = "Incident";
     //Settings
-    final static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yy");
-    final static DateTimeFormatter dtfLocalDate = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    final static String TODAY = LocalDateTime.now().format(dtf);
-    final static String TODAY_LD = LocalDateTime.now().format(dtfLocalDate);
+    final static DateTimeFormatter dtfEurope = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    final static DateTimeFormatter dtfAmerica = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    final static LocalDateTime TODAY = LocalDateTime.now();
 
     private API(){}
 
@@ -194,15 +192,17 @@ public class API {
         HashMap<String, Retrospective> retrospectives = new HashMap<>();
         for (Map.Entry<String,String> entry: TEAM_PAIR.entrySet()) {
             String teamName = entry.getKey();
-            SprintCommitment[] sprints = JiraAgileAPI.getLastlyClosedSprints(NB_SPRINTS_RETROSPECTIVE);
+            List<SprintCommitment> sprints = JiraAgileAPI.getLastlyClosedSprints(NB_SPRINTS_RETROSPECTIVE, teamName);
             for (SprintCommitment sprint : sprints) {
-                double[] commitment = JiraGreenhopperAPI.getCommitment(sprint, TEAM_PAIR.get(teamName));
-                List<String> issueKeys = JiraGreenhopperAPI.getIssueKeys(sprint, TEAM_PAIR.get(teamName));
-                sprint.setAddedIssueKeys(issueKeys);
-                sprint.setInitialCommitment(commitment[0]);
-                sprint.setFinalCommitment(commitment[1]);
-                sprint.setAddedWork(commitment[2]);
-                sprint.setCompletedWork(commitment[3]);
+                if(sprint.getId() != 0){
+                    double[] commitment = JiraGreenhopperAPI.getCommitment(sprint, TEAM_PAIR.get(teamName));
+                    List<String> issueKeys = JiraGreenhopperAPI.getIssueKeys(sprint, TEAM_PAIR.get(teamName));
+                    sprint.setAddedIssueKeys(issueKeys);
+                    sprint.setInitialCommitment(commitment[0]);
+                    sprint.setFinalCommitment(commitment[1]);
+                    sprint.setAddedWork(commitment[2]);
+                    sprint.setCompletedWork(commitment[3]);
+                }
             }
             Retrospective r = Retrospective.builder()
                     .teamName(teamName)
@@ -245,8 +245,7 @@ public class API {
      */
     public static Team getTeam(ArrayList<String> teamAccId, String label) {
         HashMap<String, Collaborator> collaborators = getCollaboratorsPerTeam(teamAccId, label);
-        List<Collaborator> c = new ArrayList<>();
-        c.addAll(collaborators.values());
+        List<Collaborator> c = new ArrayList<>(collaborators.values());
         return Team.builder()
                 .name(label)
                 .collaborators(c)

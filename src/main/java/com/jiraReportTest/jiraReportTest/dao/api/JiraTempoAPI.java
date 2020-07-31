@@ -26,6 +26,7 @@ public class JiraTempoAPI {
                 .retrieve()
                 .bodyToMono(TempoDto.class)
                 .block();
+        assert t != null;
         for(ResultsDto r: t.getResults()){
             loggedTime += r.getTimeSpentSeconds() / (double)3600;
         }
