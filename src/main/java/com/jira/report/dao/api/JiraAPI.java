@@ -47,6 +47,8 @@ public class JiraAPI {
     static final String A_LIVRER = "A Livrer";
     static final String A_TESTER = "A tester";
     static final String A_VALIDER = "A valider";
+    static final String TEST_CROISE = "Test croisé";
+
     static final ArrayList<String> DONE = new ArrayList<>(Arrays.asList(LIVRE, TERMINE, VALIDE, VALIDE_RECETTE));
     static final ArrayList<String> DONE_BUGS = new ArrayList<>(Arrays.asList(LIVRE, TERMINE, VALIDE_RECETTE, ABANDONNE));
     static final ArrayList<String> IN_PROGRESS = new ArrayList<>(Arrays.asList(EN_COURS, DEV_TERMINE, REFUSE_RECETTE, EN_ATTENTE, A_TESTER, A_LIVRER));
@@ -81,6 +83,7 @@ public class JiraAPI {
         double spValideEnRecette = 0;
         double spLivre = 0;
         double spTermine = 0;
+        double spTestCroise = 0;
         int ticketsDone = 0;
         int ticketsInProgress = 0;
         int ticketsToDo = 0;
@@ -194,6 +197,8 @@ public class JiraAPI {
                 case TERMINE:
                     spTermine += curStoryPoints;
                     break;
+                case TEST_CROISE:
+                    spTestCroise += curStoryPoints;
                 default:
                     break;
             }
@@ -241,6 +246,7 @@ public class JiraAPI {
                 .spValideEnRecette(spValideEnRecette)
                 .spLivre(spLivre)
                 .spTermine(spTermine)
+                .spTestCroise(spTestCroise)
                 .build();
     }
 

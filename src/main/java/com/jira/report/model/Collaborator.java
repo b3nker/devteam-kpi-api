@@ -38,6 +38,7 @@ public class Collaborator {
     private double spValideEnRecette;
     private double spLivre;
     private double spTermine;
+    private double spTestCroise;
     private String role;
 
 
