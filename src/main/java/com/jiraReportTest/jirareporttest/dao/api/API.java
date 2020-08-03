@@ -21,7 +21,7 @@ public class API {
     static final String PROJECT_NAME = "BMKP";
     static final String RUN_PROJECT_NAME = "RMKP";
     static final int MAX_RESULTS = 100;
-    static final int NB_SPRINTS_RETROSPECTIVE = 2;
+    static final int NB_SPRINTS_RETROSPECTIVE = 1;
     static final int NB_DAYS_BACKLOG = 20;
     //Collaborator & team information
     static final String TEAM_NAME_ALPHA = "alpha";
@@ -43,7 +43,7 @@ public class API {
         ID_COLLABS.put("5ed76cdf2fdc580b88f3bbef", "middle"); // Alex Cheuko
         ID_COLLABS.put("5ed64583620b1d0c168d4e36", "middle"); // Anthony Hernandez
         ID_COLLABS.put("5cb45bb34064460e407eabe4", "middle lead dev"); // Guillermo Garcès
-        ID_COLLABS.put("5a9ebdf74af2372a88a06565", "middle lead dev"); // Gabriel Roquigny
+        ID_COLLABS.put("5a9ebdf74af2372a88a06565", "middle"); // Gabriel Roquigny
         ID_COLLABS.put("5a2181081594706402dee482", "front lead dev"); // Etienne Bourgouin
         ID_COLLABS.put("5afe92f251d0b7540b43de81", "middle"); // Malick Diagne
         ID_COLLABS.put("5e98521a3a8b910c085d6a28", "front"); // Kévin Youna
@@ -105,7 +105,7 @@ public class API {
 
     }
     // Sprint Data
-    static final Sprint SPRINT_ACTIF = JiraAgileAPI.getLastlyActiveSprint();
+    public static final Sprint SPRINT_ACTIF = JiraAgileAPI.getLastlyActiveSprint();
     static final Sprint SPRINT_ACTIF_ALPHA = JiraAgileAPI.getLastlyActiveSprint();
     static final Sprint SPRINT_ACTIF_BETA = JiraAgileAPI.getLastlyActiveTeamSprint(TEAM_NAME_BETA);
     static final Sprint SPRINT_ACTIF_GAMMA = JiraAgileAPI.getLastlyActiveSprint();
@@ -132,10 +132,19 @@ public class API {
      * Retrieve all data from the lastly active sprint
      */
     public static Map<String,Sprint> callJiraSprintAPI() {
+        Map<String, Float[]> planning = ExternalFiles.getPlanning(PLANNING_PATH, SPRINT_ACTIF);
         for (Map.Entry<String, ArrayList<String>> entry: TEAMS.entrySet()) {
             String label = entry.getKey();
             Team t = getTeam(TEAMS.get(label), label);
+            for(Collaborator c: t.getCollaborators()){
+                if(planning.containsKey(c.getAccountId())){
+                    Float[] timeData = planning.get(c.getAccountId());
+                    c.setTotalWorkingTime(timeData[0]);
+                    c.setAvailableTime(timeData[1]);
+                }
+            }
             SPRINTS.get(label).setTeam(t);
+
         }
         return SPRINTS;
     }
@@ -144,16 +153,28 @@ public class API {
      * Retrieve all data of each ID_COLLABS on the lastly active sprint (if they have at least one assigned ticket)
      */
     public static Map<String, Collaborator> callJiraCollabSprintAPI() {
+        Map<String, Float[]> planning = ExternalFiles.getPlanning(PLANNING_PATH, SPRINT_ACTIF);
         HashMap<String, Collaborator> collaborators = new HashMap<>();
         for (Map.Entry<String, ArrayList<String>> entry : TEAMS.entrySet()) {
             String label = entry.getKey();
             Map<String, Collaborator> c = getCollaboratorsPerTeam(TEAMS.get(label), label);
-            Collaborator unassigned;
-            if((unassigned= c.get(UNASSIGNED)) != null){
+            for(Collaborator collab: c.values()){
+                if(planning.containsKey(collab.getAccountId())){
+                    Float[] timeData = planning.get(collab.getAccountId());
+                    collab.setTotalWorkingTime(timeData[0]);
+                    collab.setAvailableTime(timeData[1]);
+                }
+            }
+            Collaborator unassigned = c.get(UNASSIGNED);
+            if(unassigned != null){
                 unassigned.setAccountId(UNASSIGNED + ' ' + label);
                 c.remove(UNASSIGNED);
-                c.put(unassigned.getAccountId(), unassigned);
+            }else{
+                unassigned = Collaborator.builder()
+                        .accountId(UNASSIGNED)
+                        .build();
             }
+            c.put(unassigned.getAccountId(), unassigned);
             collaborators.putAll(c);
         }
         return collaborators;
@@ -226,16 +247,6 @@ public class API {
         for (String accId : teamAccId) {
             if ((c = JiraAPI.getCollaborator(accId, teamName, SPRINTS.get(teamName))) != null) {
                 collaborators.put(c.getAccountId(), c);
-            }
-        }
-        Map<String, Float[]> planning = ExternalFiles.getPlanning(PLANNING_PATH);
-        for (Map.Entry<String,Float[]> entry : planning.entrySet()) {
-            String accountId = entry.getKey();
-            if (collaborators.containsKey(accountId)) {
-                c = collaborators.get(accountId);
-                c.setTotalWorkingTime(planning.get(accountId)[0]);
-                c.setAvailableTime(planning.get(accountId)[1]);
-                collaborators.put(accountId, c);
             }
         }
         return collaborators;

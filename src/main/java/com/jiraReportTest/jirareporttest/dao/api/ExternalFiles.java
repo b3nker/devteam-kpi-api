@@ -1,6 +1,7 @@
 package com.jiraReportTest.jirareporttest.dao.api;
 
 import com.jiraReportTest.jirareporttest.model.Release;
+import com.jiraReportTest.jirareporttest.model.Sprint;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
@@ -19,26 +20,25 @@ import static java.lang.Integer.parseInt;
 
 public class ExternalFiles {
     static final Character SEPARATOR = ',';
-    private ExternalFiles(){}
+    static final int INDEX_ACC_ID = 2;
+    static final int FIRST_ROW = 4;
+
+    private ExternalFiles() {
+    }
 
     /* Reads "planning.csv" and extract two data, the working time and the available time per collaborator
      * HashMap <AccountID,[workingTime, availableTime]>
      */
-    public static Map<String, Float[]> getPlanning(String PLANNING_PATH) {
+    public static Map<String, Float[]> getPlanning(String PLANNING_PATH, Sprint s) {
         /*
          Variables
          */
         Map<String, Float[]> planning = new HashMap<>();
-        float totalWorkingTime;
-        float availableTime;
         String accountId;
         int startIndex = -1;
         int endIndex = -1;
         int todayIndex = -1;
         //Two constants giving the column containing information about accountId and the 1st date
-        final int INDEX_ACC_ID = 2;
-        final int FIRST_ROW = 4;
-        Float[] workTime = new Float[2];
         String[] dates;
         /*
         Logic
@@ -49,24 +49,20 @@ public class ExternalFiles {
             CSVReader csvReader = new CSVReaderBuilder(filereader)
                     .withCSVParser(parser)
                     .build();
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < FIRST_ROW; i++) {
                 csvReader.readNext();
             }
             dates = csvReader.readNext();
             for (int i = 0; i < dates.length; i++) {
-                if (SPRINT_ACTIF.getStartDate().format(dtfEurope).equals(dates[i])) {
+                if (s.getStartDate().format(dtfEurope).equals(dates[i])) {
                     startIndex = i;
                 }
-                if (SPRINT_ACTIF.getEndDate().format(dtfEurope).equals(dates[i])) {
+                if (s.getEndDate().format(dtfEurope).equals(dates[i])) {
                     endIndex = i;
                 }
                 if (TODAY.format(dtfEurope).equals(dates[i])) {
                     todayIndex = i;
                 }
-            }
-            // When the initial date is not contained in the CSV
-            if (startIndex < 0) {
-                startIndex = FIRST_ROW;
             }
             //On saute une ligne
             csvReader.readNext();
@@ -74,20 +70,19 @@ public class ExternalFiles {
             while ((infos = csvReader.readNext()) != null) {
                 if (!infos[INDEX_ACC_ID].isEmpty()) {
                     accountId = infos[INDEX_ACC_ID];
-                    totalWorkingTime = 8f * (endIndex - startIndex + 1);
-                    availableTime = 8f * (endIndex - todayIndex + 1);
+                    float totalWorkingTime = 8f * (endIndex - startIndex + 1);
+                    float availableTime = 8f * (endIndex - todayIndex + 1);
                     for (int i = startIndex; i <= endIndex; i++) {
                         if (!infos[i].isEmpty()) {
-                            totalWorkingTime -= parseFloat(infos[i].replace(",",".")) * 8;
+                            totalWorkingTime -= parseFloat(infos[i].replace(",", ".")) * 8;
                         }
                     }
                     for (int i = todayIndex; i <= endIndex; i++) {
                         if (!infos[i].isEmpty()) {
-                            availableTime -= parseFloat(infos[i].replace(",",".")) * 8;
+                            availableTime -= parseFloat(infos[i].replace(",", ".")) * 8;
                         }
                     }
-                    workTime[0] = totalWorkingTime;
-                    workTime[1] = availableTime;
+                    Float[] workTime = {totalWorkingTime,availableTime};
                     planning.put(accountId, workTime);
                 }
             }
@@ -118,10 +113,10 @@ public class ExternalFiles {
                     .startDate(startDate)
                     .endDate(endDate)
                     .nbOpenDays(parseInt(infos[3]))
-                    .nbWorkingDays(parseDouble(infos[4].replace(",",".")))
-                    .buildCapacityFront(parseDouble(infos[5].replace(",",".")))
-                    .buildCapacityMiddle(parseDouble(infos[6].replace(",",".")))
-                    .buildCapacityTotal(parseDouble(infos[7].replace(",",".")))
+                    .nbWorkingDays(parseDouble(infos[4].replace(",", ".")))
+                    .buildCapacityFront(parseDouble(infos[5].replace(",", ".")))
+                    .buildCapacityMiddle(parseDouble(infos[6].replace(",", ".")))
+                    .buildCapacityTotal(parseDouble(infos[7].replace(",", ".")))
                     .build();
             releases.add(r);
         }
