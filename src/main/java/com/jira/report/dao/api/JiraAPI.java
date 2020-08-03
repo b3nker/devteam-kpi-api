@@ -28,7 +28,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 @Service
 @RequiredArgsConstructor
 public class JiraAPI {
-    static final String JIRA_API_URL = "https://apriltechnologies.atlassian.net/rest/api/3/";
+    static final String JIRA_API_URL = "rest/api/3/";
     // JSONObject and JSONArray names in JIRA API's response
     static final String JSON_ISSUES = "issues";
     static final String JSON_FIELDS = "fields";
@@ -37,6 +37,10 @@ public class JiraAPI {
     // JSONObject's keys
     static final String JSON_KEY_STORYPOINTS = "customfield_10005";
     // JIRA STATUS & CUSTOM STATUS
+    static final String A_QUALIFIER = "A qualifier";
+    static final String A_FAIRE = "A Faire";
+    static final String BAC_AFFINAGE = "Bac d'affinage";
+
     static final String TERMINE = "Terminé";
     static final String LIVRE = "Livré";
     static final String VALIDE_RECETTE = "Validé en recette";
@@ -67,7 +71,7 @@ public class JiraAPI {
         /*
         Variables
         */
-        String request = JIRA_API_URL + "search?jql=project=" + PROJECT_NAME + "+AND+assignee=" + accId +
+        String request = BASE_URL + JIRA_API_URL + "search?jql=project=" + PROJECT_NAME + "+AND+assignee=" + accId +
                 "+AND+sprint=" + s.getId() + "+AND+labels=" + label + "&maxResults=" + MAX_RESULTS;
         double timespent = 0;
         double estimated = 0;
@@ -155,16 +159,16 @@ public class JiraAPI {
             double curStoryPoints = i.getFields().getStoryPoints();
             spTotal += curStoryPoints;
             switch (statut) {
-                case "A qualifier":
+                case A_QUALIFIER:
                     spAQualifier += curStoryPoints;
                     break;
-                case "Bac d'affinage":
+                case BAC_AFFINAGE:
                     spBacAffinage += curStoryPoints;
                     break;
                 case EN_ATTENTE:
                     spEnAttente += curStoryPoints;
                     break;
-                case "A Faire":
+                case A_FAIRE:
                     spAFaire += curStoryPoints;
                     break;
                 case EN_COURS:
@@ -251,7 +255,7 @@ public class JiraAPI {
     }
 
     /* Returns an array of integer containing information on bugs/incidents since project's creation (number and priority)
-     * A bug is active when NOT in following jira states : Terminé, Livré
+     * A bug is active when NOT in following jira states :  LIVRE, TERMINE, VALIDE_RECETTE, ABANDONNE
      */
     public int[] getProjectIncidentBug(String projectName, String issueType) {
         /*
@@ -260,11 +264,10 @@ public class JiraAPI {
         // 0 : total, 1: low, 2: medium, 3: high, 4: highest
         int[] incidentsBugs = new int[5];
         int startAt = 0;
-        String request = JIRA_API_URL + "search?jql=project=" + projectName +
+        String request = BASE_URL + JIRA_API_URL + "search?jql=project=" + projectName +
                 "+AND+issuetype='" + issueType + "'&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
         JiraDto c = connectToJiraAPI(request);
         int total = c.getTotal();
-
         /*
         Logic
          */
@@ -273,7 +276,7 @@ public class JiraAPI {
                 FieldsDto fDto = i.getFields();
                 String statut = fDto.getStatus().getName();
                 String priority = fDto.getPriority().getName();
-                if(DONE_BUGS.contains(statut)){
+                if(!DONE_BUGS.contains(statut)){
                     incidentsBugs[0]++;
                     switch (priority) {
                         case "Low":
@@ -294,59 +297,10 @@ public class JiraAPI {
                 }
             }
             startAt += MAX_RESULTS;
-            request = JIRA_API_URL + "search?jql=project=" + projectName +
+            request = BASE_URL + JIRA_API_URL + "search?jql=project=" + projectName +
                     "+AND+issuetype='" + issueType + "'&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
             c = connectToJiraAPI(request);
         }while(startAt< total);
-        /*
-            HttpResponse<JsonNode> response = Unirest.get(request)
-                .basicAuth(USERNAME, API_TOKEN)
-                .header("Accept", "application/json")
-                .asJson();
-        myObj = response.getBody().getObject();
-        issues = myObj.getJSONArray(JSON_ISSUES);
-        int total = myObj.getInt("total");
-        while (startAt < total) {
-            for (int j = 0; j < issues.length(); j++) {
-                //Ensemble des objets JSON utiles
-                issue = issues.getJSONObject(j);
-                fields = issue.getJSONObject(JSON_FIELDS);
-                priority = fields.getJSONObject(JSON_PRIORITY);
-                status = fields.getJSONObject(JSON_STATUS);
-                statut = status.getString("name");
-                if (!DONE_BUGS.contains(statut)) {
-                    incidentsBugs[0]++;
-                    switch (priority.getString("name")) {
-                        case "Low":
-                            incidentsBugs[1]++;
-                            break;
-                        case "Medium":
-                            incidentsBugs[2]++;
-                            break;
-                        case "High":
-                            incidentsBugs[3]++;
-                            break;
-                        case "Highest":
-                            incidentsBugs[4]++;
-                            break;
-                        default:
-                            break;
-                    }
-                }
-
-            }
-            startAt += MAX_RESULTS;
-            request = JIRA_API_URL + "search?jql=project=" + projectName +
-                    "+AND+issuetype='" + issueType + "'&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
-            response = Unirest.get(request)
-                    .basicAuth(USERNAME, API_TOKEN)
-                    .header("Accept", "application/json")
-                    .asJson();
-            myObj = response.getBody().getObject();
-            issues = myObj.getJSONArray("issues");
-        }
-
-         */
         return incidentsBugs;
     }
 
@@ -366,7 +320,7 @@ public class JiraAPI {
         JSONObject issue;
         JSONObject fields;
         LocalDate ldtBug;
-        String request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+created" +
+        String request = BASE_URL + JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+created" +
                 URLEncoder.encode(">=", StandardCharsets.UTF_8) + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
         /*
         Logic
@@ -390,7 +344,7 @@ public class JiraAPI {
             }
             //on incrémente du nombre de résultats dans la requête
             startAt += MAX_RESULTS;
-            request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+created" +
+            request = BASE_URL + JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+created" +
                     URLEncoder.encode(">=", StandardCharsets.UTF_8) + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
             response = Unirest.get(request)
                     .basicAuth(USERNAME, API_TOKEN)
@@ -416,7 +370,7 @@ public class JiraAPI {
         LocalDate ldtBug;
         int days;
         String today = LocalDateTime.now().format(dtfAmerica);
-        String request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+updated" +
+        String request = BASE_URL + JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+updated" +
                 URLEncoder.encode(">=", StandardCharsets.UTF_8) + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
         JSONObject myObj;
         JSONArray issues;
@@ -449,7 +403,7 @@ public class JiraAPI {
                 }
             }
             startAt += MAX_RESULTS;
-            request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+updated" +
+            request = BASE_URL + JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+updated" +
                     URLEncoder.encode(">=", StandardCharsets.UTF_8) + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
             response = Unirest.get(request)
                     .basicAuth(USERNAME, API_TOKEN)
@@ -475,7 +429,7 @@ public class JiraAPI {
         LocalDate ldtBug;
         int days;
         String today = LocalDateTime.now().format(dtfAmerica);
-        String request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+updated" +
+        String request = BASE_URL + JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+updated" +
                 URLEncoder.encode(">=", StandardCharsets.UTF_8) + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
         JSONObject myObj;
         JSONArray issues;
@@ -508,7 +462,7 @@ public class JiraAPI {
                 }
             }
             startAt += MAX_RESULTS;
-            request = JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+updated" +
+            request = BASE_URL + JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType + "'+AND+updated" +
                     URLEncoder.encode(">=", StandardCharsets.UTF_8) + "-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
             response = Unirest.get(request)
                     .basicAuth(USERNAME, API_TOKEN)
@@ -528,7 +482,7 @@ public class JiraAPI {
         Variables
          */
         double spIssue = 0;
-        String request = JIRA_API_URL + "search?jql=project=" + PROJECT_NAME + "+AND+issue=" + issueID;
+        String request = BASE_URL + JIRA_API_URL + "search?jql=project=" + PROJECT_NAME + "+AND+issue=" + issueID;
         JSONObject myObj;
         JSONArray issues;
         JSONObject issue;

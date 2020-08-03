@@ -12,12 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static com.jira.report.dao.api.API.API_TOKEN;
-import static com.jira.report.dao.api.API.USERNAME;
+import static com.jira.report.dao.api.API.*;
 
 @Service
 public class JiraGreenhopperAPI {
-    static final String JIRA_GREENHOPPER_URL = "https://apriltechnologies.atlassian.net/rest/greenhopper/1.0/";
+    static final String JIRA_GREENHOPPER_URL = "rest/greenhopper/1.0/";
     private JiraAPI jiraAPI;
 
     public JiraGreenhopperAPI(WebClient jiraWebClient){
@@ -30,7 +29,7 @@ public class JiraGreenhopperAPI {
      * 3: completedWork
      */
     public List<String> getIssueKeys(SprintCommitment s, String boardId){
-        String request = JIRA_GREENHOPPER_URL + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
+        String request = BASE_URL + JIRA_GREENHOPPER_URL + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
         /*
         Logic
          */
@@ -58,7 +57,7 @@ public class JiraGreenhopperAPI {
         double finalCommitment = 0;
         double addedWork = 0;
         double completedWork = 0;
-        String request = JIRA_GREENHOPPER_URL + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
+        String request = BASE_URL + JIRA_GREENHOPPER_URL + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
         /*
         Logic
          */

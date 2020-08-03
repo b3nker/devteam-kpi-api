@@ -14,6 +14,7 @@ import java.util.*;
 @Service
 public class API {
     //Project's variables
+    static final String BASE_URL = "https://apriltechnologies.atlassian.net/";
     private JiraAPI jiraAPI;
     private JiraGreenhopperAPI jiraGreenhopperAPI;
     private JiraAgileAPI jiraAgileAPI;
