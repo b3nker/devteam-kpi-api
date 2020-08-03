@@ -3,6 +3,8 @@ package com.jira.report.dao.api;
 import com.jira.report.model.SprintCommitment;
 import com.jira.report.dto.jiraGreenhopper.ContentsDto;
 import com.jira.report.dto.jiraGreenhopper.JiraGreenHopperDto;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -13,17 +15,21 @@ import java.util.Set;
 import static com.jira.report.dao.api.API.API_TOKEN;
 import static com.jira.report.dao.api.API.USERNAME;
 
+@Service
 public class JiraGreenhopperAPI {
     static final String JIRA_GREENHOPPER_URL = "https://apriltechnologies.atlassian.net/rest/greenhopper/1.0/";
+    private JiraAPI jiraAPI;
 
-    private JiraGreenhopperAPI(){}
+    public JiraGreenhopperAPI(WebClient jiraWebClient){
+        this.jiraAPI = new JiraAPI(jiraWebClient);
+    }
     /* Returns 4 information on a sprint
      * 0: initialCommitment
      * 1: finalCommitment
      * 2: addedWork
      * 3: completedWork
      */
-    public static List<String> getIssueKeys(SprintCommitment s, String boardId){
+    public List<String> getIssueKeys(SprintCommitment s, String boardId){
         String request = JIRA_GREENHOPPER_URL + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
         /*
         Logic
@@ -43,7 +49,7 @@ public class JiraGreenhopperAPI {
         return new ArrayList<>(addedIssues);
     }
 
-    public static double[] getCommitment(SprintCommitment s, String boardId) {
+    public double[] getCommitment(SprintCommitment s, String boardId) {
         /*
         Variables
          */
@@ -81,7 +87,7 @@ public class JiraGreenhopperAPI {
         finalCommitment += allIssuesEstimateSum;
         //Added issues
         for (String issueKey: addedIssues) {
-            addedWork += JiraAPI.getStoryPoint(issueKey);
+            addedWork += jiraAPI.getStoryPoint(issueKey);
         }
         commitment[0] = initialCommitment;
         commitment[1] = finalCommitment;

@@ -1,6 +1,7 @@
 package com.jira.report.dao.api;
 
 import com.jira.report.dto.jiraApi.AssigneeDto;
+import com.jira.report.dto.jiraApi.FieldsDto;
 import com.jira.report.dto.jiraApi.IssueDto;
 import com.jira.report.dto.jiraApi.JiraDto;
 import com.jira.report.model.Collaborator;
@@ -10,8 +11,8 @@ import kong.unirest.JsonNode;
 import kong.unirest.Unirest;
 import kong.unirest.json.JSONArray;
 import kong.unirest.json.JSONObject;
-import org.springframework.stereotype.Repository;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.net.URLEncoder;
@@ -24,7 +25,8 @@ import static com.jira.report.dao.api.API.*;
 
 import static java.time.temporal.ChronoUnit.DAYS;
 
-@Repository
+@Service
+@RequiredArgsConstructor
 public class JiraAPI {
     static final String JIRA_API_URL = "https://apriltechnologies.atlassian.net/rest/api/3/";
     // JSONObject and JSONArray names in JIRA API's response
@@ -55,11 +57,13 @@ public class JiraAPI {
     static final ArrayList<String> DEV_DONE = new ArrayList<>(Arrays.asList(A_TESTER, A_LIVRER));
     static final ArrayList<String> DEV_DONE_EN_COURS = new ArrayList<>(Arrays.asList(DEV_TERMINE, EN_COURS));
 
-    private JiraAPI(){}
+    private final WebClient jiraWebClient;
+
+
     /* Main method : Returns a Collaborator object if it has at least one ticket
      * else return null
      */
-    public static Collaborator getCollaborator(String accId, String label, Sprint s) {
+    public Collaborator getCollaborator(String accId, String label, Sprint s) {
         /*
         Variables
         */
@@ -97,16 +101,12 @@ public class JiraAPI {
         String role;
         int total;
         String statut;
-        JiraDto c = JiraAPI.connectToJiraAPI(request);
-        /* New logic with web client
-         *
-         */
+        JiraDto c = connectToJiraAPI(request);
         total = c.getTotal();
         // When assignee has no tickets assigned
         if (total == 0) {
             return null;
         }
-        //Setting assignee's personal information
         for (IssueDto i : c.getIssues()) {
             statut = i.getFields().getStatus().getName();
             if(i.getFields().getAssignee() != null){
@@ -253,26 +253,53 @@ public class JiraAPI {
     /* Returns an array of integer containing information on bugs/incidents since project's creation (number and priority)
      * A bug is active when NOT in following jira states : Terminé, Livré
      */
-    public static int[] getProjectIncidentBug(String projectName, String issueType) {
+    public int[] getProjectIncidentBug(String projectName, String issueType) {
         /*
         Variables
          */
         // 0 : total, 1: low, 2: medium, 3: high, 4: highest
         int[] incidentsBugs = new int[5];
         int startAt = 0;
-        JSONObject myObj;
-        JSONArray issues;
-        JSONObject issue;
-        JSONObject fields;
-        JSONObject priority;
-        JSONObject status;
-        String statut;
         String request = JIRA_API_URL + "search?jql=project=" + projectName +
                 "+AND+issuetype='" + issueType + "'&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+        JiraDto c = connectToJiraAPI(request);
+        int total = c.getTotal();
+
         /*
         Logic
          */
-        HttpResponse<JsonNode> response = Unirest.get(request)
+        do{
+            for (IssueDto i : c.getIssues()) {
+                FieldsDto fDto = i.getFields();
+                String statut = fDto.getStatus().getName();
+                String priority = fDto.getPriority().getName();
+                if(DONE_BUGS.contains(statut)){
+                    incidentsBugs[0]++;
+                    switch (priority) {
+                        case "Low":
+                            incidentsBugs[1]++;
+                            break;
+                        case "Medium":
+                            incidentsBugs[2]++;
+                            break;
+                        case "High":
+                            incidentsBugs[3]++;
+                            break;
+                        case "Highest":
+                            incidentsBugs[4]++;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            startAt += MAX_RESULTS;
+            request = JIRA_API_URL + "search?jql=project=" + projectName +
+                    "+AND+issuetype='" + issueType + "'&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+            c = connectToJiraAPI(request);
+        }while(startAt< total);
+        /*
+            HttpResponse<JsonNode> response = Unirest.get(request)
                 .basicAuth(USERNAME, API_TOKEN)
                 .header("Accept", "application/json")
                 .asJson();
@@ -318,13 +345,15 @@ public class JiraAPI {
             myObj = response.getBody().getObject();
             issues = myObj.getJSONArray("issues");
         }
+
+         */
         return incidentsBugs;
     }
 
     /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug/incident created
      *  Index i represent the number of bugs created (nbDays-i) ago
      */
-    public static int[] getCreated(int nbDays, String projectName, String issueType) {
+    public int[] getCreated(int nbDays, String projectName, String issueType) {
         /*
         Variables
          */
@@ -376,7 +405,7 @@ public class JiraAPI {
     /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug/incident resolved (Jira status "terminé/livré")
      *  Index i represent the number of bugs resolved (nbDays-i) ago
      */
-    public static int[] getResolved(int nbDays, String projectName, String issueType) {
+    public int[] getResolved(int nbDays, String projectName, String issueType) {
         /*
         Variables
          */
@@ -435,7 +464,7 @@ public class JiraAPI {
     /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug/incident in progress (Jira status "terminé/livré")
      *  Index i represent the number of bugs resolved (nbDays-i) ago
      */
-    public static int[] getInProgress(int nbDays, String projectName, String issueType) {
+    public int[] getInProgress(int nbDays, String projectName, String issueType) {
         /*
         Variables
          */
@@ -494,7 +523,7 @@ public class JiraAPI {
     /* Method that returns the number of story points assigned to an issue.
      * Used to retrieve story points linked to added tickets in getCommitment()
      */
-    public static double getStoryPoint(String issueID) {
+    public double getStoryPoint(String issueID) {
         /*
         Variables
          */
@@ -525,12 +554,8 @@ public class JiraAPI {
         return spIssue;
     }
 
-    public static JiraDto connectToJiraAPI(String request){
-        WebClient webClient = WebClient.builder()
-                .filter(ExchangeFilterFunctions.basicAuthentication(USERNAME, API_TOKEN))
-                .defaultHeader("Accept", "application/json")
-                .build();
-        return webClient
+    public JiraDto connectToJiraAPI(String request){
+        return jiraWebClient
                 .get()
                 .uri(request)
                 .retrieve()

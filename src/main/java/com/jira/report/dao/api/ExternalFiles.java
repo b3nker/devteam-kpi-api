@@ -23,13 +23,13 @@ public class ExternalFiles {
     static final int INDEX_ACC_ID = 2;
     static final int FIRST_ROW = 4;
 
-    private ExternalFiles() {
+    public ExternalFiles() {
     }
 
     /* Reads "planning.csv" and extract two data, the working time and the available time per collaborator
      * HashMap <AccountID,[workingTime, availableTime]>
      */
-    public static Map<String, Float[]> getPlanning(String PLANNING_PATH, Sprint s) {
+    public Map<String, Float[]> getPlanning(String PLANNING_PATH, Sprint s) {
         /*
          Variables
          */
@@ -92,7 +92,7 @@ public class ExternalFiles {
         return planning;
     }
 
-    public static List<Release> getReleases(String path) throws IOException, ParseException {
+    public List<Release> getReleases(String path) throws IOException, ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         int nbLinesToSkip = 2;
         List<Release> releases = new ArrayList<>();

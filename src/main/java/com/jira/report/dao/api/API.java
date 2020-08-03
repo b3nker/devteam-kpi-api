@@ -1,6 +1,9 @@
 package com.jira.report.dao.api;
 
 import com.jira.report.model.*;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -8,12 +11,16 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-
+@Service
 public class API {
     //Project's variables
-    static final String USERNAME = "benjamin.kermani@neo9.fr";
-    static final String API_TOKEN = "sqjFnTAVspNM4NxLd1QZC5CB";
-    static final String API_TOKEN_TEMPO = "J1eKPcvcMlCvMjNBvXyJmn0vMPvGs0";
+    private JiraAPI jiraAPI;
+    private JiraGreenhopperAPI jiraGreenhopperAPI;
+    private JiraAgileAPI jiraAgileAPI;
+    private ExternalFiles externalFiles;
+    public static final String USERNAME = "benjamin.kermani@neo9.fr";
+    public static final String API_TOKEN = "sqjFnTAVspNM4NxLd1QZC5CB";
+    public static final String API_TOKEN_TEMPO = "J1eKPcvcMlCvMjNBvXyJmn0vMPvGs0";
     static final String PROJECT_BOARD_ID = "391";
     static final String BOARD_ID_ALPHA_SP = "451";
     static final String BOARD_ID_BETA_SP = "443";
@@ -105,16 +112,11 @@ public class API {
 
     }
     // Sprint Data
-    public static final Sprint SPRINT_ACTIF = JiraAgileAPI.getLastlyActiveSprint();
-    static final Sprint SPRINT_ACTIF_ALPHA = JiraAgileAPI.getLastlyActiveSprint();
-    static final Sprint SPRINT_ACTIF_BETA = JiraAgileAPI.getLastlyActiveTeamSprint(TEAM_NAME_BETA);
-    static final Sprint SPRINT_ACTIF_GAMMA = JiraAgileAPI.getLastlyActiveSprint();
-    static final HashMap<String, Sprint> SPRINTS = new HashMap<>();
-    static {
-        SPRINTS.put(TEAM_NAME_ALPHA, SPRINT_ACTIF_ALPHA);
-        SPRINTS.put(TEAM_NAME_BETA, SPRINT_ACTIF_BETA);
-        SPRINTS.put(TEAM_NAME_GAMMA, SPRINT_ACTIF_GAMMA);
-    }
+    private Sprint SPRINT_ACTIF;
+    private Sprint SPRINT_ACTIF_ALPHA;
+    private Sprint SPRINT_ACTIF_BETA;
+    private Sprint SPRINT_ACTIF_GAMMA;
+    final HashMap<String, Sprint> SPRINTS = new HashMap<>();
     // ExternalData
     static final String PLANNING_PATH = "planning.csv";
     static final String RELEASE_PATH = "release.csv";
@@ -126,13 +128,25 @@ public class API {
     static final DateTimeFormatter dtfAmerica = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     static final LocalDateTime TODAY = LocalDateTime.now();
 
-    private API(){}
+    public API(WebClient jiraWebClient){
+        this.jiraAPI = new JiraAPI(jiraWebClient);
+        this.jiraAgileAPI = new JiraAgileAPI();
+        this.externalFiles = new ExternalFiles();
+        this.jiraGreenhopperAPI = new JiraGreenhopperAPI(jiraWebClient);
+        this.SPRINT_ACTIF = jiraAgileAPI.getLastlyActiveSprint();
+        this.SPRINT_ACTIF_ALPHA = jiraAgileAPI.getLastlyActiveSprint();
+        this.SPRINT_ACTIF_BETA = jiraAgileAPI.getLastlyActiveTeamSprint(TEAM_NAME_BETA);
+        this.SPRINT_ACTIF_GAMMA = jiraAgileAPI.getLastlyActiveSprint();
+        this.SPRINTS.put(TEAM_NAME_ALPHA, SPRINT_ACTIF_ALPHA);
+        this.SPRINTS.put(TEAM_NAME_BETA, SPRINT_ACTIF_BETA);
+        this.SPRINTS.put(TEAM_NAME_GAMMA, SPRINT_ACTIF_GAMMA);
+    }
 
     /* Returns a HashMap <TeamName, Sprint> using JiraAPI and getTeams() method
      * Retrieve all data from the lastly active sprint
      */
-    public static Map<String,Sprint> callJiraSprintAPI() {
-        Map<String, Float[]> planning = ExternalFiles.getPlanning(PLANNING_PATH, SPRINT_ACTIF);
+    public Map<String,Sprint> callJiraSprintAPI() {
+        Map<String, Float[]> planning = externalFiles.getPlanning(PLANNING_PATH, SPRINT_ACTIF);
         for (Map.Entry<String, ArrayList<String>> entry: TEAMS.entrySet()) {
             String label = entry.getKey();
             Team t = getTeam(TEAMS.get(label), label);
@@ -152,8 +166,8 @@ public class API {
     /* Method that calls getCollaborators() and return a HashMap<AccountID, collaborator>
      * Retrieve all data of each ID_COLLABS on the lastly active sprint (if they have at least one assigned ticket)
      */
-    public static Map<String, Collaborator> callJiraCollabSprintAPI() {
-        Map<String, Float[]> planning = ExternalFiles.getPlanning(PLANNING_PATH, SPRINT_ACTIF);
+    public Map<String, Collaborator> callJiraCollabSprintAPI() {
+        Map<String, Float[]> planning = externalFiles.getPlanning(PLANNING_PATH, SPRINT_ACTIF);
         HashMap<String, Collaborator> collaborators = new HashMap<>();
         for (Map.Entry<String, ArrayList<String>> entry : TEAMS.entrySet()) {
             String label = entry.getKey();
@@ -184,41 +198,41 @@ public class API {
      * Retrieve all information from RUN_PROJECT_NAME (for incident) and PROJECT_NAME (for bugs) since each
      * project's creation
      */
-    public static Backlog callJiraBacklogAPI() {
-        int[] incidents = JiraAPI.getProjectIncidentBug(RUN_PROJECT_NAME, ISSUE_INCIDENT);
-        int[] bugs = JiraAPI.getProjectIncidentBug(PROJECT_NAME, ISSUE_BUG);
+    public Backlog callJiraBacklogAPI() {
+        int[] incidents = jiraAPI.getProjectIncidentBug(RUN_PROJECT_NAME, ISSUE_INCIDENT);
+        int[] bugs = jiraAPI.getProjectIncidentBug(PROJECT_NAME, ISSUE_BUG);
         return Backlog.builder()
                 .nbIncidents(incidents[0])
                 .nbIncidentsLow(incidents[1])
                 .nbIncidentsMedium(incidents[2])
                 .nbIncidentsHigh(incidents[3])
                 .nbIncidentsHighest(incidents[4])
-                .nbIncidentsCreated(JiraAPI.getCreated(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT))
-                .nbIncidentsResolved(JiraAPI.getResolved(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT))
-                .nbIncidentsInProgress(JiraAPI.getInProgress(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT))
+                .nbIncidentsCreated(jiraAPI.getCreated(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT))
+                .nbIncidentsResolved(jiraAPI.getResolved(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT))
+                .nbIncidentsInProgress(jiraAPI.getInProgress(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT))
                 .nbBugs(bugs[0])
                 .nbBugsLow(bugs[1])
                 .nbBugsMedium(bugs[2])
                 .nbBugsHigh(bugs[3])
                 .nbBugsHighest(bugs[4])
-                .nbBugsCreated(JiraAPI.getCreated(NB_DAYS_BACKLOG, PROJECT_NAME, ISSUE_BUG))
-                .nbBugsResolved(JiraAPI.getResolved(NB_DAYS_BACKLOG, PROJECT_NAME, ISSUE_BUG))
-                .nbBugsInProgress(JiraAPI.getInProgress(NB_DAYS_BACKLOG, PROJECT_NAME, ISSUE_BUG))
+                .nbBugsCreated(jiraAPI.getCreated(NB_DAYS_BACKLOG, PROJECT_NAME, ISSUE_BUG))
+                .nbBugsResolved(jiraAPI.getResolved(NB_DAYS_BACKLOG, PROJECT_NAME, ISSUE_BUG))
+                .nbBugsInProgress(jiraAPI.getInProgress(NB_DAYS_BACKLOG, PROJECT_NAME, ISSUE_BUG))
                 .build();
     }
 
     /* Method that retrieves all data of the last NB_SPRINT_RETROSPECTIVE, including the lastly active sprint
      * for each team (board_id differs)
      */
-    public static Map<String, Retrospective> callJiraRetrospectiveAPI() {
+    public Map<String, Retrospective> callJiraRetrospectiveAPI() {
         HashMap<String, Retrospective> retrospectives = new HashMap<>();
         for (Map.Entry<String,String> entry: TEAM_PAIR.entrySet()) {
             String teamName = entry.getKey();
-            List<SprintCommitment> sprints = JiraAgileAPI.getLastlyClosedSprints(NB_SPRINTS_RETROSPECTIVE, teamName);
+            List<SprintCommitment> sprints = jiraAgileAPI.getLastlyClosedSprints(NB_SPRINTS_RETROSPECTIVE, teamName);
             for (SprintCommitment sprint : sprints) {
                 if(sprint.getId() != 0){
-                    double[] commitment = JiraGreenhopperAPI.getCommitment(sprint, TEAM_PAIR.get(teamName));
-                    List<String> issueKeys = JiraGreenhopperAPI.getIssueKeys(sprint, TEAM_PAIR.get(teamName));
+                    double[] commitment = jiraGreenhopperAPI.getCommitment(sprint, TEAM_PAIR.get(teamName));
+                    List<String> issueKeys = jiraGreenhopperAPI.getIssueKeys(sprint, TEAM_PAIR.get(teamName));
                     sprint.setAddedIssueKeys(issueKeys);
                     sprint.setInitialCommitment(commitment[0]);
                     sprint.setFinalCommitment(commitment[1]);
@@ -238,14 +252,15 @@ public class API {
     /* Method that calls getReleases() from ExternalFiles class
      * Returns a list of Release object
      */
-    public static List<Release> getReleases() throws IOException, ParseException {
-        return ExternalFiles.getReleases(RELEASE_PATH);
+    public List<Release> getReleases() throws IOException, ParseException {
+        return externalFiles.getReleases(RELEASE_PATH);
     }
-    public static Map<String, Collaborator> getCollaboratorsPerTeam(List<String> teamAccId, String teamName) {
+
+    public Map<String, Collaborator> getCollaboratorsPerTeam(List<String> teamAccId, String teamName) {
         HashMap<String, Collaborator> collaborators = new HashMap<>();
         Collaborator c;
         for (String accId : teamAccId) {
-            if ((c = JiraAPI.getCollaborator(accId, teamName, SPRINTS.get(teamName))) != null) {
+            if ((c = jiraAPI.getCollaborator(accId, teamName, SPRINTS.get(teamName))) != null) {
                 collaborators.put(c.getAccountId(), c);
             }
         }
@@ -255,7 +270,7 @@ public class API {
     /* Call above method, getCollaborators() and assign each collaborator to its team
      * returning a HashMap of size nbTeams
      */
-    public static Team getTeam(ArrayList<String> teamAccId, String label) {
+    public Team getTeam(ArrayList<String> teamAccId, String label) {
         Map<String, Collaborator> collaborators = getCollaboratorsPerTeam(teamAccId, label);
         List<Collaborator> c = new ArrayList<>(collaborators.values());
         return Team.builder()

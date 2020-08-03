@@ -16,9 +16,9 @@ public class JiraAgileAPI {
     static final String JIRA_AGILE_API_URL = "https://apriltechnologies.atlassian.net/rest/agile/1.0/";
     static final String ACTIVE_SPRINT = "active";
 
-    private JiraAgileAPI(){}
+    JiraAgileAPI(){}
 
-    public static List<SprintCommitment> getLastlyClosedSprints(int nbSprints, String teamName) {
+    public List<SprintCommitment> getLastlyClosedSprints(int nbSprints, String teamName) {
         /*
         Variables
          */
@@ -30,7 +30,7 @@ public class JiraAgileAPI {
         /*
         Logic
          */
-        AgileDto agileDto = JiraAgileAPI.connectToJiraAgileAPI(request);
+        AgileDto agileDto = connectToJiraAgileAPI(request);
         assert agileDto != null;
         SprintDto[] sprintsDto = agileDto.getValues();
         for (int i = sprintsDto.length-1; i > 0; i--) {
@@ -64,13 +64,13 @@ public class JiraAgileAPI {
     /* Method that returns the lastly active sprint in JIRA Agile API
      * A sprint is active if
      */
-    public static Sprint getLastlyActiveSprint() {
+    public Sprint getLastlyActiveSprint() {
         String startDate = "";
         String endDate = "";
         String sprintName = "";
         int sprintId = 0;
         String request = JIRA_AGILE_API_URL + "board/" + PROJECT_BOARD_ID + "/sprint";
-        AgileDto agileDto = JiraAgileAPI.connectToJiraAgileAPI(request);
+        AgileDto agileDto = connectToJiraAgileAPI(request);
         assert agileDto != null;
         SprintDto[] sprintsDto = agileDto.getValues();
         for (SprintDto s: sprintsDto) {
@@ -97,7 +97,7 @@ public class JiraAgileAPI {
     /* Method that returns the lastly active sprint that contains teamName in its name
      *
      */
-    public static Sprint getLastlyActiveTeamSprint(String teamName){
+    public Sprint getLastlyActiveTeamSprint(String teamName){
         String startDate = "";
         String endDate = "";
         String sprintName = "";
@@ -105,7 +105,7 @@ public class JiraAgileAPI {
         String name;
         String teamNameLC = teamName.toLowerCase();
         String request = JIRA_AGILE_API_URL + "board/" + PROJECT_BOARD_ID + "/sprint";
-        AgileDto agileDto = JiraAgileAPI.connectToJiraAgileAPI(request);
+        AgileDto agileDto = connectToJiraAgileAPI(request);
         assert agileDto != null;
         SprintDto[] sprintsDto = agileDto.getValues();
         for (SprintDto s: sprintsDto) {
@@ -129,7 +129,7 @@ public class JiraAgileAPI {
     /* Method that connect to Jira Agile API
      * GET on the given request
      */
-    public static AgileDto connectToJiraAgileAPI(String request){
+    public AgileDto connectToJiraAgileAPI(String request){
         WebClient webClient = WebClient.builder()
                 .filter(ExchangeFilterFunctions.basicAuthentication(USERNAME, API_TOKEN))
                 .defaultHeader("Accept", "application/json")
