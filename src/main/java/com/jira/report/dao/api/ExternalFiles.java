@@ -1,11 +1,13 @@
 package com.jira.report.dao.api;
 
+import com.jira.report.config.JiraReportConfigExternal;
 import com.jira.report.model.Release;
 import com.jira.report.model.Sprint;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
+import org.springframework.stereotype.Service;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -18,14 +20,16 @@ import static java.lang.Double.parseDouble;
 import static java.lang.Float.parseFloat;
 import static java.lang.Integer.parseInt;
 
+@Service
 public class ExternalFiles {
-    static final Character SEPARATOR = ',';
-    static final Character VALUE_COMMA = ',';
-    static final Character VALUE_DOT = '.';
-    static final int INDEX_ACC_ID = 2;
-    static final int FIRST_ROW = 4;
+    private final Character separator;
+    private final int indexAccountId;
+    private final int firstRow;
 
-    public ExternalFiles() {
+    public ExternalFiles(JiraReportConfigExternal jiraReportConfigExternal){
+        this.separator = ',';
+        this.indexAccountId = jiraReportConfigExternal.getIndexAccountId();
+        this.firstRow = jiraReportConfigExternal.getFirstRow();
     }
 
     /* Reads "planning.csv" and extract two data, the working time and the available time per collaborator
@@ -47,11 +51,11 @@ public class ExternalFiles {
          */
         try {
             FileReader filereader = new FileReader(PLANNING_PATH);
-            CSVParser parser = new CSVParserBuilder().withSeparator(SEPARATOR).build();
+            CSVParser parser = new CSVParserBuilder().withSeparator(separator).build();
             CSVReader csvReader = new CSVReaderBuilder(filereader)
                     .withCSVParser(parser)
                     .build();
-            for (int i = 0; i < FIRST_ROW; i++) {
+            for (int i = 0; i < firstRow; i++) {
                 csvReader.readNext();
             }
             dates = csvReader.readNext();
@@ -70,8 +74,8 @@ public class ExternalFiles {
             csvReader.readNext();
             String[] infos;
             while ((infos = csvReader.readNext()) != null) {
-                if (!infos[INDEX_ACC_ID].isEmpty()) {
-                    accountId = infos[INDEX_ACC_ID];
+                if (!infos[indexAccountId].isEmpty()) {
+                    accountId = infos[indexAccountId];
                     float totalWorkingTime = 8f * (endIndex - startIndex + 1);
                     float availableTime = 8f * (endIndex - todayIndex + 1);
                     for (int i = startIndex; i <= endIndex; i++) {
@@ -97,9 +101,11 @@ public class ExternalFiles {
     public List<Release> getReleases(String path) throws IOException, ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         int nbLinesToSkip = 2;
+        char VALUE_DOT = '.';
+        char VALUE_COMMA = ',';
         List<Release> releases = new ArrayList<>();
         FileReader filereader = new FileReader(path);
-        CSVParser parser = new CSVParserBuilder().withSeparator(SEPARATOR).build();
+        CSVParser parser = new CSVParserBuilder().withSeparator(separator).build();
         CSVReader csvReader = new CSVReaderBuilder(filereader)
                 .withCSVParser(parser)
                 .build();

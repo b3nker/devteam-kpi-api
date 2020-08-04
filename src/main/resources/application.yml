@@ -6,6 +6,8 @@ jira:
   external:
     planning: planning.csv
     release: release.csv
+    indexAccountId: 2
+    firstRow: 4
   report:
     global:
       projectName: BMKP
@@ -29,13 +31,15 @@ jira:
       active: active
       maxResults: 100
       unassignedAccountId: unassigned
+      # anomalies name in Jira
       bug: Bug
       incident: Incident
-      status:
+      #statuses' names in Jira
+      statuses:
         - Abandonné
         - En cours
         - A qualifier
-        - A Faire
+        - A faire
         - Bac d'affinage
         - Terminé
         - Livré
@@ -47,12 +51,36 @@ jira:
         - A Livrer
         - A tester
         - A valider
-        - Test croisé
-      priority:
-        - Low
-        - Medium
-        - High
-        - Highest
+        - Testcroisé
+      done:
+        - Livré
+        - Terminé
+        - Validé
+        - Validé en recette
+      doneBugs:
+        - Livré
+        - Terminé
+        - Validé en recette
+        - Abandonné
+      inProgress:
+        - En cours
+        - Dév terminé
+        - Refusé en recette
+        - En attente
+        - A tester
+        - A Livrer
+      devDone:
+        - A tester
+        - A Livrer
+      devDoneEnCours:
+        - Dév terminé
+        - En cours
+
+      #Priorities' names in Jira
+      priorityLow: Low
+      priorityMedium: Medium
+      priorityHigh: High
+      priorityHighest: Highest
     individuals:
       idCollabs:
         5c17b4599f443a65fecae3ca: middle lead dev # Julien Mosset

@@ -14,10 +14,14 @@ import reactor.netty.tcp.TcpClient;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.jira.report.dao.api.API.*;
 
 @Configuration
 public class WebClientInstancesConfig {
+    private JiraReportConfigApi jiraReportConfigApi;
+
+    public WebClientInstancesConfig(JiraReportConfigApi jiraReportConfigApi) {
+        this.jiraReportConfigApi = jiraReportConfigApi;
+    }
 
     @Bean
     public WebClient jiraWebClient(ReactiveServicesExchangesConfig reactiveServicesExchangesConfig) {
@@ -33,7 +37,7 @@ public class WebClientInstancesConfig {
         return webClientBuilder
                 .clientConnector(new ReactorClientHttpConnector(HttpClient.from(timeoutClient)))
                 .exchangeStrategies(ExchangeStrategies.builder().codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024)).build())
-                .filter(ExchangeFilterFunctions.basicAuthentication(USERNAME, API_TOKEN))
+                .filter(ExchangeFilterFunctions.basicAuthentication(jiraReportConfigApi.getUsername(), jiraReportConfigApi.getJiraToken()))
                 .build();
     }
 
@@ -51,7 +55,7 @@ public class WebClientInstancesConfig {
         return webClientBuilder
                 .clientConnector(new ReactorClientHttpConnector(HttpClient.from(timeoutClient)))
                 .exchangeStrategies(ExchangeStrategies.builder().codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024)).build())
-                .defaultHeaders(h -> h.setBearerAuth(API_TOKEN_TEMPO))
+                .defaultHeaders(h -> h.setBearerAuth(jiraReportConfigApi.getTempoToken()))
                 .build();
     }
 

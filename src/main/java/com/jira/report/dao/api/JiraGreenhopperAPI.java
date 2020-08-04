@@ -1,6 +1,7 @@
 package com.jira.report.dao.api;
 
 import com.jira.report.config.JiraReportConfigApi;
+import com.jira.report.config.JiraReportConfigGlobal;
 import com.jira.report.model.SprintCommitment;
 import com.jira.report.dto.jiraGreenhopper.ContentsDto;
 import com.jira.report.dto.jiraGreenhopper.JiraGreenHopperDto;
@@ -14,17 +15,20 @@ import java.util.Set;
 @Service
 public class JiraGreenhopperAPI {
     private final WebClient jiraWebClient;
-    private final JiraReportConfigApi jiraReportConfigApi;
+    private final String projectName;
     private final JiraAPI jiraAPI;
     private final String baseUrl;
     private final String greenhopperUrl;
 
-    public JiraGreenhopperAPI(WebClient jiraWebClient, JiraReportConfigApi jiraReportConfigApi, JiraAPI jiraAPI) {
+    public JiraGreenhopperAPI(WebClient jiraWebClient,
+                              JiraReportConfigApi jiraReportConfigApi,
+                              JiraReportConfigGlobal jiraReportConfigGlobal,
+                              JiraAPI jiraAPI) {
         this.jiraWebClient = jiraWebClient;
-        this.jiraReportConfigApi = jiraReportConfigApi;
-        this.baseUrl = this.jiraReportConfigApi.getBaseUrl();
+        this.baseUrl = jiraReportConfigApi.getBaseUrl();
         this.jiraAPI = jiraAPI;
-        this.greenhopperUrl = this.jiraReportConfigApi.getJiraGreenhopperApiUrl();
+        this.projectName = jiraReportConfigGlobal.getProjectName();
+        this.greenhopperUrl = jiraReportConfigApi.getJiraGreenhopperApiUrl();
     }
 
     /* Returns 4 information on a sprint
@@ -73,7 +77,7 @@ public class JiraGreenhopperAPI {
         finalCommitment += allIssuesEstimateSum;
         //Added issues
         for (String issueKey: addedIssues) {
-            addedWork += jiraAPI.getStoryPoint(issueKey);
+            addedWork += jiraAPI.getStoryPoint(issueKey, this.projectName);
         }
         commitment[0] = initialCommitment;
         commitment[1] = finalCommitment;

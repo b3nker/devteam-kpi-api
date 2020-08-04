@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import javax.annotation.PostConstruct;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -24,44 +23,42 @@ import static java.time.temporal.ChronoUnit.DAYS;
 @Slf4j
 public class JiraAPI {
     private final WebClient jiraWebClient;
-    private final JiraReportConfigIndividuals jiraReportConfigIndividuals;
-    private final JiraReportConfigApi jiraReportConfigApi;
-    private final JiraReportConfigQuery jiraReportConfigQuery;
     private final JiraTempoAPI jiraTempoAPI;
     private final String baseUrl;
-    static final String JIRA_API_URL = "rest/api/3/";
+    private final String jiraApiUrl;
+    private final Map<String, String> idCollabs;
+    private final String unassignedAccountId;
     // JIRA STATUS & CUSTOM STATUS
-    static final String A_QUALIFIER = "A qualifier";
-    static final String A_FAIRE = "A Faire";
-    static final String BAC_AFFINAGE = "Bac d'affinage";
-    static final String TERMINE = "Terminé";
-    static final String LIVRE = "Livré";
-    static final String VALIDE_RECETTE = "Validé en recette";
-    static final String VALIDE = "Validé";
-    static final String ABANDONNE = "Abandonné";
-    static final String EN_COURS = "En cours";
-    static final String DEV_TERMINE = "Dév terminé";
-    static final String REFUSE_RECETTE = "Refusé en recette";
-    static final String EN_ATTENTE = "En attente";
-    static final String A_LIVRER = "A Livrer";
-    static final String A_TESTER = "A tester";
-    static final String A_VALIDER = "A valider";
-    static final String TEST_CROISE = "Test croisé";
+    private final String aQualifier = "A qualifier";
+    private final String aFaire = "A Faire";
+    private final String bacAffinage = "Bac d'affinage";
+    private final String termine = "Terminé";
+    private final String livre = "Livré";
+    private final String valideRecette = "Validé en recette";
+    private final String valide = "Validé";
+    private final String abandonne = "Abandonné";
+    private final String enCours = "En cours";
+    private final String devTermine = "Dév terminé";
+    private final String refuseRecette = "Refusé en recette";
+    private final String enAttente = "En attente";
+    private final String aLivrer = "A Livrer";
+    private final String aTester = "A tester";
+    private final String aValider = "A valider";
+    private final String testCroise = "Test croisé";
     //Unassigned infos
     static final String UNASSIGNED_ROLE = "none";
     static final String UNASSIGNED_FIRST_NAME = "Non";
     static final String UNASSIGNED_LAST_NAME = "Assigné";
     //Priority
-    static final String PRIORITY_LOW = "Low";
-    static final String PRIORITY_MEDIUM = "Medium";
-    static final String PRIORITY_HIGH = "High";
-    static final String PRIORITY_HIGHEST = "Highest";
-
-    static final ArrayList<String> DONE = new ArrayList<>(Arrays.asList(LIVRE, TERMINE, VALIDE, VALIDE_RECETTE));
-    static final ArrayList<String> DONE_BUGS = new ArrayList<>(Arrays.asList(LIVRE, TERMINE, VALIDE_RECETTE, ABANDONNE));
-    static final ArrayList<String> IN_PROGRESS = new ArrayList<>(Arrays.asList(EN_COURS, DEV_TERMINE, REFUSE_RECETTE, EN_ATTENTE, A_TESTER, A_LIVRER));
-    static final ArrayList<String> DEV_DONE = new ArrayList<>(Arrays.asList(A_TESTER, A_LIVRER));
-    static final ArrayList<String> DEV_DONE_EN_COURS = new ArrayList<>(Arrays.asList(DEV_TERMINE, EN_COURS));
+    private final String PRIORITY_LOW = "Low";
+    private final String PRIORITY_MEDIUM = "Medium";
+    private final String PRIORITY_HIGH = "High";
+    private final String PRIORITY_HIGHEST = "Highest";
+    private final List<String> done = new ArrayList<>(Arrays.asList(livre,termine,valide,valideRecette));
+    private final List<String> doneBugs = new ArrayList<>(Arrays.asList(livre,termine,valideRecette,abandonne));
+    private final List<String> inProgress = new ArrayList<>(Arrays.asList(enCours,devTermine,refuseRecette,enAttente,aTester,aLivrer));
+    private final List<String> devDone = new ArrayList<>(Arrays.asList(aTester, aLivrer));
+    private final List<String> devDoneEnCours = new ArrayList<>(Arrays.asList(devTermine, enCours));
 
     public JiraAPI(JiraTempoAPI jiraTempoAPI,
                    JiraReportConfigQuery jiraReportConfigQuery,
@@ -69,28 +66,23 @@ public class JiraAPI {
                    JiraReportConfigApi jiraReportConfigApi,
                    WebClient jiraWebClient) {
         this.jiraTempoAPI = jiraTempoAPI;
-        this.jiraReportConfigIndividuals = jiraReportConfigIndividuals;
-        this.jiraReportConfigApi = jiraReportConfigApi;
         this.jiraWebClient = jiraWebClient;
-        this.jiraReportConfigQuery = jiraReportConfigQuery;
-        this.baseUrl = this.jiraReportConfigApi.getBaseUrl();
+        this.baseUrl = jiraReportConfigApi.getBaseUrl();
+        this.jiraApiUrl = jiraReportConfigApi.getJiraApiUrl();
+        this.idCollabs = jiraReportConfigIndividuals.getCollabs();
+        this.unassignedAccountId = jiraReportConfigQuery.getUnassignedAccountId();
     }
 
-    @PostConstruct
-    public void afterInit() {
-        log.info("after init = {}", jiraReportConfigApi.getBaseUrl());
-    }
 
     /* Main method : Returns a Collaborator object if it has at least one ticket
      * else return null
      */
-    public Collaborator getCollaborator(String accId, String label, Sprint s) {
-        /*
+    public Collaborator getCollaborator(String accId, String label, Sprint s, String projectName, int maxResults) {
+          /*
         Variables
         */
-        Map<String, String> idCollabs = jiraReportConfigIndividuals.getCollabs();
-        String request = baseUrl + JIRA_API_URL + "search?jql=project=" + PROJECT_NAME + "+AND+assignee=" + accId +
-                "+AND+sprint=" + s.getId() + "+AND+labels=" + label + "&maxResults=" + MAX_RESULTS;
+        String request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName + "+AND+assignee=" + accId +
+                "+AND+sprint=" + s.getId() + "+AND+labels=" + label + "&maxResults=" + maxResults;
         double timespent = 0;
         double estimated = 0;
         double remaining = 0;
@@ -152,10 +144,10 @@ public class JiraAPI {
                     }
                 }
             }
-            if (DONE.contains(statut)) {
+            if (done.contains(statut)) {
                 ticketsDone++;
-            } else if (IN_PROGRESS.contains(statut)) {
-                if (DEV_DONE.contains(statut)) {
+            } else if (inProgress.contains(statut)) {
+                if (devDone.contains(statut)) {
                     ticketsDevDone++;
                 } else {
                     ticketsInProgress++;
@@ -163,10 +155,10 @@ public class JiraAPI {
             } else {
                 ticketsToDo++;
             }
-            if (DEV_DONE_EN_COURS.contains(statut)) {
+            if (devDoneEnCours.contains(statut)) {
                 ticketsEnCoursDevTermine++;
             }
-            if (A_TESTER.contains(statut)) {
+            if (aTester.contains(statut)) {
                 ticketsAtester++;
             }
             // Setting working time
@@ -177,49 +169,49 @@ public class JiraAPI {
             double curStoryPoints = i.getFields().getStoryPoints();
             spTotal += curStoryPoints;
             switch (statut) {
-                case A_QUALIFIER:
+                case aQualifier:
                     spAQualifier += curStoryPoints;
                     break;
-                case BAC_AFFINAGE:
+                case bacAffinage:
                     spBacAffinage += curStoryPoints;
                     break;
-                case EN_ATTENTE:
+                case enAttente:
                     spEnAttente += curStoryPoints;
                     break;
-                case A_FAIRE:
+                case aFaire:
                     spAFaire += curStoryPoints;
                     break;
-                case EN_COURS:
+                case enCours:
                     spEnCours += curStoryPoints;
                     break;
-                case ABANDONNE:
+                case abandonne:
                     spAbandonne += curStoryPoints;
                     break;
-                case DEV_TERMINE:
+                case devTermine:
                     spDevTermine += curStoryPoints;
                     break;
-                case A_VALIDER:
+                case aValider:
                     spAvalider += curStoryPoints;
                     break;
-                case A_LIVRER:
+                case aLivrer:
                     spAlivrer += curStoryPoints;
                     break;
-                case A_TESTER:
+                case aTester:
                     spATester += curStoryPoints;
                     break;
-                case REFUSE_RECETTE:
+                case refuseRecette:
                     spRefuseEnRecette += curStoryPoints;
                     break;
-                case VALIDE_RECETTE:
+                case valideRecette:
                     spValideEnRecette += curStoryPoints;
                     break;
-                case LIVRE:
+                case livre:
                     spLivre += curStoryPoints;
                     break;
-                case TERMINE:
+                case termine:
                     spTermine += curStoryPoints;
                     break;
-                case TEST_CROISE:
+                case testCroise:
                     spTestCroise += curStoryPoints;
                 default:
                     break;
@@ -229,11 +221,11 @@ public class JiraAPI {
         if (request.contains("null")) {
             prenom = UNASSIGNED_FIRST_NAME;
             nom = UNASSIGNED_LAST_NAME;
-            accountId = UNASSIGNED;
+            accountId = unassignedAccountId;
             role = UNASSIGNED_ROLE;
         } else {
             //Replace ":" with "_"
-            role = idCollabs.get(accountId);
+            role = this.idCollabs.get(accountId);
             //Calling tempo API
             timespent = jiraTempoAPI.getWorklogByAccountID(accId, s.getStartDate().format(dtfAmerica), s.getEndDate().format(dtfAmerica));
         }
@@ -273,18 +265,19 @@ public class JiraAPI {
                 .build();
     }
 
+
     /* Returns an array of integer containing information on bugs/incidents since project's creation (number and priority)
      * A bug is active when NOT in following jira states :  LIVRE, TERMINE, VALIDE_RECETTE, ABANDONNE
      */
-    public int[] getProjectIncidentBug(String projectName, String issueType) {
+    public int[] getProjectIncidentBug(String projectName, String issueType, int maxResults) {
         /*
         Variables
          */
         // 0 : total, 1: low, 2: medium, 3: high, 4: highest
         int[] incidentsBugs = new int[5];
         int startAt = 0;
-        String request = baseUrl + JIRA_API_URL + "search?jql=project=" + projectName +
-                "+AND+issuetype='" + issueType + "'&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+        String request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName +
+                "+AND+issuetype='" + issueType + "'&maxResults=" + maxResults + "&startAt=" + startAt;
         JiraDto c = connectToJiraAPI(request);
         int total = c.getTotal();
         /*
@@ -295,7 +288,7 @@ public class JiraAPI {
                 FieldsDto fDto = i.getFields();
                 String statut = fDto.getStatus().getName();
                 String priority = fDto.getPriority().getName();
-                if (!DONE_BUGS.contains(statut)) {
+                if (!doneBugs.contains(statut)) {
                     incidentsBugs[0]++;
                     switch (priority) {
                         case PRIORITY_LOW:
@@ -315,9 +308,9 @@ public class JiraAPI {
                     }
                 }
             }
-            startAt += MAX_RESULTS;
-            request = baseUrl + JIRA_API_URL + "search?jql=project=" + projectName +
-                    "+AND+issuetype='" + issueType + "'&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+            startAt += maxResults;
+            request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName +
+                    "+AND+issuetype='" + issueType + "'&maxResults=" + maxResults + "&startAt=" + startAt;
             c = connectToJiraAPI(request);
         } while (startAt < total);
         return incidentsBugs;
@@ -326,7 +319,7 @@ public class JiraAPI {
     /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug/incident created
      *  Index i represent the number of bugs created (nbDays-i) ago
      */
-    public int[] getCreated(int nbDays, String projectName, String issueType) {
+    public int[] getCreated(int nbDays, String projectName, String issueType, int maxResults) {
         /*
         Variables
          */
@@ -335,8 +328,8 @@ public class JiraAPI {
         int days;
         String dateCreation;
         LocalDate ldtBug;
-        String request = baseUrl + JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType +
-                "'+AND+created>=-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+        String request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType +
+                "'+AND+created>=-" + nbDays + "d&maxResults=" + maxResults + "&startAt=" + startAt;
         JiraDto c = connectToJiraAPI(request);
         int total = c.getTotal();
         /*
@@ -349,9 +342,9 @@ public class JiraAPI {
                 days = (int) DAYS.between(ldtBug, LocalDate.parse(TODAY.format(dtfAmerica)));
                 bugsCreated[nbDays - days] += 1;
             }
-            startAt += MAX_RESULTS;
-            request = baseUrl + JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType +
-                    "'+AND+created>=-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+            startAt += maxResults;
+            request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType +
+                    "'+AND+created>=-" + nbDays + "d&maxResults=" + maxResults + "&startAt=" + startAt;
             c = connectToJiraAPI(request);
         } while (startAt < total);
         return bugsCreated;
@@ -360,7 +353,7 @@ public class JiraAPI {
     /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug/incident resolved (Jira status "terminé/livré")
      *  Index i represent the number of bugs resolved (nbDays-i) ago
      */
-    public int[] getResolved(int nbDays, String projectName, String issueType) {
+    public int[] getResolved(int nbDays, String projectName, String issueType, int maxResults) {
         /*
         Variables
          */
@@ -371,8 +364,8 @@ public class JiraAPI {
         LocalDate ldtBug;
         int days;
         String today = LocalDateTime.now().format(dtfAmerica);
-        String request = baseUrl + JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType +
-                "'+AND+updated>=-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+        String request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType +
+                "'+AND+updated>=-" + nbDays + "d&maxResults=" + maxResults + "&startAt=" + startAt;
         /*
         Logic
          */
@@ -381,16 +374,16 @@ public class JiraAPI {
         do {
             for (IssueDto i : jDto.getIssues()) {
                 statut = i.getFields().getStatus().getName();
-                if (statut.contains(TERMINE) || statut.contains(LIVRE)) {
+                if (statut.contains(termine) || statut.contains(livre)) {
                     updateDate = i.getFields().getUpdated().substring(0, 10);
                     ldtBug = LocalDate.parse(updateDate);
                     days = (int) DAYS.between(ldtBug, LocalDate.parse(today));
                     bugsResolved[nbDays - days] += 1;
                 }
             }
-            startAt += MAX_RESULTS;
-            request = baseUrl + JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType +
-                    "'+AND+updated>=-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+            startAt += maxResults;
+            request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType +
+                    "'+AND+updated>=-" + nbDays + "d&maxResults=" + maxResults + "&startAt=" + startAt;
             jDto = connectToJiraAPI(request);
         } while (startAt < total);
         return bugsResolved;
@@ -399,7 +392,7 @@ public class JiraAPI {
     /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug/incident in progress (Jira status "terminé/livré")
      *  Index i represent the number of bugs resolved (nbDays-i) ago
      */
-    public int[] getInProgress(int nbDays, String projectName, String issueType) {
+    public int[] getInProgress(int nbDays, String projectName, String issueType, int maxResults) {
         /*
         Variables
          */
@@ -410,8 +403,8 @@ public class JiraAPI {
         LocalDate ldtBug;
         int days;
         String today = LocalDateTime.now().format(dtfAmerica);
-        String request = baseUrl + JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType +
-                "'+AND+updated>=-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+        String request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType +
+                "'+AND+updated>=-" + nbDays + "d&maxResults=" + maxResults + "&startAt=" + startAt;
         /*
         Logic
          */
@@ -420,16 +413,16 @@ public class JiraAPI {
         do {
             for (IssueDto i : jDto.getIssues()) {
                 statut = i.getFields().getStatus().getName();
-                if (IN_PROGRESS.contains(statut)) {
+                if (this.inProgress.contains(statut)) {
                     updateDate = i.getFields().getUpdated().substring(0, 10);
                     ldtBug = LocalDate.parse(updateDate);
                     days = (int) DAYS.between(ldtBug, LocalDate.parse(today));
                     inProgress[nbDays - days] += 1;
                 }
             }
-            startAt += MAX_RESULTS;
-            request = baseUrl + JIRA_API_URL + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType +
-                    "'+AND+updated>=-" + nbDays + "d&maxResults=" + MAX_RESULTS + "&startAt=" + startAt;
+            startAt += maxResults;
+            request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType +
+                    "'+AND+updated>=-" + nbDays + "d&maxResults=" + maxResults + "&startAt=" + startAt;
             jDto = connectToJiraAPI(request);
         } while (startAt < total);
         return inProgress;
@@ -438,11 +431,11 @@ public class JiraAPI {
     /* Method that returns the number of story points assigned to an issue.
      * Used to retrieve story points linked to added tickets in getCommitment()
      */
-    public double getStoryPoint(String issueID) {
+    public double getStoryPoint(String issueID, String projectName) {
         /*
         Variables
          */
-        String request = baseUrl + JIRA_API_URL + "search?jql=project=" + PROJECT_NAME + "+AND+issue=" + issueID;
+        String request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName + "+AND+issue=" + issueID;
         /*
         Logic
          */

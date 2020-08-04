@@ -28,7 +28,7 @@ public class JiraAgileAPI {
         this.active = jiraReportConfigQuery.getActive();
     }
 
-    public List<SprintCommitment> getLastlyClosedSprints(int nbSprints, String teamName) {
+    public List<SprintCommitment> getLastlyClosedSprints(int nbSprints, String teamName, String projectBoardId) {
         /*
         Variables
          */
@@ -36,7 +36,7 @@ public class JiraAgileAPI {
         boolean lastActiveFound = false;
         String teamNameLC = teamName.toLowerCase();
         List<SprintCommitment> sc = new ArrayList<>();
-        String request = baseUrl + jiraAgileUrl + "/board/" + PROJECT_BOARD_ID + "/sprint";
+        String request = baseUrl + jiraAgileUrl + "/board/" + projectBoardId + "/sprint";
         /*
         Logic
          */
@@ -74,12 +74,12 @@ public class JiraAgileAPI {
     /* Method that returns the lastly active sprint in JIRA Agile API
      * A sprint is active if
      */
-    public Sprint getLastlyActiveSprint() {
+    public Sprint getLastlyActiveSprint(String projectBoardId) {
         String startDate = "";
         String endDate = "";
         String sprintName = "";
         int sprintId = 0;
-        String request = baseUrl + jiraAgileUrl + "board/" + PROJECT_BOARD_ID + "/sprint";
+        String request = baseUrl + jiraAgileUrl + "board/" + projectBoardId + "/sprint";
         AgileDto agileDto = connectToJiraAgileAPI(request);
         assert agileDto != null;
         SprintDto[] sprintsDto = agileDto.getValues();
@@ -107,14 +107,14 @@ public class JiraAgileAPI {
     /* Method that returns the lastly active sprint that contains teamName in its name
      *
      */
-    public Sprint getLastlyActiveTeamSprint(String teamName){
+    public Sprint getLastlyActiveTeamSprint(String teamName, String projectBoardId){
         String startDate = "";
         String endDate = "";
         String sprintName = "";
         int sprintId = 0;
         String name;
         String teamNameLC = teamName.toLowerCase();
-        String request = baseUrl + jiraAgileUrl + "board/" + PROJECT_BOARD_ID + "/sprint";
+        String request = baseUrl + jiraAgileUrl + "board/" + projectBoardId + "/sprint";
         AgileDto agileDto = connectToJiraAgileAPI(request);
         assert agileDto != null;
         SprintDto[] sprintsDto = agileDto.getValues();

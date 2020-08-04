@@ -1,6 +1,6 @@
 package com.jira.report.dao.api;
 
-import com.jira.report.config.JiraReportConfigIndividuals;
+import com.jira.report.config.*;
 import com.jira.report.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,109 +14,85 @@ import java.util.*;
 @Slf4j
 @Service
 public class API {
-    //Project's variables
-    private final JiraReportConfigIndividuals jiraReportConfig;
     private final JiraAPI jiraAPI;
+    private final String projectBoardId;
+    private final int maxResults;
     private final JiraGreenhopperAPI jiraGreenhopperAPI;
     private final JiraAgileAPI jiraAgileAPI;
     private final ExternalFiles externalFiles;
-    public static final String USERNAME = "benjamin.kermani@neo9.fr";
-    public static final String API_TOKEN = "sqjFnTAVspNM4NxLd1QZC5CB";
-    public static final String API_TOKEN_TEMPO = "J1eKPcvcMlCvMjNBvXyJmn0vMPvGs0";
-    static final String PROJECT_BOARD_ID = "391";
-    static final String BOARD_ID_ALPHA_SP = "451";
-    static final String BOARD_ID_BETA_SP = "443";
-    static final String BOARD_ID_GAMMA_SP = "450";
-    static final String PROJECT_NAME = "BMKP";
-    static final String RUN_PROJECT_NAME = "RMKP";
-    static final int MAX_RESULTS = 100;
-    static final int NB_SPRINTS_RETROSPECTIVE = 1;
-    static final int NB_DAYS_BACKLOG = 20;
-    //Collaborator & team information
-    static final String TEAM_NAME_ALPHA = "alpha";
-    static final String TEAM_NAME_BETA = "beta";
-    static final String TEAM_NAME_GAMMA = "gamma";
-    static final String UNASSIGNED = "unassigned";
-    static final HashMap<String, String> TEAM_PAIR = new HashMap<>();
-    static {
-        TEAM_PAIR.put(TEAM_NAME_ALPHA, BOARD_ID_ALPHA_SP);
-        TEAM_PAIR.put(TEAM_NAME_BETA, BOARD_ID_BETA_SP);
-        TEAM_PAIR.put(TEAM_NAME_GAMMA, BOARD_ID_GAMMA_SP);
-    }
-    static final ArrayList<String> TEAM_ALPHA = new ArrayList<>(Arrays.asList(
-            "5c17b4599f443a65fecae3ca", // Julien Mosset
-            "5a9ebe1c4af2372a88a0656b", // Nicolas Ovejero
-            "5bcd8282607ed038040177bb", // Pape Thiam
-            "5cf921f6b06c540e82580cbd", // Valentin Pierrel
-            "5ed76cdf2fdc580b88f3bbef", // Alex Cheuko
-            "5a9ebdf74af2372a88a06565", // Gabriel Roquigny
-            "null"
-    ));
-    static final ArrayList<String> TEAM_BETA = new ArrayList<>(Arrays.asList(
-            "5cb45bb34064460e407eabe4", // Guillermo Garcès
-            "5a2181081594706402dee482", // Etienne Bourgouin
-            "5afe92f251d0b7540b43de81", // Malick Diagne
-            "5d6e32e06e3e1f0d9623cb5a", // Pierre Tomasina
-            "5ed64583620b1d0c168d4e36", // Anthony Hernandez
-            "5e98521a3a8b910c085d6a28", // Kévin Youna
-            "null"
-    ));
-    static final ArrayList<String> TEAM_GAMMA = new ArrayList<>(Arrays.asList(
-            "5e285008ee264b0e74591993", // Eric Coupal
-            "5ed76cc1be03220ab32183be", // Thibault Foucault
-            "557058:87b17037-8a69-4b38-8dab-b4cf904e960a", // Pierre Thevenet
-            "5d9b0573ea65c10c3fdbaab2", // Maxime Fourt
-            "5a8155f0cad06b353733bae8", // Guillaume Coppens
-            "5dfd11b39422830cacaa8a79", // Carthy Marie Joseph
-            "null"
-    ));
-    static final HashMap<String, ArrayList<String>> TEAMS = new HashMap<>();
-    static {
-        TEAMS.put(TEAM_NAME_ALPHA, TEAM_ALPHA);
-        TEAMS.put(TEAM_NAME_BETA, TEAM_BETA);
-        TEAMS.put(TEAM_NAME_GAMMA, TEAM_GAMMA);
+    private final String projectName;
+    private final String runProjectName;
+    private final int nbSprintsRetrospective;
+    private final int nbDaysBacklog;
+    private final String unassigned;
+    private final HashMap<String, String> teamPair = new HashMap<>();
+    private final HashMap<String, List<String>> teams = new HashMap<>();
+    private final Sprint sprintActif;
+    private final HashMap<String, Sprint> sprints = new HashMap<>();
+    private final String planningPath;
+    private final String releasePath;
+    private final String bug;
+    private final String incident;
 
-    }
-    // Sprint Data
-    private Sprint SPRINT_ACTIF;
-    private Sprint SPRINT_ACTIF_ALPHA;
-    private Sprint SPRINT_ACTIF_BETA;
-    private Sprint SPRINT_ACTIF_GAMMA;
-    final HashMap<String, Sprint> SPRINTS = new HashMap<>();
-    // ExternalData
-    static final String PLANNING_PATH = "planning.csv";
-    static final String RELEASE_PATH = "release.csv";
-    // Queries variables
-    static final String ISSUE_BUG = "Bug";
-    static final String ISSUE_INCIDENT = "Incident";
     //Settings
     static final DateTimeFormatter dtfEurope = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     static final DateTimeFormatter dtfAmerica = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     static final LocalDateTime TODAY = LocalDateTime.now();
 
-    public API(JiraAPI jiraAPI, JiraGreenhopperAPI jiraGreenhopperAPI, JiraAgileAPI jiraAgileAPI, JiraReportConfigIndividuals jiraReportConfig){
+    public API(JiraAPI jiraAPI, JiraGreenhopperAPI jiraGreenhopperAPI,
+               JiraAgileAPI jiraAgileAPI, ExternalFiles externalFiles,
+               JiraReportConfigIndividuals jiraReportConfigIndividuals,
+               JiraReportConfigQuery jiraReportConfigQuery,
+               JiraReportConfigExternal jiraReportConfigExternal,
+               JiraReportConfigGlobal jiraReportConfigGlobal){
         this.jiraAPI = jiraAPI;
-        this.jiraReportConfig = jiraReportConfig;
         this.jiraGreenhopperAPI = jiraGreenhopperAPI;
         this.jiraAgileAPI = jiraAgileAPI;
-        this.externalFiles = new ExternalFiles();
-        this.SPRINT_ACTIF = jiraAgileAPI.getLastlyActiveSprint();
-        this.SPRINT_ACTIF_ALPHA = jiraAgileAPI.getLastlyActiveSprint();
-        this.SPRINT_ACTIF_BETA = jiraAgileAPI.getLastlyActiveTeamSprint(TEAM_NAME_BETA);
-        this.SPRINT_ACTIF_GAMMA = jiraAgileAPI.getLastlyActiveSprint();
-        this.SPRINTS.put(TEAM_NAME_ALPHA, SPRINT_ACTIF_ALPHA);
-        this.SPRINTS.put(TEAM_NAME_BETA, SPRINT_ACTIF_BETA);
-        this.SPRINTS.put(TEAM_NAME_GAMMA, SPRINT_ACTIF_GAMMA);
+        this.externalFiles = externalFiles;
+        this.maxResults = jiraReportConfigQuery.getMaxResults();
+        this.projectBoardId = jiraReportConfigGlobal.getBoardIdProject();
+        String teamNameAlpha = jiraReportConfigIndividuals.getTeamNameOne();
+        String teamNameBeta = jiraReportConfigIndividuals.getTeamNameTwo();
+        String teamNameGamma = jiraReportConfigIndividuals.getTeamNameThree();
+        List<String> teamAlpha = jiraReportConfigIndividuals.getTeamOne();
+        List<String> teamBeta = jiraReportConfigIndividuals.getTeamTwo();
+        List<String> teamGamma = jiraReportConfigIndividuals.getTeamThree();
+        Sprint SPRINT_ACTIF_ALPHA = jiraAgileAPI.getLastlyActiveSprint(projectBoardId);
+        Sprint SPRINT_ACTIF_BETA = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameBeta, projectBoardId);
+        Sprint SPRINT_ACTIF_GAMMA = jiraAgileAPI.getLastlyActiveSprint(projectBoardId);
+        String boardIdAlpha = jiraReportConfigGlobal.getBoardIdOne();
+        String boardIdBeta = jiraReportConfigGlobal.getBoardIdTwo();
+        String boardIdGamma = jiraReportConfigGlobal.getBoardIdThree();
+        this.runProjectName = jiraReportConfigGlobal.getRunProjectName();
+        this.projectName = jiraReportConfigGlobal.getProjectName();
+        this.sprintActif = jiraAgileAPI.getLastlyActiveSprint(projectBoardId);
+        this.sprints.put(teamNameAlpha, SPRINT_ACTIF_ALPHA);
+        this.sprints.put(teamNameBeta, SPRINT_ACTIF_BETA);
+        this.sprints.put(teamNameGamma, SPRINT_ACTIF_GAMMA);
+        this.teamPair.put(teamNameAlpha, boardIdAlpha);
+        this.teamPair.put(teamNameBeta, boardIdBeta);
+        this.teamPair.put(teamNameGamma, boardIdGamma);
+        this.teams.put(teamNameAlpha, teamAlpha);
+        this.teams.put(teamNameBeta, teamBeta);
+        this.teams.put(teamNameGamma, teamGamma);
+        this.bug = jiraReportConfigQuery.getBug();
+        this.incident = jiraReportConfigQuery.getIncident();
+        this.planningPath = jiraReportConfigExternal.getPlanning();
+        this.releasePath = jiraReportConfigExternal.getRelease();
+        this.unassigned = jiraReportConfigQuery.getUnassignedAccountId();
+        this.nbDaysBacklog = jiraReportConfigGlobal.getNbDaysBacklog();
+        this.nbSprintsRetrospective = jiraReportConfigGlobal.getNbSprintsRetrospective();
+
     }
 
     /* Returns a HashMap <TeamName, Sprint> using JiraAPI and getTeams() method
      * Retrieve all data from the lastly active sprint
      */
     public Map<String,Sprint> callJiraSprintAPI() {
-        Map<String, Float[]> planning = externalFiles.getPlanning(PLANNING_PATH, SPRINT_ACTIF);
-        for (Map.Entry<String, ArrayList<String>> entry: TEAMS.entrySet()) {
+        Map<String, Float[]> planning = externalFiles.getPlanning(planningPath, sprintActif);
+        for (Map.Entry<String, List<String>> entry: teams.entrySet()) {
             String label = entry.getKey();
-            Team t = getTeam(TEAMS.get(label), label);
+            Team t = getTeam(teams.get(label), label);
             for(Collaborator c: t.getCollaborators()){
                 if(planning.containsKey(c.getAccountId())){
                     Float[] timeData = planning.get(c.getAccountId());
@@ -124,21 +100,21 @@ public class API {
                     c.setAvailableTime(timeData[1]);
                 }
             }
-            SPRINTS.get(label).setTeam(t);
+            sprints.get(label).setTeam(t);
 
         }
-        return SPRINTS;
+        return sprints;
     }
 
     /* Method that calls getCollaborators() and return a HashMap<AccountID, collaborator>
      * Retrieve all data of each ID_COLLABS on the lastly active sprint (if they have at least one assigned ticket)
      */
     public Map<String, Collaborator> callJiraCollabSprintAPI() {
-        Map<String, Float[]> planning = externalFiles.getPlanning(PLANNING_PATH, SPRINT_ACTIF);
+        Map<String, Float[]> planning = externalFiles.getPlanning(planningPath, sprintActif);
         HashMap<String, Collaborator> collaborators = new HashMap<>();
-        for (Map.Entry<String, ArrayList<String>> entry : TEAMS.entrySet()) {
+        for (Map.Entry<String, List<String>> entry : teams.entrySet()) {
             String label = entry.getKey();
-            Map<String, Collaborator> c = getCollaboratorsPerTeam(TEAMS.get(label), label);
+            Map<String, Collaborator> c = getCollaboratorsPerTeam(teams.get(label), label);
             for(Collaborator collab: c.values()){
                 if(planning.containsKey(collab.getAccountId())){
                     Float[] timeData = planning.get(collab.getAccountId());
@@ -146,13 +122,13 @@ public class API {
                     collab.setAvailableTime(timeData[1]);
                 }
             }
-            Collaborator unassigned = c.get(UNASSIGNED);
+            Collaborator unassigned = c.get(this.unassigned);
             if(unassigned != null){
-                unassigned.setAccountId(UNASSIGNED + ' ' + label);
-                c.remove(UNASSIGNED);
+                unassigned.setAccountId(this.unassigned + ' ' + label);
+                c.remove(this.unassigned);
             }else{
                 unassigned = Collaborator.builder()
-                        .accountId(UNASSIGNED)
+                        .accountId(this.unassigned)
                         .build();
             }
             c.put(unassigned.getAccountId(), unassigned);
@@ -166,25 +142,25 @@ public class API {
      * project's creation
      */
     public Backlog callJiraBacklogAPI() {
-        int[] incidents = jiraAPI.getProjectIncidentBug(RUN_PROJECT_NAME, ISSUE_INCIDENT);
-        int[] bugs = jiraAPI.getProjectIncidentBug(PROJECT_NAME, ISSUE_BUG);
+        int[] incidents = jiraAPI.getProjectIncidentBug(runProjectName, incident,maxResults);
+        int[] bugs = jiraAPI.getProjectIncidentBug(projectName, bug,maxResults);
         return Backlog.builder()
                 .nbIncidents(incidents[0])
                 .nbIncidentsLow(incidents[1])
                 .nbIncidentsMedium(incidents[2])
                 .nbIncidentsHigh(incidents[3])
                 .nbIncidentsHighest(incidents[4])
-                .nbIncidentsCreated(jiraAPI.getCreated(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT))
-                .nbIncidentsResolved(jiraAPI.getResolved(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT))
-                .nbIncidentsInProgress(jiraAPI.getInProgress(NB_DAYS_BACKLOG, RUN_PROJECT_NAME, ISSUE_INCIDENT))
+                .nbIncidentsCreated(jiraAPI.getCreated(nbDaysBacklog, runProjectName, incident,maxResults))
+                .nbIncidentsResolved(jiraAPI.getResolved(nbDaysBacklog, runProjectName, incident,maxResults))
+                .nbIncidentsInProgress(jiraAPI.getInProgress(nbDaysBacklog, runProjectName, incident,maxResults))
                 .nbBugs(bugs[0])
                 .nbBugsLow(bugs[1])
                 .nbBugsMedium(bugs[2])
                 .nbBugsHigh(bugs[3])
                 .nbBugsHighest(bugs[4])
-                .nbBugsCreated(jiraAPI.getCreated(NB_DAYS_BACKLOG, PROJECT_NAME, ISSUE_BUG))
-                .nbBugsResolved(jiraAPI.getResolved(NB_DAYS_BACKLOG, PROJECT_NAME, ISSUE_BUG))
-                .nbBugsInProgress(jiraAPI.getInProgress(NB_DAYS_BACKLOG, PROJECT_NAME, ISSUE_BUG))
+                .nbBugsCreated(jiraAPI.getCreated(nbDaysBacklog, projectName, bug,maxResults))
+                .nbBugsResolved(jiraAPI.getResolved(nbDaysBacklog, projectName, bug,maxResults))
+                .nbBugsInProgress(jiraAPI.getInProgress(nbDaysBacklog, projectName, bug,maxResults))
                 .build();
     }
 
@@ -193,13 +169,13 @@ public class API {
      */
     public Map<String, Retrospective> callJiraRetrospectiveAPI() {
         HashMap<String, Retrospective> retrospectives = new HashMap<>();
-        for (Map.Entry<String,String> entry: TEAM_PAIR.entrySet()) {
+        for (Map.Entry<String,String> entry: teamPair.entrySet()) {
             String teamName = entry.getKey();
-            List<SprintCommitment> sprints = jiraAgileAPI.getLastlyClosedSprints(NB_SPRINTS_RETROSPECTIVE, teamName);
+            List<SprintCommitment> sprints = jiraAgileAPI.getLastlyClosedSprints(nbSprintsRetrospective, teamName,projectBoardId);
             for (SprintCommitment sprint : sprints) {
                 if(sprint.getId() != 0){
-                    double[] commitment = jiraGreenhopperAPI.getCommitment(sprint, TEAM_PAIR.get(teamName));
-                    List<String> issueKeys = jiraGreenhopperAPI.getIssueKeys(sprint, TEAM_PAIR.get(teamName));
+                    double[] commitment = jiraGreenhopperAPI.getCommitment(sprint, teamPair.get(teamName));
+                    List<String> issueKeys = jiraGreenhopperAPI.getIssueKeys(sprint, teamPair.get(teamName));
                     sprint.setAddedIssueKeys(issueKeys);
                     sprint.setInitialCommitment(commitment[0]);
                     sprint.setFinalCommitment(commitment[1]);
@@ -220,14 +196,18 @@ public class API {
      * Returns a list of Release object
      */
     public List<Release> getReleases() throws IOException, ParseException {
-        return externalFiles.getReleases(RELEASE_PATH);
+        return externalFiles.getReleases(releasePath);
     }
 
     public Map<String, Collaborator> getCollaboratorsPerTeam(List<String> teamAccId, String teamName) {
         HashMap<String, Collaborator> collaborators = new HashMap<>();
         Collaborator c;
         for (String accId : teamAccId) {
-            if ((c = jiraAPI.getCollaborator(accId, teamName, SPRINTS.get(teamName))) != null) {
+            // In application.yml, unassigned whosedefined with a nil value is returned as an empty char
+            if(accId.isEmpty()){
+                accId = null;
+            }
+            if ((c = jiraAPI.getCollaborator(accId, teamName, sprints.get(teamName),this.projectName,maxResults)) != null) {
                 collaborators.put(c.getAccountId(), c);
             }
         }
@@ -237,7 +217,7 @@ public class API {
     /* Call above method, getCollaborators() and assign each collaborator to its team
      * returning a HashMap of size nbTeams
      */
-    public Team getTeam(ArrayList<String> teamAccId, String label) {
+    public Team getTeam(List<String> teamAccId, String label) {
         Map<String, Collaborator> collaborators = getCollaboratorsPerTeam(teamAccId, label);
         List<Collaborator> c = new ArrayList<>(collaborators.values());
         return Team.builder()
