@@ -1,12 +1,12 @@
 package com.jira.report.dao.api;
 
-import com.jira.report.config.JiraReportConfig;
+import com.jira.report.config.JiraReportConfigApi;
+import com.jira.report.config.JiraReportConfigQuery;
 import com.jira.report.model.Sprint;
 import com.jira.report.model.SprintCommitment;
 import com.jira.report.dto.jiraAgileApi.AgileDto;
 import com.jira.report.dto.jiraAgileApi.SprintDto;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -17,15 +17,15 @@ import static com.jira.report.dao.api.API.*;
 @Service
 public class JiraAgileAPI {
     private final WebClient jiraWebClient;
-    private final JiraReportConfig jiraReportConfig;
     private final String baseUrl;
-    static final String JIRA_AGILE_API_URL = "rest/agile/1.0/";
-    static final String ACTIVE_SPRINT = "active";
+    private final String jiraAgileUrl;
+    private final String active;
 
-    JiraAgileAPI(WebClient jiraWebClient, JiraReportConfig jiraReportConfig){
+    JiraAgileAPI(JiraReportConfigQuery jiraReportConfigQuery, WebClient jiraWebClient, JiraReportConfigApi jiraReportConfigApi){
         this.jiraWebClient = jiraWebClient;
-        this.jiraReportConfig = jiraReportConfig;
-        this.baseUrl = this.jiraReportConfig.getBaseUrl();
+        this.baseUrl = jiraReportConfigApi.getBaseUrl();
+        this.jiraAgileUrl = jiraReportConfigApi.getJiraAgileApiUrl();
+        this.active = jiraReportConfigQuery.getActive();
     }
 
     public List<SprintCommitment> getLastlyClosedSprints(int nbSprints, String teamName) {
@@ -36,7 +36,7 @@ public class JiraAgileAPI {
         boolean lastActiveFound = false;
         String teamNameLC = teamName.toLowerCase();
         List<SprintCommitment> sc = new ArrayList<>();
-        String request = baseUrl + JIRA_AGILE_API_URL + "/board/" + PROJECT_BOARD_ID + "/sprint";
+        String request = baseUrl + jiraAgileUrl + "/board/" + PROJECT_BOARD_ID + "/sprint";
         /*
         Logic
          */
@@ -46,7 +46,7 @@ public class JiraAgileAPI {
         for (int i = sprintsDto.length-1; i > 0; i--) {
             String sprintName = sprintsDto[i].getName();
             if(!lastActiveFound){
-                if (sprintName.toLowerCase().contains(teamNameLC) && ACTIVE_SPRINT.equals(sprintsDto[i].getState())){
+                if (sprintName.toLowerCase().contains(teamNameLC) && active.equals(sprintsDto[i].getState())){
                     sc.add(SprintCommitment.builder()
                             .name(sprintsDto[i].getName())
                             .id(sprintsDto[i].getId())
@@ -79,12 +79,12 @@ public class JiraAgileAPI {
         String endDate = "";
         String sprintName = "";
         int sprintId = 0;
-        String request = baseUrl + JIRA_AGILE_API_URL + "board/" + PROJECT_BOARD_ID + "/sprint";
+        String request = baseUrl + jiraAgileUrl + "board/" + PROJECT_BOARD_ID + "/sprint";
         AgileDto agileDto = connectToJiraAgileAPI(request);
         assert agileDto != null;
         SprintDto[] sprintsDto = agileDto.getValues();
         for (SprintDto s: sprintsDto) {
-            if (s.getState().contains(ACTIVE_SPRINT)) {
+            if (s.getState().contains(active)) {
                 sprintName = s.getName();
                 startDate = s.getStartDate();
                 endDate = s.getEndDate();
@@ -114,13 +114,13 @@ public class JiraAgileAPI {
         int sprintId = 0;
         String name;
         String teamNameLC = teamName.toLowerCase();
-        String request = baseUrl + JIRA_AGILE_API_URL + "board/" + PROJECT_BOARD_ID + "/sprint";
+        String request = baseUrl + jiraAgileUrl + "board/" + PROJECT_BOARD_ID + "/sprint";
         AgileDto agileDto = connectToJiraAgileAPI(request);
         assert agileDto != null;
         SprintDto[] sprintsDto = agileDto.getValues();
         for (SprintDto s: sprintsDto) {
             name = s.getName().toLowerCase();
-            if (ACTIVE_SPRINT.equals(s.getState()) && name.contains(teamNameLC)) {
+            if (active.equals(s.getState()) && name.contains(teamNameLC)) {
                 sprintName = s.getName();
                 startDate = s.getStartDate();
                 endDate = s.getEndDate();
@@ -139,12 +139,8 @@ public class JiraAgileAPI {
     /* Method that connect to Jira Agile API
      * GET on the given request
      */
-    public AgileDto connectToJiraAgileAPI(String request){
-        WebClient webClient = WebClient.builder()
-                .filter(ExchangeFilterFunctions.basicAuthentication(USERNAME, API_TOKEN))
-                .defaultHeader("Accept", "application/json")
-                .build();
-        return webClient
+    public AgileDto connectToJiraAgileAPI(String request) {
+        return jiraWebClient
                 .get()
                 .uri(request)
                 .retrieve()

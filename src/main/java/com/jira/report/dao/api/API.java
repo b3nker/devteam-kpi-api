@@ -1,11 +1,10 @@
 package com.jira.report.dao.api;
 
-import com.jira.report.config.JiraReportConfig;
+import com.jira.report.config.JiraReportConfigIndividuals;
 import com.jira.report.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.text.ParseException;
 import java.time.LocalDateTime;
@@ -16,7 +15,7 @@ import java.util.*;
 @Service
 public class API {
     //Project's variables
-    private final JiraReportConfig jiraReportConfig;
+    private final JiraReportConfigIndividuals jiraReportConfig;
     private final JiraAPI jiraAPI;
     private final JiraGreenhopperAPI jiraGreenhopperAPI;
     private final JiraAgileAPI jiraAgileAPI;
@@ -95,7 +94,7 @@ public class API {
     static final DateTimeFormatter dtfAmerica = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     static final LocalDateTime TODAY = LocalDateTime.now();
 
-    public API(JiraAPI jiraAPI, JiraGreenhopperAPI jiraGreenhopperAPI, JiraAgileAPI jiraAgileAPI, JiraReportConfig jiraReportConfig){
+    public API(JiraAPI jiraAPI, JiraGreenhopperAPI jiraGreenhopperAPI, JiraAgileAPI jiraAgileAPI, JiraReportConfigIndividuals jiraReportConfig){
         this.jiraAPI = jiraAPI;
         this.jiraReportConfig = jiraReportConfig;
         this.jiraGreenhopperAPI = jiraGreenhopperAPI;

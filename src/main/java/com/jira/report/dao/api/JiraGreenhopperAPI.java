@@ -1,10 +1,9 @@
 package com.jira.report.dao.api;
 
-import com.jira.report.config.JiraReportConfig;
+import com.jira.report.config.JiraReportConfigApi;
 import com.jira.report.model.SprintCommitment;
 import com.jira.report.dto.jiraGreenhopper.ContentsDto;
 import com.jira.report.dto.jiraGreenhopper.JiraGreenHopperDto;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -12,21 +11,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static com.jira.report.dao.api.API.*;
-
 @Service
 public class JiraGreenhopperAPI {
     private final WebClient jiraWebClient;
-    private final JiraReportConfig jiraReportConfig;
-    private final String baseUrl;
+    private final JiraReportConfigApi jiraReportConfigApi;
     private final JiraAPI jiraAPI;
-    static final String JIRA_GREENHOPPER_URL = "rest/greenhopper/1.0/";
+    private final String baseUrl;
+    private final String greenhopperUrl;
 
-    public JiraGreenhopperAPI(WebClient jiraWebClient, JiraReportConfig jiraReportConfig, JiraAPI jiraAPI) {
+    public JiraGreenhopperAPI(WebClient jiraWebClient, JiraReportConfigApi jiraReportConfigApi, JiraAPI jiraAPI) {
         this.jiraWebClient = jiraWebClient;
-        this.jiraReportConfig = jiraReportConfig;
-        this.baseUrl = this.jiraReportConfig.getBaseUrl();
+        this.jiraReportConfigApi = jiraReportConfigApi;
+        this.baseUrl = this.jiraReportConfigApi.getBaseUrl();
         this.jiraAPI = jiraAPI;
+        this.greenhopperUrl = this.jiraReportConfigApi.getJiraGreenhopperApiUrl();
     }
 
     /* Returns 4 information on a sprint
@@ -36,7 +34,7 @@ public class JiraGreenhopperAPI {
      * 3: completedWork
      */
     public List<String> getIssueKeys(SprintCommitment s, String boardId){
-        String request = baseUrl + JIRA_GREENHOPPER_URL + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
+        String request = this.baseUrl + this.greenhopperUrl + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
         /*
         Logic
          */
@@ -55,7 +53,7 @@ public class JiraGreenhopperAPI {
         double finalCommitment = 0;
         double addedWork = 0;
         double completedWork = 0;
-        String request = baseUrl + JIRA_GREENHOPPER_URL + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
+        String request = this.baseUrl + this.greenhopperUrl + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
         /*
         Logic
          */
