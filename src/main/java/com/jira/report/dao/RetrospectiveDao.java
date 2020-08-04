@@ -13,7 +13,12 @@ public class RetrospectiveDao {
     private static Map<String, Retrospective> retrospectives;
     private WebClientInstancesConfig wcic = new WebClientInstancesConfig();
     private ReactiveServicesExchangesConfig rsec = new ReactiveServicesExchangesConfig();
-    private API api = new API(wcic.jiraWebClient(rsec));
+    private final API api;
+
+    public RetrospectiveDao(API api) {
+        this.api = api;
+    }
+
     public void loadRetrospectives(){
         retrospectives = api.callJiraRetrospectiveAPI();
     }

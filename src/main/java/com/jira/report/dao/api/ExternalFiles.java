@@ -20,6 +20,8 @@ import static java.lang.Integer.parseInt;
 
 public class ExternalFiles {
     static final Character SEPARATOR = ',';
+    static final Character VALUE_COMMA = ',';
+    static final Character VALUE_DOT = '.';
     static final int INDEX_ACC_ID = 2;
     static final int FIRST_ROW = 4;
 
@@ -113,10 +115,10 @@ public class ExternalFiles {
                     .startDate(startDate)
                     .endDate(endDate)
                     .nbOpenDays(parseInt(infos[3]))
-                    .nbWorkingDays(parseDouble(infos[4].replace(",", ".")))
-                    .buildCapacityFront(parseDouble(infos[5].replace(",", ".")))
-                    .buildCapacityMiddle(parseDouble(infos[6].replace(",", ".")))
-                    .buildCapacityTotal(parseDouble(infos[7].replace(",", ".")))
+                    .nbWorkingDays(parseDouble(infos[4].replace(VALUE_COMMA, VALUE_DOT)))
+                    .buildCapacityFront(parseDouble(infos[5].replace(VALUE_COMMA, VALUE_DOT)))
+                    .buildCapacityMiddle(parseDouble(infos[6].replace(VALUE_COMMA, VALUE_DOT)))
+                    .buildCapacityTotal(parseDouble(infos[7].replace(VALUE_COMMA, VALUE_DOT)))
                     .build();
             releases.add(r);
         }

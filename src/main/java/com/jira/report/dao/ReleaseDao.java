@@ -1,7 +1,5 @@
 package com.jira.report.dao;
 
-import com.jira.report.config.ReactiveServicesExchangesConfig;
-import com.jira.report.config.WebClientInstancesConfig;
 import com.jira.report.model.Release;
 import com.jira.report.dao.api.API;
 import lombok.extern.slf4j.Slf4j;
@@ -16,10 +14,11 @@ import java.util.List;
 @Slf4j
 public class ReleaseDao {
     private List<Release> releases;
-    private WebClientInstancesConfig wcic = new WebClientInstancesConfig();
-    private ReactiveServicesExchangesConfig rsec = new ReactiveServicesExchangesConfig();
-    private API api = new API(wcic.jiraWebClient(rsec));
+    private final API api;
 
+    public ReleaseDao(API api) {
+        this.api = api;
+    }
 
     public void loadReleases() {
         log.info("Start to load releases");

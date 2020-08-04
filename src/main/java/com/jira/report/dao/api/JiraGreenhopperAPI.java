@@ -1,11 +1,11 @@
 package com.jira.report.dao.api;
 
+import com.jira.report.config.JiraReportConfig;
 import com.jira.report.model.SprintCommitment;
 import com.jira.report.dto.jiraGreenhopper.ContentsDto;
 import com.jira.report.dto.jiraGreenhopper.JiraGreenHopperDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.ArrayList;
@@ -16,12 +16,19 @@ import static com.jira.report.dao.api.API.*;
 
 @Service
 public class JiraGreenhopperAPI {
+    private final WebClient jiraWebClient;
+    private final JiraReportConfig jiraReportConfig;
+    private final String baseUrl;
+    private final JiraAPI jiraAPI;
     static final String JIRA_GREENHOPPER_URL = "rest/greenhopper/1.0/";
-    private JiraAPI jiraAPI;
 
-    public JiraGreenhopperAPI(WebClient jiraWebClient){
-        this.jiraAPI = new JiraAPI(jiraWebClient);
+    public JiraGreenhopperAPI(WebClient jiraWebClient, JiraReportConfig jiraReportConfig, JiraAPI jiraAPI) {
+        this.jiraWebClient = jiraWebClient;
+        this.jiraReportConfig = jiraReportConfig;
+        this.baseUrl = this.jiraReportConfig.getBaseUrl();
+        this.jiraAPI = jiraAPI;
     }
+
     /* Returns 4 information on a sprint
      * 0: initialCommitment
      * 1: finalCommitment
@@ -29,20 +36,11 @@ public class JiraGreenhopperAPI {
      * 3: completedWork
      */
     public List<String> getIssueKeys(SprintCommitment s, String boardId){
-        String request = BASE_URL + JIRA_GREENHOPPER_URL + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
+        String request = baseUrl + JIRA_GREENHOPPER_URL + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
         /*
         Logic
          */
-        WebClient webClient = WebClient.builder()
-                .filter(ExchangeFilterFunctions.basicAuthentication(USERNAME, API_TOKEN))
-                .defaultHeader("Accept", "application/json")
-                .build();
-        JiraGreenHopperDto greenHopperDto = webClient
-                .get()
-                .uri(request)
-                .retrieve()
-                .bodyToMono(JiraGreenHopperDto.class)
-                .block();
+        JiraGreenHopperDto greenHopperDto = connectToJiraAPI(request);
         assert greenHopperDto != null;
         Set<String> addedIssues = greenHopperDto.getContents().getIssueKeysAddedDuringSprint().keySet();
         return new ArrayList<>(addedIssues);
@@ -57,20 +55,11 @@ public class JiraGreenhopperAPI {
         double finalCommitment = 0;
         double addedWork = 0;
         double completedWork = 0;
-        String request = BASE_URL + JIRA_GREENHOPPER_URL + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
+        String request = baseUrl + JIRA_GREENHOPPER_URL + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
         /*
         Logic
          */
-        WebClient webClient = WebClient.builder()
-                .filter(ExchangeFilterFunctions.basicAuthentication(USERNAME, API_TOKEN))
-                .defaultHeader("Accept", "application/json")
-                .build();
-        JiraGreenHopperDto greenHopperDto = webClient
-                .get()
-                .uri(request)
-                .retrieve()
-                .bodyToMono(JiraGreenHopperDto.class)
-                .block();
+        JiraGreenHopperDto greenHopperDto = connectToJiraAPI(request);
         ContentsDto contents = greenHopperDto.getContents();
         Set<String> addedIssues = contents.getIssueKeysAddedDuringSprint().keySet();
         int completedIssuesEstimateSum = contents.getCompletedIssuesEstimateSum().getValue();
@@ -93,5 +82,14 @@ public class JiraGreenhopperAPI {
         commitment[2] = addedWork;
         commitment[3] = completedWork;
         return commitment;
+    }
+
+    public JiraGreenHopperDto connectToJiraAPI(String request){
+        return jiraWebClient
+                .get()
+                .uri(request)
+                .retrieve()
+                .bodyToMono(JiraGreenHopperDto.class)
+                .block();
     }
 }

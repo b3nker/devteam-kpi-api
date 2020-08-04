@@ -13,4 +13,6 @@ public class FieldsDto {
     private int timespent;
     @JsonProperty("customfield_10005")
     private double storyPoints; // story points
+    private String created;
+    private String updated;
 }

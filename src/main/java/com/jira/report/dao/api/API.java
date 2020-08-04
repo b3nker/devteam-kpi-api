@@ -1,24 +1,26 @@
 package com.jira.report.dao.api;
 
+import com.jira.report.config.JiraReportConfig;
 import com.jira.report.model.*;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+@Slf4j
 @Service
 public class API {
     //Project's variables
-    static final String BASE_URL = "https://apriltechnologies.atlassian.net/";
-    private JiraAPI jiraAPI;
-    private JiraGreenhopperAPI jiraGreenhopperAPI;
-    private JiraAgileAPI jiraAgileAPI;
-    private ExternalFiles externalFiles;
+    private final JiraReportConfig jiraReportConfig;
+    private final JiraAPI jiraAPI;
+    private final JiraGreenhopperAPI jiraGreenhopperAPI;
+    private final JiraAgileAPI jiraAgileAPI;
+    private final ExternalFiles externalFiles;
     public static final String USERNAME = "benjamin.kermani@neo9.fr";
     public static final String API_TOKEN = "sqjFnTAVspNM4NxLd1QZC5CB";
     public static final String API_TOKEN_TEMPO = "J1eKPcvcMlCvMjNBvXyJmn0vMPvGs0";
@@ -42,41 +44,6 @@ public class API {
         TEAM_PAIR.put(TEAM_NAME_BETA, BOARD_ID_BETA_SP);
         TEAM_PAIR.put(TEAM_NAME_GAMMA, BOARD_ID_GAMMA_SP);
     }
-    static final HashMap<String, String> ID_COLLABS = new HashMap<>();
-    static {
-        ID_COLLABS.put("5c17b4599f443a65fecae3ca", "middle lead dev"); // Julien Mosset
-        ID_COLLABS.put("5a9ebe1c4af2372a88a0656b", "front lead dev"); // Nicolas Ovejero
-        ID_COLLABS.put("5bcd8282607ed038040177bb", "middle"); // Pape Thiam
-        ID_COLLABS.put("5cf921f6b06c540e82580cbd", "front"); // Valentin Pierrel
-        ID_COLLABS.put("5ed76cdf2fdc580b88f3bbef", "middle"); // Alex Cheuko
-        ID_COLLABS.put("5ed64583620b1d0c168d4e36", "middle"); // Anthony Hernandez
-        ID_COLLABS.put("5cb45bb34064460e407eabe4", "middle lead dev"); // Guillermo Garcès
-        ID_COLLABS.put("5a9ebdf74af2372a88a06565", "middle"); // Gabriel Roquigny
-        ID_COLLABS.put("5a2181081594706402dee482", "front lead dev"); // Etienne Bourgouin
-        ID_COLLABS.put("5afe92f251d0b7540b43de81", "middle"); // Malick Diagne
-        ID_COLLABS.put("5e98521a3a8b910c085d6a28", "front"); // Kévin Youna
-        ID_COLLABS.put("5d6e32e06e3e1f0d9623cb5a", "middle"); // Pierre Tomasina
-        ID_COLLABS.put("5e285008ee264b0e74591993", "middle lead dev"); // Eric Coupal
-        ID_COLLABS.put("5ed76cc1be03220ab32183be", "front lead dev"); // Thibault Foucault
-        ID_COLLABS.put("557058:87b17037-8a69-4b38-8dab-b4cf904e960a", "middle"); // Pierre Thevenet
-        ID_COLLABS.put("5d9b0573ea65c10c3fdbaab2", "middle"); // Maxime Fourt
-        ID_COLLABS.put("5a8155f0cad06b353733bae8", "middle"); // Guillaume Coppens
-        ID_COLLABS.put("5dfd11b39422830cacaa8a79", "front"); // Carthy Marie Joseph
-        ID_COLLABS.put("5ef1afd6561e0e0aae904914", "middle"); // Yong Ma
-        ID_COLLABS.put("5aafb6012235812a6233652d", "scrum"); //Lionel Sjarbi
-        ID_COLLABS.put("5ed754b0f93b230ba59a3d38", "scrum"); // Nicolas Beucler
-        ID_COLLABS.put("557058:1f318bba-6336-4f60-a3b1-67e03a32a3dc", "transverse"); // Kévin Labesse
-        ID_COLLABS.put("5ef5ec9a7e95e80a8126e509", "scrum"); // Pierre-Yves Garic
-        ID_COLLABS.put("5b97bc461b4803467d26fd6e", "transverse"); // Xavier Michel
-        ID_COLLABS.put("5e787dfb2466490c495f2a85", "transverse"); // Maxime Ancellin
-        ID_COLLABS.put("5a96abe5e9dc0033a7af8cfb", "transverse"); // Joël Royer
-        ID_COLLABS.put("5db2f070af604e0db364eb12", "transverse"); // David Boucard Planel
-        ID_COLLABS.put("5a27b9ed466b4a37eec61268", "transverse"); // Pierre Bertin
-        ID_COLLABS.put("557058:d8f506a1-fa47-4681-9ab1-7214a062c264", "transverse"); // Vincent Martin
-        ID_COLLABS.put("557058:834cbf83-d227-4823-bfdf-db62c8672ad1", "transverse"); // Victor Dumesny
-        ID_COLLABS.put("557058:df17bf30-7843-415e-985d-151faba64429", "transverse"); // Philippe Fleur
-        ID_COLLABS.put(null, "none"); // unassigned
-    }
     static final ArrayList<String> TEAM_ALPHA = new ArrayList<>(Arrays.asList(
             "5c17b4599f443a65fecae3ca", // Julien Mosset
             "5a9ebe1c4af2372a88a0656b", // Nicolas Ovejero
@@ -92,7 +59,6 @@ public class API {
             "5afe92f251d0b7540b43de81", // Malick Diagne
             "5d6e32e06e3e1f0d9623cb5a", // Pierre Tomasina
             "5ed64583620b1d0c168d4e36", // Anthony Hernandez
-            "5ef1afd6561e0e0aae904914", // Yong Ma
             "5e98521a3a8b910c085d6a28", // Kévin Youna
             "null"
     ));
@@ -129,11 +95,12 @@ public class API {
     static final DateTimeFormatter dtfAmerica = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     static final LocalDateTime TODAY = LocalDateTime.now();
 
-    public API(WebClient jiraWebClient){
-        this.jiraAPI = new JiraAPI(jiraWebClient);
-        this.jiraAgileAPI = new JiraAgileAPI();
+    public API(JiraAPI jiraAPI, JiraGreenhopperAPI jiraGreenhopperAPI, JiraAgileAPI jiraAgileAPI, JiraReportConfig jiraReportConfig){
+        this.jiraAPI = jiraAPI;
+        this.jiraReportConfig = jiraReportConfig;
+        this.jiraGreenhopperAPI = jiraGreenhopperAPI;
+        this.jiraAgileAPI = jiraAgileAPI;
         this.externalFiles = new ExternalFiles();
-        this.jiraGreenhopperAPI = new JiraGreenhopperAPI(jiraWebClient);
         this.SPRINT_ACTIF = jiraAgileAPI.getLastlyActiveSprint();
         this.SPRINT_ACTIF_ALPHA = jiraAgileAPI.getLastlyActiveSprint();
         this.SPRINT_ACTIF_BETA = jiraAgileAPI.getLastlyActiveTeamSprint(TEAM_NAME_BETA);

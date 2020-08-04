@@ -14,11 +14,11 @@ import reactor.netty.tcp.TcpClient;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.jira.report.dao.api.API.API_TOKEN;
-import static com.jira.report.dao.api.API.USERNAME;
+import static com.jira.report.dao.api.API.*;
 
 @Configuration
 public class WebClientInstancesConfig {
+
     @Bean
     public WebClient jiraWebClient(ReactiveServicesExchangesConfig reactiveServicesExchangesConfig) {
         TcpClient timeoutClient = TcpClient.create()
@@ -30,16 +30,28 @@ public class WebClientInstancesConfig {
 
         WebClient.Builder webClientBuilder = WebClient
                 .builder();
-        /*
-        if (baseUrl != null) {
-            webClientBuilder.baseUrl(baseUrl);
-        }
-         */
-
         return webClientBuilder
                 .clientConnector(new ReactorClientHttpConnector(HttpClient.from(timeoutClient)))
                 .exchangeStrategies(ExchangeStrategies.builder().codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024)).build())
                 .filter(ExchangeFilterFunctions.basicAuthentication(USERNAME, API_TOKEN))
+                .build();
+    }
+
+    @Bean
+    public WebClient tempoWebClient(ReactiveServicesExchangesConfig reactiveServicesExchangesConfig) {
+        TcpClient timeoutClient = TcpClient.create()
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, reactiveServicesExchangesConfig.getConnectionTimeout())
+                .doOnConnected(
+                        c -> c.addHandlerLast(new ReadTimeoutHandler(reactiveServicesExchangesConfig.getReadTimeout(), TimeUnit.MILLISECONDS))
+                                .addHandlerLast(new WriteTimeoutHandler(reactiveServicesExchangesConfig.getReadTimeout(), TimeUnit.MILLISECONDS))
+                );
+
+        WebClient.Builder webClientBuilder = WebClient
+                .builder();
+        return webClientBuilder
+                .clientConnector(new ReactorClientHttpConnector(HttpClient.from(timeoutClient)))
+                .exchangeStrategies(ExchangeStrategies.builder().codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024)).build())
+                .defaultHeaders(h -> h.setBearerAuth(API_TOKEN_TEMPO))
                 .build();
     }
 
