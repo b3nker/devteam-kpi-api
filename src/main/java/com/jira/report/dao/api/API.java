@@ -24,11 +24,11 @@ public class API {
     private final String runProjectName;
     private final int nbSprintsRetrospective;
     private final int nbDaysBacklog;
-    private final String unassigned;
+    private final String unassignedAccountId;
     private final HashMap<String, String> teamPair = new HashMap<>();
     private final HashMap<String, List<String>> teams = new HashMap<>();
     private final Sprint sprintActif;
-    private final HashMap<String, Sprint> sprints = new HashMap<>();
+    private final HashMap<String, Sprint> activeSprints = new HashMap<>();
     private final String planningPath;
     private final String releasePath;
     private final String bug;
@@ -57,18 +57,18 @@ public class API {
         List<String> teamAlpha = jiraReportConfigIndividuals.getTeamOne();
         List<String> teamBeta = jiraReportConfigIndividuals.getTeamTwo();
         List<String> teamGamma = jiraReportConfigIndividuals.getTeamThree();
-        Sprint SPRINT_ACTIF_ALPHA = jiraAgileAPI.getLastlyActiveSprint(projectBoardId);
-        Sprint SPRINT_ACTIF_BETA = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameBeta, projectBoardId);
-        Sprint SPRINT_ACTIF_GAMMA = jiraAgileAPI.getLastlyActiveSprint(projectBoardId);
+        Sprint sprintActifAlpha = jiraAgileAPI.getLastlyActiveSprint(projectBoardId);
+        Sprint sprintActifBeta = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameBeta, projectBoardId);
+        Sprint sprintActifGamma = jiraAgileAPI.getLastlyActiveSprint(projectBoardId);
         String boardIdAlpha = jiraReportConfigGlobal.getBoardIdOne();
         String boardIdBeta = jiraReportConfigGlobal.getBoardIdTwo();
         String boardIdGamma = jiraReportConfigGlobal.getBoardIdThree();
         this.runProjectName = jiraReportConfigGlobal.getRunProjectName();
         this.projectName = jiraReportConfigGlobal.getProjectName();
         this.sprintActif = jiraAgileAPI.getLastlyActiveSprint(projectBoardId);
-        this.sprints.put(teamNameAlpha, SPRINT_ACTIF_ALPHA);
-        this.sprints.put(teamNameBeta, SPRINT_ACTIF_BETA);
-        this.sprints.put(teamNameGamma, SPRINT_ACTIF_GAMMA);
+        this.activeSprints.put(teamNameAlpha, sprintActifAlpha);
+        this.activeSprints.put(teamNameBeta, sprintActifBeta);
+        this.activeSprints.put(teamNameGamma, sprintActifGamma);
         this.teamPair.put(teamNameAlpha, boardIdAlpha);
         this.teamPair.put(teamNameBeta, boardIdBeta);
         this.teamPair.put(teamNameGamma, boardIdGamma);
@@ -79,7 +79,7 @@ public class API {
         this.incident = jiraReportConfigQuery.getIncident();
         this.planningPath = jiraReportConfigExternal.getPlanning();
         this.releasePath = jiraReportConfigExternal.getRelease();
-        this.unassigned = jiraReportConfigQuery.getUnassignedAccountId();
+        this.unassignedAccountId = jiraReportConfigQuery.getUnassignedAccountId();
         this.nbDaysBacklog = jiraReportConfigGlobal.getNbDaysBacklog();
         this.nbSprintsRetrospective = jiraReportConfigGlobal.getNbSprintsRetrospective();
 
@@ -100,10 +100,10 @@ public class API {
                     c.setAvailableTime(timeData[1]);
                 }
             }
-            sprints.get(label).setTeam(t);
+            activeSprints.get(label).setTeam(t);
 
         }
-        return sprints;
+        return activeSprints;
     }
 
     /* Method that calls getCollaborators() and return a HashMap<AccountID, collaborator>
@@ -122,13 +122,13 @@ public class API {
                     collab.setAvailableTime(timeData[1]);
                 }
             }
-            Collaborator unassigned = c.get(this.unassigned);
+            Collaborator unassigned = c.get(this.unassignedAccountId);
             if(unassigned != null){
-                unassigned.setAccountId(this.unassigned + ' ' + label);
-                c.remove(this.unassigned);
+                unassigned.setAccountId(this.unassignedAccountId + ' ' + label);
+                c.remove(this.unassignedAccountId);
             }else{
                 unassigned = Collaborator.builder()
-                        .accountId(this.unassigned)
+                        .accountId(this.unassignedAccountId)
                         .build();
             }
             c.put(unassigned.getAccountId(), unassigned);
@@ -207,7 +207,7 @@ public class API {
             if(accId.isEmpty()){
                 accId = null;
             }
-            if ((c = jiraAPI.getCollaborator(accId, teamName, sprints.get(teamName),this.projectName,maxResults)) != null) {
+            if ((c = jiraAPI.getCollaborator(accId, teamName, activeSprints.get(teamName),this.projectName,maxResults)) != null) {
                 collaborators.put(c.getAccountId(), c);
             }
         }

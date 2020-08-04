@@ -2,9 +2,11 @@ package com.jira.report.dao;
 
 import com.jira.report.dao.api.API;
 import com.jira.report.model.Collaborator;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import java.util.*;
 
+@Slf4j
 @Repository
 public class CollaboratorDao {
     private static Map<String,Collaborator> collaboratorsSprint;
@@ -15,7 +17,10 @@ public class CollaboratorDao {
     }
 
     public void loadCollaborators(){
+        log.info("Starting to construct Collaborator objects");
         collaboratorsSprint = api.callJiraCollabSprintAPI();
+        log.info("Finished constructing Collaborator objects");
+
     }
 
     public Collection<Collaborator> getAllCollaboratorsPerSprint(){

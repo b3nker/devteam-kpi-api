@@ -29,36 +29,36 @@ public class JiraAPI {
     private final Map<String, String> idCollabs;
     private final String unassignedAccountId;
     // JIRA STATUS & CUSTOM STATUS
-    private final String aQualifier = "A qualifier";
-    private final String aFaire = "A Faire";
-    private final String bacAffinage = "Bac d'affinage";
-    private final String termine = "Terminé";
-    private final String livre = "Livré";
-    private final String valideRecette = "Validé en recette";
-    private final String valide = "Validé";
-    private final String abandonne = "Abandonné";
-    private final String enCours = "En cours";
-    private final String devTermine = "Dév terminé";
-    private final String refuseRecette = "Refusé en recette";
-    private final String enAttente = "En attente";
-    private final String aLivrer = "A Livrer";
-    private final String aTester = "A tester";
-    private final String aValider = "A valider";
-    private final String testCroise = "Test croisé";
+    private static final String aQualifier = "A qualifier";
+    private static final String aFaire = "A Faire";
+    private static final String bacAffinage = "Bac d'affinage";
+    private static final String termine = "Terminé";
+    private static final String livre = "Livré";
+    private static final String valideRecette = "Validé en recette";
+    private static final String valide = "Validé";
+    private static final String abandonne = "Abandonné";
+    private static final String enCours = "En cours";
+    private static final String devTermine = "Dév terminé";
+    private static final String refuseRecette = "Refusé en recette";
+    private static final String enAttente = "En attente";
+    private static final String aLivrer = "A Livrer";
+    private static final String aTester = "A tester";
+    private static final String aValider = "A valider";
+    private static final String testCroise = "Test croisé";
     //Unassigned infos
-    static final String UNASSIGNED_ROLE = "none";
-    static final String UNASSIGNED_FIRST_NAME = "Non";
-    static final String UNASSIGNED_LAST_NAME = "Assigné";
+    private static final String UNASSIGNED_ROLE = "none";
+    private static final String UNASSIGNED_FIRST_NAME = "Non";
+    private static final String UNASSIGNED_LAST_NAME = "Assigné";
     //Priority
-    private final String PRIORITY_LOW = "Low";
-    private final String PRIORITY_MEDIUM = "Medium";
-    private final String PRIORITY_HIGH = "High";
-    private final String PRIORITY_HIGHEST = "Highest";
-    private final List<String> done = new ArrayList<>(Arrays.asList(livre,termine,valide,valideRecette));
-    private final List<String> doneBugs = new ArrayList<>(Arrays.asList(livre,termine,valideRecette,abandonne));
-    private final List<String> inProgress = new ArrayList<>(Arrays.asList(enCours,devTermine,refuseRecette,enAttente,aTester,aLivrer));
-    private final List<String> devDone = new ArrayList<>(Arrays.asList(aTester, aLivrer));
-    private final List<String> devDoneEnCours = new ArrayList<>(Arrays.asList(devTermine, enCours));
+    private static final String priorityLow = "Low";
+    private static final String priorityMedium = "Medium";
+    private static final String priorityHigh = "High";
+    private static final String priorityHighest = "Highest";
+    private static final List<String> done = new ArrayList<>(Arrays.asList(livre,termine,valide,valideRecette));
+    private static final List<String> doneBugs = new ArrayList<>(Arrays.asList(livre,termine,valideRecette,abandonne));
+    private static final List<String> inProgress = new ArrayList<>(Arrays.asList(enCours,devTermine,refuseRecette,enAttente,aTester,aLivrer));
+    private static final List<String> devDone = new ArrayList<>(Arrays.asList(aTester, aLivrer));
+    private static final List<String> devDoneEnCours = new ArrayList<>(Arrays.asList(devTermine, enCours));
 
     public JiraAPI(JiraTempoAPI jiraTempoAPI,
                    JiraReportConfigQuery jiraReportConfigQuery,
@@ -213,6 +213,7 @@ public class JiraAPI {
                     break;
                 case testCroise:
                     spTestCroise += curStoryPoints;
+                    break;
                 default:
                     break;
             }
@@ -291,16 +292,16 @@ public class JiraAPI {
                 if (!doneBugs.contains(statut)) {
                     incidentsBugs[0]++;
                     switch (priority) {
-                        case PRIORITY_LOW:
+                        case priorityLow:
                             incidentsBugs[1]++;
                             break;
-                        case PRIORITY_MEDIUM:
+                        case priorityMedium:
                             incidentsBugs[2]++;
                             break;
-                        case PRIORITY_HIGH:
+                        case priorityHigh:
                             incidentsBugs[3]++;
                             break;
-                        case PRIORITY_HIGHEST:
+                        case priorityHighest:
                             incidentsBugs[4]++;
                             break;
                         default:
@@ -396,7 +397,7 @@ public class JiraAPI {
         /*
         Variables
          */
-        int[] inProgress = new int[nbDays + 1];
+        int[] bugsInProgressPerDay = new int[nbDays + 1];
         int startAt = 0;
         String statut;
         String updateDate;
@@ -413,11 +414,11 @@ public class JiraAPI {
         do {
             for (IssueDto i : jDto.getIssues()) {
                 statut = i.getFields().getStatus().getName();
-                if (this.inProgress.contains(statut)) {
+                if (inProgress.contains(statut)) {
                     updateDate = i.getFields().getUpdated().substring(0, 10);
                     ldtBug = LocalDate.parse(updateDate);
                     days = (int) DAYS.between(ldtBug, LocalDate.parse(today));
-                    inProgress[nbDays - days] += 1;
+                    bugsInProgressPerDay[nbDays - days] += 1;
                 }
             }
             startAt += maxResults;
@@ -425,7 +426,7 @@ public class JiraAPI {
                     "'+AND+updated>=-" + nbDays + "d&maxResults=" + maxResults + "&startAt=" + startAt;
             jDto = connectToJiraAPI(request);
         } while (startAt < total);
-        return inProgress;
+        return bugsInProgressPerDay;
     }
 
     /* Method that returns the number of story points assigned to an issue.

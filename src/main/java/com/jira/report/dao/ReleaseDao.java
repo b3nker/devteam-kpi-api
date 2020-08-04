@@ -21,9 +21,10 @@ public class ReleaseDao {
     }
 
     public void loadReleases() {
-        log.info("Start to load releases");
+        log.info("Starting to construct releases objects");
         try {
             releases = api.getReleases();
+            log.info("Finished constructing releases objects");
         } catch (IOException | ParseException e) {
             log.error("Failed to retrieve release file",e);
         }

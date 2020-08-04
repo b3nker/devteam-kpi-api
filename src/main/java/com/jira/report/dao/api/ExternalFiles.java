@@ -35,7 +35,7 @@ public class ExternalFiles {
     /* Reads "planning.csv" and extract two data, the working time and the available time per collaborator
      * HashMap <AccountID,[workingTime, availableTime]>
      */
-    public Map<String, Float[]> getPlanning(String PLANNING_PATH, Sprint s) {
+    public Map<String, Float[]> getPlanning(String planningPath, Sprint s) {
         /*
          Variables
          */
@@ -50,7 +50,7 @@ public class ExternalFiles {
         Logic
          */
         try {
-            FileReader filereader = new FileReader(PLANNING_PATH);
+            FileReader filereader = new FileReader(planningPath);
             CSVParser parser = new CSVParserBuilder().withSeparator(separator).build();
             CSVReader csvReader = new CSVReaderBuilder(filereader)
                     .withCSVParser(parser)
@@ -101,8 +101,8 @@ public class ExternalFiles {
     public List<Release> getReleases(String path) throws IOException, ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         int nbLinesToSkip = 2;
-        char VALUE_DOT = '.';
-        char VALUE_COMMA = ',';
+        char valueDot = '.';
+        char valueComma = ',';
         List<Release> releases = new ArrayList<>();
         FileReader filereader = new FileReader(path);
         CSVParser parser = new CSVParserBuilder().withSeparator(separator).build();
@@ -121,10 +121,10 @@ public class ExternalFiles {
                     .startDate(startDate)
                     .endDate(endDate)
                     .nbOpenDays(parseInt(infos[3]))
-                    .nbWorkingDays(parseDouble(infos[4].replace(VALUE_COMMA, VALUE_DOT)))
-                    .buildCapacityFront(parseDouble(infos[5].replace(VALUE_COMMA, VALUE_DOT)))
-                    .buildCapacityMiddle(parseDouble(infos[6].replace(VALUE_COMMA, VALUE_DOT)))
-                    .buildCapacityTotal(parseDouble(infos[7].replace(VALUE_COMMA, VALUE_DOT)))
+                    .nbWorkingDays(parseDouble(infos[4].replace(valueComma, valueDot)))
+                    .buildCapacityFront(parseDouble(infos[5].replace(valueComma, valueDot)))
+                    .buildCapacityMiddle(parseDouble(infos[6].replace(valueComma, valueDot)))
+                    .buildCapacityTotal(parseDouble(infos[7].replace(valueComma, valueDot)))
                     .build();
             releases.add(r);
         }
