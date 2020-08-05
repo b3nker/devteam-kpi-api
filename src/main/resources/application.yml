@@ -31,56 +31,9 @@ jira:
       active: active
       maxResults: 100
       unassignedAccountId: unassigned
-      # anomalies name in Jira
+      # anomalies names in Jira
       bug: Bug
       incident: Incident
-      #statuses' names in Jira
-      statuses:
-        - Abandonné
-        - En cours
-        - A qualifier
-        - A faire
-        - Bac d'affinage
-        - Terminé
-        - Livré
-        - Validé en recette
-        - Validé
-        - Dév terminé
-        - Refusé en recette
-        - En attente
-        - A Livrer
-        - A tester
-        - A valider
-        - Testcroisé
-      done:
-        - Livré
-        - Terminé
-        - Validé
-        - Validé en recette
-      doneBugs:
-        - Livré
-        - Terminé
-        - Validé en recette
-        - Abandonné
-      inProgress:
-        - En cours
-        - Dév terminé
-        - Refusé en recette
-        - En attente
-        - A tester
-        - A Livrer
-      devDone:
-        - A tester
-        - A Livrer
-      devDoneEnCours:
-        - Dév terminé
-        - En cours
-
-      #Priorities' names in Jira
-      priorityLow: Low
-      priorityMedium: Medium
-      priorityHigh: High
-      priorityHighest: Highest
     individuals:
       idCollabs:
         5c17b4599f443a65fecae3ca: middle lead dev # Julien Mosset

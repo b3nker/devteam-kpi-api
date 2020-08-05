@@ -14,32 +14,6 @@ public class JiraReportConfigQuery {
     private String unassignedAccountId;
     private String bug;
     private String incident;
-    private String priorityLow;
-    private String priorityMedium;
-    private String priorityHigh;
-    private String priorityHighest;
-    private List<String> statuses;
-    private List<String> done;
-    private List<String> doneBugs;
-    private List<String> inProgress;
-    private List<String> devDone;
-    private List<String> devDoneEnCours;
-    private String abandonne;
-    private String enCours;
-    private String aQualifier;
-    private String aFaire;
-    private String bacAffinage;
-    private String termine;
-    private String livre;
-    private String valideEnRecette;
-    private String valide;
-    private String devTermine;
-    private String refuseEnRecette;
-    private String enAttente;
-    private String aLivrer;
-    private String aTester;
-    private String aValider;
-    private String testCroise;
     private String active;
 
 }
