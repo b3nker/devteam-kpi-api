@@ -36,7 +36,6 @@ public class JiraReportInitializer {
         loadingDataStopWatch.start("loadBacklog");
         backlogDao.loadBacklog();
         loadingDataStopWatch.stop();
-
          */
 
         loadingDataStopWatch.start("loadCollaborators");

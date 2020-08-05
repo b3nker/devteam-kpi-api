@@ -22,6 +22,9 @@ import static java.time.temporal.ChronoUnit.DAYS;
 @Service
 @Slf4j
 public class JiraAPI {
+
+    private static final String JQL_SPRINT = "+AND+sprint=";
+    private static final String JQL_LABELS = "+AND+labels=";
     private final WebClient jiraWebClient;
     private final JiraTempoAPI jiraTempoAPI;
     private final String baseUrl;
@@ -60,6 +63,13 @@ public class JiraAPI {
     private static final List<String> devDone = new ArrayList<>(Arrays.asList(aTester, aLivrer));
     private static final List<String> devDoneEnCours = new ArrayList<>(Arrays.asList(devTermine, enCours));
 
+    //Query URI
+    private static final String SEARCH_JQL_PROJECT = "search?jql=project=";
+    private static final String JQL_ASSIGNEE = "+AND+assignee=";
+    private static final String JQL_ISSUE_TYPE = "+AND+issuetype=";
+    private static final String JQL_MAX_RESULTS = "&maxResults=";
+    private static final String JQL_START_AT = "&startAt=";
+
     public JiraAPI(JiraTempoAPI jiraTempoAPI,
                    JiraReportConfigQuery jiraReportConfigQuery,
                    JiraReportConfigIndividuals jiraReportConfigIndividuals,
@@ -81,8 +91,8 @@ public class JiraAPI {
           /*
         Variables
         */
-        String request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName + "+AND+assignee=" + accId +
-                "+AND+sprint=" + s.getId() + "+AND+labels=" + label + "&maxResults=" + maxResults;
+        String request = baseUrl + jiraApiUrl + SEARCH_JQL_PROJECT + projectName + JQL_ASSIGNEE + accId +
+                JQL_SPRINT + s.getId() + JQL_LABELS + label + JQL_MAX_RESULTS + maxResults;
         double timespent = 0;
         double estimated = 0;
         double remaining = 0;
@@ -164,7 +174,6 @@ public class JiraAPI {
             // Setting working time
             remaining += i.getFields().getTimeestimate() / (double) 3600;
             estimated += i.getFields().getTimeoriginalestimate() / (double) 3600;
-            timespent += i.getFields().getTimespent() / (double) 3600;
             //Setting story points
             double curStoryPoints = i.getFields().getStoryPoints();
             spTotal += curStoryPoints;
@@ -277,8 +286,8 @@ public class JiraAPI {
         // 0 : total, 1: low, 2: medium, 3: high, 4: highest
         int[] incidentsBugs = new int[5];
         int startAt = 0;
-        String request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName +
-                "+AND+issuetype='" + issueType + "'&maxResults=" + maxResults + "&startAt=" + startAt;
+        String request = baseUrl + jiraApiUrl + SEARCH_JQL_PROJECT + projectName + JQL_ISSUE_TYPE + "'" + issueType +
+                "'" + JQL_MAX_RESULTS + maxResults + JQL_START_AT + startAt;
         JiraDto c = connectToJiraAPI(request);
         int total = c.getTotal();
         /*
@@ -310,8 +319,8 @@ public class JiraAPI {
                 }
             }
             startAt += maxResults;
-            request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName +
-                    "+AND+issuetype='" + issueType + "'&maxResults=" + maxResults + "&startAt=" + startAt;
+            request = baseUrl + jiraApiUrl + SEARCH_JQL_PROJECT + projectName + JQL_ISSUE_TYPE + "'" + issueType +
+                    "'" + JQL_MAX_RESULTS + maxResults + JQL_START_AT + startAt;
             c = connectToJiraAPI(request);
         } while (startAt < total);
         return incidentsBugs;
@@ -329,8 +338,8 @@ public class JiraAPI {
         int days;
         String dateCreation;
         LocalDate ldtBug;
-        String request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType +
-                "'+AND+created>=-" + nbDays + "d&maxResults=" + maxResults + "&startAt=" + startAt;
+        String request = baseUrl + jiraApiUrl + SEARCH_JQL_PROJECT + projectName + JQL_ISSUE_TYPE + "'" +  issueType +
+                "'+AND+created>=-" + nbDays + "d" + JQL_MAX_RESULTS + maxResults + JQL_START_AT + startAt;
         JiraDto c = connectToJiraAPI(request);
         int total = c.getTotal();
         /*
@@ -344,8 +353,8 @@ public class JiraAPI {
                 bugsCreated[nbDays - days] += 1;
             }
             startAt += maxResults;
-            request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType +
-                    "'+AND+created>=-" + nbDays + "d&maxResults=" + maxResults + "&startAt=" + startAt;
+            request = baseUrl + jiraApiUrl + SEARCH_JQL_PROJECT + projectName + JQL_ISSUE_TYPE + "'" +  issueType +
+                    "'+AND+created>=-" + nbDays + "d" + JQL_MAX_RESULTS + maxResults + JQL_START_AT + startAt;
             c = connectToJiraAPI(request);
         } while (startAt < total);
         return bugsCreated;
@@ -365,8 +374,8 @@ public class JiraAPI {
         LocalDate ldtBug;
         int days;
         String today = LocalDateTime.now().format(dtfAmerica);
-        String request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType +
-                "'+AND+updated>=-" + nbDays + "d&maxResults=" + maxResults + "&startAt=" + startAt;
+        String request = baseUrl + jiraApiUrl + SEARCH_JQL_PROJECT + projectName + JQL_ISSUE_TYPE + "'" +  issueType +
+                "'+AND+updated>=-" + nbDays + "d" + JQL_MAX_RESULTS + maxResults + JQL_START_AT + startAt;
         /*
         Logic
          */
@@ -383,8 +392,8 @@ public class JiraAPI {
                 }
             }
             startAt += maxResults;
-            request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType +
-                    "'+AND+updated>=-" + nbDays + "d&maxResults=" + maxResults + "&startAt=" + startAt;
+            request = baseUrl + jiraApiUrl + SEARCH_JQL_PROJECT + projectName + JQL_ISSUE_TYPE + "'" +  issueType +
+                    "'+AND+updated>=-" + nbDays + "d" + JQL_MAX_RESULTS + maxResults + JQL_START_AT + startAt;
             jDto = connectToJiraAPI(request);
         } while (startAt < total);
         return bugsResolved;
@@ -404,8 +413,8 @@ public class JiraAPI {
         LocalDate ldtBug;
         int days;
         String today = LocalDateTime.now().format(dtfAmerica);
-        String request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType +
-                "'+AND+updated>=-" + nbDays + "d&maxResults=" + maxResults + "&startAt=" + startAt;
+        String request = baseUrl + jiraApiUrl + SEARCH_JQL_PROJECT + projectName + JQL_ISSUE_TYPE + "'" +  issueType +
+                "'+AND+updated>=-" + nbDays + "d" + JQL_MAX_RESULTS + maxResults + JQL_START_AT + startAt;
         /*
         Logic
          */
@@ -422,8 +431,8 @@ public class JiraAPI {
                 }
             }
             startAt += maxResults;
-            request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName + "+AND+issuetype='" + issueType +
-                    "'+AND+updated>=-" + nbDays + "d&maxResults=" + maxResults + "&startAt=" + startAt;
+            request = baseUrl + jiraApiUrl + SEARCH_JQL_PROJECT + projectName + JQL_ISSUE_TYPE + "'" +  issueType +
+                    "'+AND+updated>=-" + nbDays + "d" + JQL_MAX_RESULTS + maxResults + JQL_START_AT + startAt;
             jDto = connectToJiraAPI(request);
         } while (startAt < total);
         return bugsInProgressPerDay;
@@ -436,7 +445,7 @@ public class JiraAPI {
         /*
         Variables
          */
-        String request = baseUrl + jiraApiUrl + "search?jql=project=" + projectName + "+AND+issue=" + issueID;
+        String request = baseUrl + jiraApiUrl + SEARCH_JQL_PROJECT + projectName + "+AND+issue=" + issueID;
         /*
         Logic
          */

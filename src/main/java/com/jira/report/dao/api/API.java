@@ -27,7 +27,6 @@ public class API {
     private final String unassignedAccountId;
     private final HashMap<String, String> teamPair = new HashMap<>();
     private final HashMap<String, List<String>> teams = new HashMap<>();
-    private final Sprint sprintActif;
     private final HashMap<String, Sprint> activeSprints = new HashMap<>();
     private final String planningPath;
     private final String releasePath;
@@ -65,7 +64,6 @@ public class API {
         String boardIdGamma = jiraReportConfigGlobal.getBoardIdThree();
         this.runProjectName = jiraReportConfigGlobal.getRunProjectName();
         this.projectName = jiraReportConfigGlobal.getProjectName();
-        this.sprintActif = jiraAgileAPI.getLastlyActiveSprint(projectBoardId);
         this.activeSprints.put(teamNameAlpha, sprintActifAlpha);
         this.activeSprints.put(teamNameBeta, sprintActifBeta);
         this.activeSprints.put(teamNameGamma, sprintActifGamma);
@@ -101,18 +99,10 @@ public class API {
      * Retrieve all data of each ID_COLLABS on the lastly active sprint (if they have at least one assigned ticket)
      */
     public Map<String, Collaborator> callJiraCollabSprintAPI() {
-        Map<String, Float[]> planning = externalFiles.getPlanning(planningPath, sprintActif);
         HashMap<String, Collaborator> collaborators = new HashMap<>();
         for (Map.Entry<String, List<String>> entry : teams.entrySet()) {
             String label = entry.getKey();
             Map<String, Collaborator> c = getCollaboratorsPerTeam(teams.get(label), label);
-            for(Collaborator collab: c.values()){
-                if(planning.containsKey(collab.getAccountId())){
-                    Float[] timeData = planning.get(collab.getAccountId());
-                    collab.setTotalWorkingTime(timeData[0]);
-                    collab.setAvailableTime(timeData[1]);
-                }
-            }
             Collaborator unassigned = c.get(this.unassignedAccountId);
             if(unassigned != null){
                 unassigned.setAccountId(this.unassignedAccountId + ' ' + label);
@@ -191,14 +181,20 @@ public class API {
     }
 
     public Map<String, Collaborator> getCollaboratorsPerTeam(List<String> teamAccId, String teamName) {
-        HashMap<String, Collaborator> collaborators = new HashMap<>();
+        Map<String, Float[]> planning = externalFiles.getPlanning(planningPath, activeSprints.get(teamName));
+        Map<String, Collaborator> collaborators = new HashMap<>();
         Collaborator c;
         for (String accId : teamAccId) {
-            // In application.yml, unassigned whosedefined with a nil value is returned as an empty char
+            // In application.yml, unassigned who is defined with a nil value is returned as an empty char
             if(accId.isEmpty()){
                 accId = null;
             }
             if ((c = jiraAPI.getCollaborator(accId, teamName, activeSprints.get(teamName),this.projectName,maxResults)) != null) {
+                if(planning.containsKey(accId)){
+                    Float[] timeValues = planning.get(accId);
+                    c.setTotalWorkingTime(timeValues[0]);
+                    c.setAvailableTime(timeValues[1]);
+                }
                 collaborators.put(c.getAccountId(), c);
             }
         }
@@ -211,15 +207,6 @@ public class API {
     public Team getTeam(List<String> teamAccId, String teamName) {
         Map<String, Collaborator> collaborators = getCollaboratorsPerTeam(teamAccId, teamName);
         List<Collaborator> c = new ArrayList<>(collaborators.values());
-        Map<String, Float[]> planning = externalFiles.getPlanning(planningPath, activeSprints.get(teamName));
-        for(Collaborator collaborator: c){
-            String accId = collaborator.getAccountId();
-            if(planning.containsKey(accId)){
-                Float[] timeValues = planning.get(accId);
-                collaborator.setTotalWorkingTime(timeValues[0]);
-                collaborator.setAvailableTime(timeValues[1]);
-            }
-        }
         return Team.builder()
                 .name(teamName)
                 .collaborators(c)
