@@ -57,7 +57,7 @@ public class API {
         List<String> teamAlpha = jiraReportConfigIndividuals.getTeamOne();
         List<String> teamBeta = jiraReportConfigIndividuals.getTeamTwo();
         List<String> teamGamma = jiraReportConfigIndividuals.getTeamThree();
-        Sprint sprintActifAlpha = jiraAgileAPI.getLastlyActiveSprint(projectBoardId);
+        Sprint sprintActifAlpha = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameAlpha, projectBoardId);
         Sprint sprintActifBeta = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameBeta, projectBoardId);
         Sprint sprintActifGamma = jiraAgileAPI.getLastlyActiveSprint(projectBoardId);
         String boardIdAlpha = jiraReportConfigGlobal.getBoardIdOne();
@@ -89,19 +89,10 @@ public class API {
      * Retrieve all data from the lastly active sprint
      */
     public Map<String,Sprint> callJiraSprintAPI() {
-        Map<String, Float[]> planning = externalFiles.getPlanning(planningPath, sprintActif);
         for (Map.Entry<String, List<String>> entry: teams.entrySet()) {
             String label = entry.getKey();
             Team t = getTeam(teams.get(label), label);
-            for(Collaborator c: t.getCollaborators()){
-                if(planning.containsKey(c.getAccountId())){
-                    Float[] timeData = planning.get(c.getAccountId());
-                    c.setTotalWorkingTime(timeData[0]);
-                    c.setAvailableTime(timeData[1]);
-                }
-            }
             activeSprints.get(label).setTeam(t);
-
         }
         return activeSprints;
     }
@@ -217,11 +208,20 @@ public class API {
     /* Call above method, getCollaborators() and assign each collaborator to its team
      * returning a HashMap of size nbTeams
      */
-    public Team getTeam(List<String> teamAccId, String label) {
-        Map<String, Collaborator> collaborators = getCollaboratorsPerTeam(teamAccId, label);
+    public Team getTeam(List<String> teamAccId, String teamName) {
+        Map<String, Collaborator> collaborators = getCollaboratorsPerTeam(teamAccId, teamName);
         List<Collaborator> c = new ArrayList<>(collaborators.values());
+        Map<String, Float[]> planning = externalFiles.getPlanning(planningPath, activeSprints.get(teamName));
+        for(Collaborator collaborator: c){
+            String accId = collaborator.getAccountId();
+            if(planning.containsKey(accId)){
+                Float[] timeValues = planning.get(accId);
+                collaborator.setTotalWorkingTime(timeValues[0]);
+                collaborator.setAvailableTime(timeValues[1]);
+            }
+        }
         return Team.builder()
-                .name(label)
+                .name(teamName)
                 .collaborators(c)
                 .build();
     }

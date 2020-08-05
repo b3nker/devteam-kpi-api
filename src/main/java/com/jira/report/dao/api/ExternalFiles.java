@@ -90,6 +90,7 @@ public class ExternalFiles {
                     }
                     Float[] workTime = {totalWorkingTime,availableTime};
                     planning.put(accountId, workTime);
+                    System.out.println(accountId + " " + workTime[0] + " " + workTime[1]);
                 }
             }
         } catch (IOException e) {
