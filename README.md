@@ -1,5 +1,5 @@
 # KPI API
-KPI API is a reporting API that fetch data in JIRA APIs and serialize them into intelligible objects.
+KPI API is a reporting API that fetch data in JIRA APIs and serialize it into intelligible objects.
 This app is destinated to April's projects (BMKP,RMKP) for management purposes.
 
 ## Targeted versions
