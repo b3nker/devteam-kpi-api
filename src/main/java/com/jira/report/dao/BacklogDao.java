@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 @Slf4j
 @Repository
 public class BacklogDao {
-    private static Backlog backlog;
+    private Backlog backlog;
 
     private final API api;
 

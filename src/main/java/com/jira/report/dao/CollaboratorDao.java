@@ -9,7 +9,7 @@ import java.util.*;
 @Slf4j
 @Repository
 public class CollaboratorDao {
-    private static Map<String,Collaborator> collaboratorsSprint;
+    private Map<String,Collaborator> collaboratorsSprint;
     private final API api;
 
     public CollaboratorDao(API api) {

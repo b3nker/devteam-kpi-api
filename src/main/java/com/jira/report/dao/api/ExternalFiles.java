@@ -22,12 +22,11 @@ import static java.lang.Integer.parseInt;
 
 @Service
 public class ExternalFiles {
-    private final Character separator;
+    private static final Character SEPARATOR = ',';
     private final int indexAccountId;
     private final int firstRow;
 
     public ExternalFiles(JiraReportConfigExternal jiraReportConfigExternal){
-        this.separator = ',';
         this.indexAccountId = jiraReportConfigExternal.getIndexAccountId();
         this.firstRow = jiraReportConfigExternal.getFirstRow();
     }
@@ -51,7 +50,7 @@ public class ExternalFiles {
          */
         try {
             FileReader filereader = new FileReader(planningPath);
-            CSVParser parser = new CSVParserBuilder().withSeparator(separator).build();
+            CSVParser parser = new CSVParserBuilder().withSeparator(SEPARATOR).build();
             CSVReader csvReader = new CSVReaderBuilder(filereader)
                     .withCSVParser(parser)
                     .build();
@@ -106,7 +105,7 @@ public class ExternalFiles {
         char valueComma = ',';
         List<Release> releases = new ArrayList<>();
         FileReader filereader = new FileReader(path);
-        CSVParser parser = new CSVParserBuilder().withSeparator(separator).build();
+        CSVParser parser = new CSVParserBuilder().withSeparator(SEPARATOR).build();
         CSVReader csvReader = new CSVReaderBuilder(filereader)
                 .withCSVParser(parser)
                 .build();

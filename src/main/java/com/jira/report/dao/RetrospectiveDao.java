@@ -10,7 +10,7 @@ import java.util.Map;
 @Slf4j
 @Repository
 public class RetrospectiveDao {
-    private static Map<String, Retrospective> retrospectives;
+    private Map<String, Retrospective> retrospectives;
     private final API api;
 
     public RetrospectiveDao(API api) {
