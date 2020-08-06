@@ -5,6 +5,7 @@ import com.jira.report.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.text.ParseException;
 import java.time.LocalDateTime;
@@ -58,7 +59,7 @@ public class API {
         List<String> teamGamma = jiraReportConfigIndividuals.getTeamThree();
         Sprint sprintActifAlpha = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameAlpha, projectBoardId);
         Sprint sprintActifBeta = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameBeta, projectBoardId);
-        Sprint sprintActifGamma = jiraAgileAPI.getLastlyActiveSprint(projectBoardId);
+        Sprint sprintActifGamma = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameGamma, projectBoardId);
         String boardIdAlpha = jiraReportConfigGlobal.getBoardIdOne();
         String boardIdBeta = jiraReportConfigGlobal.getBoardIdTwo();
         String boardIdGamma = jiraReportConfigGlobal.getBoardIdThree();

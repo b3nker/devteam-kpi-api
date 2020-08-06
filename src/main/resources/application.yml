@@ -16,7 +16,7 @@ jira:
       boardIdOne: 451
       boardIdTwo: 443
       boardIdThree: 450
-      nbSprintsRetrospective: 1
+      nbSprintsRetrospective: 2
       nbDaysBacklog: 20
     api:
       baseUrl: https://apriltechnologies.atlassian.net/
