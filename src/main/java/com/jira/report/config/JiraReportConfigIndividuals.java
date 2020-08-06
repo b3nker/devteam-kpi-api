@@ -20,6 +20,11 @@ public class JiraReportConfigIndividuals {
     private List<String> teamTwo;
     private List<String> teamThree;
 
+    /**
+     * Creates a Map (key: accountId, value: Collaborator's role) by replacing collected data in "idCollabs" from application.yml
+     * Replace  all '_' with ':' in keys
+     * @return A map
+     */
     public Map<String, String> getCollabs(){
         return idCollabs.entrySet().stream()
                 .collect(Collectors.toMap(entry -> RegExUtils.replaceFirst(entry.getKey(),"_",":"), Map.Entry::getValue));

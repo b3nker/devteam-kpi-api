@@ -39,9 +39,6 @@ public class JiraGreenhopperAPI {
      */
     public List<String> getIssueKeys(SprintCommitment s, String boardId){
         String request = this.baseUrl + this.greenhopperUrl + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
-        /*
-        Logic
-         */
         JiraGreenHopperDto greenHopperDto = connectToJiraAPI(request);
         assert greenHopperDto != null;
         Set<String> addedIssues = greenHopperDto.getContents().getIssueKeysAddedDuringSprint().keySet();

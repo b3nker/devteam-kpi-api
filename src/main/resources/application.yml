@@ -6,8 +6,6 @@ jira:
   external:
     planning: planning.csv
     release: release.csv
-    indexAccountId: 2
-    firstRow: 4
   report:
     global:
       projectName: BMKP

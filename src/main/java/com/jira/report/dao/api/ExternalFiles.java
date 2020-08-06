@@ -24,13 +24,10 @@ import static java.lang.Integer.parseInt;
 @Service
 public class ExternalFiles {
     private static final Character SEPARATOR = ',';
-    private final int indexAccountId;
-    private final int firstRow;
+    private static final int INDEX_ACCOUNT_ID = 2;
+    private static final int FIRST_ROW = 4;
 
-    public ExternalFiles(JiraReportConfigExternal jiraReportConfigExternal){
-        this.indexAccountId = jiraReportConfigExternal.getIndexAccountId();
-        this.firstRow = jiraReportConfigExternal.getFirstRow();
-    }
+    public ExternalFiles(){}
 
     /**
      * Creates a Map (key: accountId, value: [totalWorkingTime, availableTime])
@@ -59,7 +56,7 @@ public class ExternalFiles {
             CSVReader csvReader = new CSVReaderBuilder(filereader)
                     .withCSVParser(parser)
                     .build();
-            for (int i = 0; i < firstRow; i++) {
+            for (int i = 0; i < FIRST_ROW; i++) {
                 csvReader.readNext();
             }
             dates = csvReader.readNext();
@@ -78,8 +75,8 @@ public class ExternalFiles {
             csvReader.readNext();
             String[] infos;
             while ((infos = csvReader.readNext()) != null) {
-                if (!infos[indexAccountId].isEmpty()) {
-                    accountId = infos[indexAccountId];
+                if (!infos[INDEX_ACCOUNT_ID].isEmpty()) {
+                    accountId = infos[INDEX_ACCOUNT_ID];
                     float totalWorkingTime = 8f * (endIndex - startIndex + 1);
                     float availableTime = 8f * (endIndex - todayIndex + 1);
                     for (int i = startIndex; i <= endIndex; i++) {
@@ -117,9 +114,6 @@ public class ExternalFiles {
         char valueComma = ',';
         List<Release> releases = new ArrayList<>();
         FileReader filereader = new FileReader(path);
-        if (filereader == null) {
-            throw new FileNotFoundException("Resource not found: " + path);
-        }
         CSVParser parser = new CSVParserBuilder().withSeparator(SEPARATOR).build();
         CSVReader csvReader = new CSVReaderBuilder(filereader)
                 .withCSVParser(parser)

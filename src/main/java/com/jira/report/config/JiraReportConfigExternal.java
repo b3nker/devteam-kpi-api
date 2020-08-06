@@ -10,6 +10,4 @@ public class JiraReportConfigExternal {
     private String planning;
     private String release;
     private Character separator;
-    private int indexAccountId;
-    private int firstRow;
 }
