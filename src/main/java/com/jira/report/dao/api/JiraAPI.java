@@ -84,8 +84,14 @@ public class JiraAPI {
     }
 
 
-    /* Main method : Returns a Collaborator object if it has at least one ticket
-     * else return null
+    /**
+     * Creates a Collaborator object. Fetch "timespent" data using method from JiraTempoAPI
+     * @param accId Collaborator accountId
+     * @param label Corresponds to team name, it's contained in jql "labels" field
+     * @param s Sprint, to request data on a period of time and fetch data in JiraTempoAPI
+     * @param projectName Project name linked to the specified sprint
+     * @param maxResults Number of results returned from GET method.
+     * @return A Collaborator object
      */
     public Collaborator getCollaborator(String accId, String label, Sprint s, String projectName, int maxResults) {
           /*
@@ -276,8 +282,12 @@ public class JiraAPI {
     }
 
 
-    /* Returns an array of integer containing information on bugs/incidents since project's creation (number and priority)
-     * A bug is active when NOT in following jira states :  LIVRE, TERMINE, VALIDE_RECETTE, ABANDONNE
+    /**
+     * Creates an array of Integer where each index represents number of issuetype with specified priority
+     * @param projectName Project name from which we desire to collect data
+     * @param issueType Type of issue we want to collect (bug, incident,...)
+     * @param maxResults Number of results returned from GET method.
+     * @return An array of integer
      */
     public int[] getProjectIncidentBug(String projectName, String issueType, int maxResults) {
         /*
@@ -326,9 +336,16 @@ public class JiraAPI {
         return incidentsBugs;
     }
 
-    /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug/incident created
-     *  Index i represent the number of bugs created (nbDays-i) ago
+    /**
+     * Creates an array of Integer where each index corresponds to the number of issuetype created per day
+     * Index (nbDays) being today. Thus, index i represent the number of bugs created (nbDays-i) ago
+     * @param nbDays Length of the array
+     * @param projectName Project name from which we desire to collect data
+     * @param issueType Type of issue we want to collect (bug, incident,...)
+     * @param maxResults Number of results returned from GET method.
+     * @return An array of Integer
      */
+
     public int[] getCreated(int nbDays, String projectName, String issueType, int maxResults) {
         /*
         Variables
@@ -360,8 +377,14 @@ public class JiraAPI {
         return bugsCreated;
     }
 
-    /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug/incident resolved (Jira status "terminé/livré")
-     *  Index i represent the number of bugs resolved (nbDays-i) ago
+    /**
+     * Creates an array of Integer where each index corresponds to the number of issuetype resolved per day
+     * Index (nbDays) being today. Thus, index i represent the number of bugs resolved (nbDays-i) ago
+     * @param nbDays Length of the array
+     * @param projectName Project name from which we desire to collect data
+     * @param issueType Type of issue we want to collect (bug, incident,...)
+     * @param maxResults Number of results returned from GET method.
+     * @return An array of Integer
      */
     public int[] getResolved(int nbDays, String projectName, String issueType, int maxResults) {
         /*
@@ -399,8 +422,14 @@ public class JiraAPI {
         return bugsResolved;
     }
 
-    /* Returns an array of integer of length 'nbDays'. Each element corresponds to the number of bug/incident in progress (Jira status "terminé/livré")
-     *  Index i represent the number of bugs resolved (nbDays-i) ago
+    /**
+     * Creates an array of Integer where each index corresponds to the number of issuetype in progress per day
+     * Index (nbDays) being today. Thus, index i represent the number of bugs in progress (nbDays-i) ago
+     * @param nbDays Length of the array
+     * @param projectName Project name from which we desire to collect data
+     * @param issueType Type of issue we want to collect (bug, incident,...)
+     * @param maxResults Number of results returned from GET method.
+     * @return An array of Integer
      */
     public int[] getInProgress(int nbDays, String projectName, String issueType, int maxResults) {
         /*
@@ -438,8 +467,11 @@ public class JiraAPI {
         return bugsInProgressPerDay;
     }
 
-    /* Method that returns the number of story points assigned to an issue.
-     * Used to retrieve story points linked to added tickets in getCommitment()
+    /**
+     * Creates a Double. Retrieve the number of storypoints linked to issueId
+     * @param issueID Ticket Id
+     * @param projectName Project name from which we desire to collect data
+     * @return Number of story points assigned to an issue
      */
     public double getStoryPoint(String issueID, String projectName) {
         /*
@@ -454,6 +486,11 @@ public class JiraAPI {
         return i.getFields().getStoryPoints();
     }
 
+    /**
+     * Creates an JiraDto object
+     * @param request The request we want to GET data from
+     * @return A JiraDto object containing parsed data from the GET request to the API
+     */
     public JiraDto connectToJiraAPI(String request) {
         return jiraWebClient
                 .get()

@@ -9,6 +9,7 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import org.springframework.stereotype.Service;
 
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.ParseException;
@@ -31,10 +32,14 @@ public class ExternalFiles {
         this.firstRow = jiraReportConfigExternal.getFirstRow();
     }
 
-    /* Reads "planning.csv" and extract two data, the working time and the available time per collaborator
-     * HashMap <AccountID,[workingTime, availableTime]>
+    /**
+     * Creates a Map (key: accountId, value: [totalWorkingTime, availableTime])
+     * @param planningPath path to "planning.csv"
+     * @param sprint Sprint to get precise start and end date for each team (as a team is assigned to a sprint)
+     * @return A Map containing, for each collaborator, his number of hours on the sprint, and left time as of today
+     * @throws IOException, If "planning.csv" cannot be found.
      */
-    public Map<String, Float[]> getPlanning(String planningPath, Sprint s) {
+    public Map<String, Float[]> getPlanning(String planningPath, Sprint sprint) {
         /*
          Variables
          */
@@ -59,10 +64,10 @@ public class ExternalFiles {
             }
             dates = csvReader.readNext();
             for (int i = 0; i < dates.length; i++) {
-                if (s.getStartDate().format(dtfEurope).equals(dates[i])) {
+                if (sprint.getStartDate().format(dtfEurope).equals(dates[i])) {
                     startIndex = i;
                 }
-                if (s.getEndDate().format(dtfEurope).equals(dates[i])) {
+                if (sprint.getEndDate().format(dtfEurope).equals(dates[i])) {
                     endIndex = i;
                 }
                 if (TODAY.format(dtfEurope).equals(dates[i])) {
@@ -98,6 +103,13 @@ public class ExternalFiles {
         return planning;
     }
 
+    /**
+     *Creates a list of Release objects.
+     * @param path path to "releases.csv"
+     * @return A list containing releases data
+     * @throws IOException, If file cannot be found
+     * @throws ParseException, If file cannot be parsed (illegal character)
+     */
     public List<Release> getReleases(String path) throws IOException, ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         int nbLinesToSkip = 2;
@@ -105,6 +117,9 @@ public class ExternalFiles {
         char valueComma = ',';
         List<Release> releases = new ArrayList<>();
         FileReader filereader = new FileReader(path);
+        if (filereader == null) {
+            throw new FileNotFoundException("Resource not found: " + path);
+        }
         CSVParser parser = new CSVParserBuilder().withSeparator(SEPARATOR).build();
         CSVReader csvReader = new CSVReaderBuilder(filereader)
                 .withCSVParser(parser)

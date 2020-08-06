@@ -31,11 +31,11 @@ public class JiraGreenhopperAPI {
         this.greenhopperUrl = jiraReportConfigApi.getJiraGreenhopperApiUrl();
     }
 
-    /* Returns 4 information on a sprint
-     * 0: initialCommitment
-     * 1: finalCommitment
-     * 2: addedWork
-     * 3: completedWork
+    /**
+     * Creates a list of strings. Each string corresponds to an issue that has been added in the specified input sprint
+     * @param s SprintCommitment object from which we want to get added issues
+     * @param boardId Board to which the sprint is linked
+     * @return All added issues as list of strings
      */
     public List<String> getIssueKeys(SprintCommitment s, String boardId){
         String request = this.baseUrl + this.greenhopperUrl + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
@@ -48,6 +48,12 @@ public class JiraGreenhopperAPI {
         return new ArrayList<>(addedIssues);
     }
 
+    /**
+     * Creates an array of double by fetching data on initial commitment,...
+     * @param s SprintCommitment object from which we want to get added issues
+     * @param boardId Board to which the sprint is linked
+     * @return An array of double, collecting SprintCommitment data (initial commitment,...)
+     */
     public double[] getCommitment(SprintCommitment s, String boardId) {
         /*
         Variables
@@ -86,6 +92,11 @@ public class JiraGreenhopperAPI {
         return commitment;
     }
 
+    /**
+     * Creates an JiraGreenHopperDto object
+     * @param request The request we want to GET data from
+     * @return A JiraGreenHopperDto object containing parsed data from the GET request to the API
+     */
     public JiraGreenHopperDto connectToJiraAPI(String request){
         return jiraWebClient
                 .get()

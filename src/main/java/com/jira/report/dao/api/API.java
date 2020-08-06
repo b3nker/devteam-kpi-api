@@ -5,7 +5,6 @@ import com.jira.report.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.text.ParseException;
 import java.time.LocalDateTime;
@@ -84,8 +83,10 @@ public class API {
 
     }
 
-    /* Returns a HashMap <TeamName, Sprint> using JiraAPI and getTeams() method
-     * Retrieve all data from the lastly active sprint
+    /**
+     * Creates a Map (key: team name, value: sprint)
+     * Service used to retrieve sprints and sprint per team.
+     * @return A HashMap containing sprints for each team.
      */
     public Map<String,Sprint> callJiraSprintAPI() {
         for (Map.Entry<String, List<String>> entry: teams.entrySet()) {
@@ -96,8 +97,11 @@ public class API {
         return activeSprints;
     }
 
-    /* Method that calls getCollaborators() and return a HashMap<AccountID, collaborator>
-     * Retrieve all data of each ID_COLLABS on the lastly active sprint (if they have at least one assigned ticket)
+    /**
+     *
+     * Creates a Map (key: accountId, value: Collaborator)
+     * Service used to retrieve collaborators data
+     * @return A HashMap containing all collaborators data
      */
     public Map<String, Collaborator> callJiraCollabSprintAPI() {
         HashMap<String, Collaborator> collaborators = new HashMap<>();
@@ -119,9 +123,10 @@ public class API {
         return collaborators;
     }
 
-    /* Method that returns a Backlog object
-     * Retrieve all information from RUN_PROJECT_NAME (for incident) and PROJECT_NAME (for bugs) since each
-     * project's creation
+    /**
+     * Creates a Backlog object
+     * Service used to retrieve project's backlog data (number of bugs,...)
+     * @return A Backlog object containing project's data
      */
     public Backlog callJiraBacklogAPI() {
         int[] incidents = jiraAPI.getProjectIncidentBug(runProjectName, incident,maxResults);
@@ -146,8 +151,10 @@ public class API {
                 .build();
     }
 
-    /* Method that retrieves all data of the last NB_SPRINT_RETROSPECTIVE, including the lastly active sprint
-     * for each team (board_id differs)
+    /**
+     * Creates a Map (key: team name, value: retrospective object).
+     * Service used to retrieve initial and former sprints data (initial commitment,....).
+     * @return A map containing retrospective objects.
      */
     public Map<String, Retrospective> callJiraRetrospectiveAPI() {
         HashMap<String, Retrospective> retrospectives = new HashMap<>();
@@ -174,13 +181,24 @@ public class API {
         return retrospectives;
     }
 
-    /* Method that calls getReleases() from ExternalFiles class
-     * Returns a list of Release object
+    /**
+     * Creates a List of Release object.
+     * Service used to retrieve actual and upcoming releases data.
+     * @return A List of release object.
+     * @throws IOException, If the file cannot be found.
+     * @throws ParseException, If the data cannot be parsed
      */
     public List<Release> getReleases() throws IOException, ParseException {
         return externalFiles.getReleases(releasePath);
     }
 
+    /**
+     * Creates a Map (key: accountId, value: Collaborator object)
+     * Assign total working time and available time by fetching data from "planning.csv"
+     * @param teamAccId All collaborator accountId in a team, plus an empty accountId representing null assignee.
+     * @param teamName name of the team linked to previous parameter.
+     * @return A Map of collaborators for a specific team
+     */
     public Map<String, Collaborator> getCollaboratorsPerTeam(List<String> teamAccId, String teamName) {
         Map<String, Float[]> planning = externalFiles.getPlanning(planningPath, activeSprints.get(teamName));
         Map<String, Collaborator> collaborators = new HashMap<>();
@@ -202,8 +220,11 @@ public class API {
         return collaborators;
     }
 
-    /* Call above method, getCollaborators() and assign each collaborator to its team
-     * returning a HashMap of size nbTeams
+    /**
+     * Creates a Team object
+     * @param teamAccId All collaborator accountId in a team, plus null assignee
+     * @param teamName Team name linked to previous parameter
+     * @return A Team object containing a list of Collaborators and team name.
      */
     public Team getTeam(List<String> teamAccId, String teamName) {
         Map<String, Collaborator> collaborators = getCollaboratorsPerTeam(teamAccId, teamName);

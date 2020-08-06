@@ -16,8 +16,13 @@ public class JiraTempoAPI {
         this.tempoWebClient = tempoWebClient;
         this.tempoUrl = jiraReportConfigApi.getTempoApiUrl();
     }
-    /* Method that retrieves the worklog (loggedTime) from a worklogid
-     * String dates should have the following format 'yyyy-dd-mm'
+
+    /**
+     * Creates a double from fetching worklokgs hours in Tempo API.
+     * @param accountID Collaborator's accountId from which we wish to collect worklogs
+     * @param startDate Date from which we want to start gathering worklogs data
+     * @param endDate Date from which we want to stop gathering worklogs data
+     * @return A double representing the number of hours logged on Tempo by a collaborator
      */
     public double getWorklogByAccountID(String accountID, String startDate, String endDate){
         double loggedTime = 0;
@@ -30,6 +35,11 @@ public class JiraTempoAPI {
         return loggedTime;
     }
 
+    /**
+     * Creates an TempoDto object
+     * @param request The request we want to GET data from
+     * @return A TempoDto object containing parsed data from the GET request to the API
+     */
     public TempoDto connectToJiraAPI(String request) {
         return tempoWebClient
                 .get()

@@ -28,6 +28,15 @@ public class JiraAgileAPI {
         this.active = jiraReportConfigQuery.getActive();
     }
 
+    /**
+     * Creates a list of SprintCommitment objects
+     * Returns a list containing exactly (nbSprints) SprintCommitment object, fills with empty object when not enough data are available.
+     * Starts from the lastly active sprint containing team name.
+     * @param nbSprints Desired number of SprintCommitment objects in the returned list
+     * @param teamName  Desired team from which we want to collect sprints' data (sprint name must contain this label)
+     * @param projectBoardId BoardId from which the sprints are retrieved
+     * @return A list of SprintCommitment objects
+     */
     public List<SprintCommitment> getLastlyClosedSprints(int nbSprints, String teamName, String projectBoardId) {
         /*
         Variables
@@ -74,8 +83,11 @@ public class JiraAgileAPI {
         return sc;
     }
 
-    /* Method that returns the lastly active sprint that contains teamName in its name
-     *
+    /**
+     * Creates a Sprint object
+     * @param teamName Desired team from which we want to collect sprints' data (sprint name must contain this label)
+     * @param projectBoardId BoardId from which the sprints are retrieved
+     * @return A Sprint object corresponding to the lastly active in the API for the specified team
      */
     public Sprint getLastlyActiveTeamSprint(String teamName, String projectBoardId) {
         String startDate = "";
@@ -106,8 +118,10 @@ public class JiraAgileAPI {
                 .build();
     }
 
-    /* Method that connect to Jira Agile API
-     * GET on the given request
+    /**
+     * Creates an AgileDto object
+     * @param request The request we want to GET data from
+     * @return A AgileDto object containing parsed data from the GET request to the API
      */
     public AgileDto connectToJiraAgileAPI(String request) {
         return jiraWebClient
