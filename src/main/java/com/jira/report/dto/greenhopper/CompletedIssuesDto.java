@@ -1,4 +1,4 @@
-package com.jira.report.dto.jiraGreenhopper;
+package com.jira.report.dto.greenhopper;
 
 import lombok.Data;
 

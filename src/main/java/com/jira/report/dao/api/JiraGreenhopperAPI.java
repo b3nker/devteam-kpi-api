@@ -3,8 +3,8 @@ package com.jira.report.dao.api;
 import com.jira.report.config.JiraReportConfigApi;
 import com.jira.report.config.JiraReportConfigGlobal;
 import com.jira.report.model.SprintCommitment;
-import com.jira.report.dto.jiraGreenhopper.ContentsDto;
-import com.jira.report.dto.jiraGreenhopper.JiraGreenHopperDto;
+import com.jira.report.dto.greenhopper.ContentsDto;
+import com.jira.report.dto.greenhopper.JiraGreenHopperDto;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 

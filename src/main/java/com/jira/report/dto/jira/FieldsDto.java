@@ -1,4 +1,4 @@
-package com.jira.report.dto.jiraApi;
+package com.jira.report.dto.jira;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

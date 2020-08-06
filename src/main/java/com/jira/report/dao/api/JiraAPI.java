@@ -3,10 +3,10 @@ package com.jira.report.dao.api;
 import com.jira.report.config.JiraReportConfigApi;
 import com.jira.report.config.JiraReportConfigIndividuals;
 import com.jira.report.config.JiraReportConfigQuery;
-import com.jira.report.dto.jiraApi.AssigneeDto;
-import com.jira.report.dto.jiraApi.FieldsDto;
-import com.jira.report.dto.jiraApi.IssueDto;
-import com.jira.report.dto.jiraApi.JiraDto;
+import com.jira.report.dto.jira.AssigneeDto;
+import com.jira.report.dto.jira.FieldsDto;
+import com.jira.report.dto.jira.IssueDto;
+import com.jira.report.dto.jira.JiraDto;
 import com.jira.report.model.Collaborator;
 import com.jira.report.model.Sprint;
 import lombok.extern.slf4j.Slf4j;
@@ -63,7 +63,7 @@ public class JiraAPI {
     private static final List<String> DEV_DONE = new ArrayList<>(Arrays.asList(A_TESTER, A_LIVRER));
     private static final List<String> DEV_DONE_EN_COURS = new ArrayList<>(Arrays.asList(DEV_TERMINE, EN_COURS));
 
-    //Query URI
+    //Queries URI
     private static final String SEARCH_JQL_PROJECT = "search?jql=project=";
     private static final String JQL_ASSIGNEE = "+AND+assignee=";
     private static final String JQL_ISSUE_TYPE = "+AND+issuetype=";

@@ -4,8 +4,8 @@ import com.jira.report.config.JiraReportConfigApi;
 import com.jira.report.config.JiraReportConfigQuery;
 import com.jira.report.model.Sprint;
 import com.jira.report.model.SprintCommitment;
-import com.jira.report.dto.jiraAgileApi.AgileDto;
-import com.jira.report.dto.jiraAgileApi.SprintDto;
+import com.jira.report.dto.agile.AgileDto;
+import com.jira.report.dto.agile.SprintDto;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 

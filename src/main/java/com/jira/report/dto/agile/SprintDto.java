@@ -1,4 +1,4 @@
-package com.jira.report.dto.jiraAgileApi;
+package com.jira.report.dto.agile;
 
 import lombok.Data;
 
