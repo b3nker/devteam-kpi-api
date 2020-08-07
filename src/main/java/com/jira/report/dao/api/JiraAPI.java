@@ -60,7 +60,7 @@ public class JiraAPI {
     private static final List<String> DONE = new ArrayList<>(Arrays.asList(LIVRE, TERMINE, VALIDE, VALIDE_RECETTE));
     private static final List<String> DONE_BUGS = new ArrayList<>(Arrays.asList(LIVRE, TERMINE, VALIDE_RECETTE, ABANDONNE));
     private static final List<String> IN_PROGRESS = new ArrayList<>(Arrays.asList(EN_COURS, DEV_TERMINE, REFUSE_RECETTE, EN_ATTENTE, A_TESTER, A_LIVRER));
-    private static final List<String> DEV_DONE = new ArrayList<>(Arrays.asList(A_TESTER, A_LIVRER));
+    private static final List<String> DEV_DONE = new ArrayList<>(Arrays.asList(A_TESTER, A_LIVRER, DEV_TERMINE,TEST_CROISE));
     private static final List<String> DEV_DONE_EN_COURS = new ArrayList<>(Arrays.asList(DEV_TERMINE, EN_COURS));
 
     //Queries URI
@@ -162,6 +162,7 @@ public class JiraAPI {
             }
             if (DONE.contains(statut)) {
                 ticketsDone++;
+                ticketsDevDone++;
             } else if (IN_PROGRESS.contains(statut)) {
                 if (DEV_DONE.contains(statut)) {
                     ticketsDevDone++;
