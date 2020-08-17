@@ -32,7 +32,7 @@ public class JiraReportInitializer {
         sprintDao.loadSprints();
         loadingDataStopWatch.stop();
 
-
+        /*
         loadingDataStopWatch.start("loadBacklog");
         backlogDao.loadBacklog();
         loadingDataStopWatch.stop();
@@ -41,9 +41,11 @@ public class JiraReportInitializer {
         collaboratorDao.loadCollaborators();
         loadingDataStopWatch.stop();
 
+
         loadingDataStopWatch.start("loadRetrospectives");
         retrospectiveDao.loadRetrospectives();
         loadingDataStopWatch.stop();
+         */
 
         log.info("Finished data loading : {}", loadingDataStopWatch.prettyPrint());
     }

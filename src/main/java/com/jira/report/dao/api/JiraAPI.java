@@ -137,6 +137,7 @@ public class JiraAPI {
         String prenom = "";
         String role;
         String statut;
+        List<String> assignedIssues = new ArrayList<>();
         JiraDto c = connectToJiraAPI(request);
         ticketsTotal = c.getTotal();
         // When assignee has no tickets assigned
@@ -144,6 +145,7 @@ public class JiraAPI {
             return null;
         }
         for (IssueDto i : c.getIssues()) {
+            assignedIssues.add(i.getKey());
             statut = i.getFields().getStatus().getName();
             if (i.getFields().getAssignee() != null) {
                 AssigneeDto assignee = i.getFields().getAssignee();
@@ -294,6 +296,7 @@ public class JiraAPI {
                 .spLivre(spLivre)
                 .spTermine(spTermine)
                 .spTestCroise(spTestCroise)
+                .assignedIssues(assignedIssues)
                 .build();
     }
 

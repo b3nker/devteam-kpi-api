@@ -3,6 +3,8 @@ package com.jira.report.model;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class Collaborator {
@@ -49,6 +51,7 @@ public class Collaborator {
     private int ticketsTestCroise;
     private int ticketsValide;
     private String role;
+    private List<String> assignedIssues;
 
 
     public void setFirstName(String firstName) {
