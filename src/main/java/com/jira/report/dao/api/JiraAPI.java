@@ -58,8 +58,6 @@ public class JiraAPI {
     private static final String PRIORITY_HIGH = "High";
     private static final String PRIORITY_HIGHEST = "Highest";
     private static final List<String> DONE_BUGS = new ArrayList<>(Arrays.asList(LIVRE, TERMINE, VALIDE_RECETTE, ABANDONNE));
-    private static final List<String> IN_PROGRESS = new ArrayList<>(Arrays.asList(EN_COURS, DEV_TERMINE, REFUSE_RECETTE, EN_ATTENTE, A_TESTER, A_LIVRER));
-
     //Queries URI
     private static final String SEARCH_JQL_PROJECT = "search?jql=project=";
     private static final String JQL_ASSIGNEE = "+AND+assignee=";
@@ -438,51 +436,6 @@ public class JiraAPI {
             jDto = connectToJiraAPI(request);
         } while (startAt < total);
         return bugsResolved;
-    }
-
-    /**
-     * Creates an array of Integer where each index corresponds to the number of issuetype in progress per day
-     * Index (nbDays) being today. Thus, index i represent the number of bugs in progress (nbDays-i) ago
-     * @param nbDays Length of the array
-     * @param projectName Project name from which we desire to collect data
-     * @param issueType Type of issue we want to collect (bug, incident,...)
-     * @param maxResults Number of results returned from GET method.
-     * @return An array of Integer
-     */
-    public int[] getInProgress(int nbDays, String projectName, String issueType, int maxResults) {
-        /*
-        Variables
-         */
-        int[] bugsInProgressPerDay = new int[nbDays + 1];
-        int startAt = 0;
-        String statut;
-        String updateDate;
-        LocalDate ldtBug;
-        int days;
-        String today = LocalDateTime.now().format(dtfAmerica);
-        String request = baseUrl + jiraApiUrl + SEARCH_JQL_PROJECT + projectName + JQL_ISSUE_TYPE + "'" +  issueType +
-                "'+AND+updated>=-" + nbDays + "d" + JQL_MAX_RESULTS + maxResults + JQL_START_AT + startAt;
-        /*
-        Logic
-         */
-        JiraDto jDto = connectToJiraAPI(request);
-        int total = jDto.getTotal();
-        do {
-            for (IssueDto i : jDto.getIssues()) {
-                statut = i.getFields().getStatus().getName();
-                if (IN_PROGRESS.contains(statut)) {
-                    updateDate = i.getFields().getUpdated().substring(0, 10);
-                    ldtBug = LocalDate.parse(updateDate);
-                    days = (int) DAYS.between(ldtBug, LocalDate.parse(today));
-                    bugsInProgressPerDay[nbDays - days] += 1;
-                }
-            }
-            startAt += maxResults;
-            request = baseUrl + jiraApiUrl + SEARCH_JQL_PROJECT + projectName + JQL_ISSUE_TYPE + "'" +  issueType +
-                    "'+AND+updated>=-" + nbDays + "d" + JQL_MAX_RESULTS + maxResults + JQL_START_AT + startAt;
-            jDto = connectToJiraAPI(request);
-        } while (startAt < total);
-        return bugsInProgressPerDay;
     }
 
     /**

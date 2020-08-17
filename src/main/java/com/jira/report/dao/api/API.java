@@ -129,17 +129,8 @@ public class API {
      * @return A Backlog object containing project's data
      */
     public Backlog callJiraBacklogAPI() {
-        int[] incidents = jiraAPI.getProjectIncidentBug(runProjectName, incident,maxResults);
         int[] bugs = jiraAPI.getProjectIncidentBug(projectName, bug,maxResults);
         return Backlog.builder()
-                .nbIncidents(incidents[0])
-                .nbIncidentsLow(incidents[1])
-                .nbIncidentsMedium(incidents[2])
-                .nbIncidentsHigh(incidents[3])
-                .nbIncidentsHighest(incidents[4])
-                .nbIncidentsCreated(jiraAPI.getCreated(nbDaysBacklog, runProjectName, incident,maxResults))
-                .nbIncidentsResolved(jiraAPI.getResolved(nbDaysBacklog, runProjectName, incident,maxResults))
-                .nbIncidentsInProgress(jiraAPI.getInProgress(nbDaysBacklog, runProjectName, incident,maxResults))
                 .nbBugs(bugs[0])
                 .nbBugsLow(bugs[1])
                 .nbBugsMedium(bugs[2])
@@ -147,7 +138,6 @@ public class API {
                 .nbBugsHighest(bugs[4])
                 .nbBugsCreated(jiraAPI.getCreated(nbDaysBacklog, projectName, bug,maxResults))
                 .nbBugsResolved(jiraAPI.getResolved(nbDaysBacklog, projectName, bug,maxResults))
-                .nbBugsInProgress(jiraAPI.getInProgress(nbDaysBacklog, projectName, bug,maxResults))
                 .build();
     }
 

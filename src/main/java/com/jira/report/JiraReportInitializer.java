@@ -32,11 +32,10 @@ public class JiraReportInitializer {
         sprintDao.loadSprints();
         loadingDataStopWatch.stop();
 
-        /*
+
         loadingDataStopWatch.start("loadBacklog");
         backlogDao.loadBacklog();
         loadingDataStopWatch.stop();
-         */
 
         loadingDataStopWatch.start("loadCollaborators");
         collaboratorDao.loadCollaborators();
