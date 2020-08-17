@@ -56,9 +56,9 @@ public class API {
         List<String> teamAlpha = jiraReportConfigIndividuals.getTeamOne();
         List<String> teamBeta = jiraReportConfigIndividuals.getTeamTwo();
         List<String> teamGamma = jiraReportConfigIndividuals.getTeamThree();
-        Sprint sprintActifAlpha = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameAlpha, projectBoardId);
-        Sprint sprintActifBeta = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameBeta, projectBoardId);
-        Sprint sprintActifGamma = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameGamma, projectBoardId);
+        Sprint sprintActifAlpha = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameAlpha, jiraReportConfigGlobal.getBoardIdOne());
+        Sprint sprintActifBeta = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameBeta, jiraReportConfigGlobal.getBoardIdTwo());
+        Sprint sprintActifGamma = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameGamma, jiraReportConfigGlobal.getBoardIdThree());
         String boardIdAlpha = jiraReportConfigGlobal.getBoardIdOne();
         String boardIdBeta = jiraReportConfigGlobal.getBoardIdTwo();
         String boardIdGamma = jiraReportConfigGlobal.getBoardIdThree();

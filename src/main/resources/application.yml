@@ -23,7 +23,7 @@ jira:
       tempoApiUrl: https://api.tempo.io/core/3
       jiraAgileApiUrl: rest/agile/1.0/
       username: benjamin.kermani@neo9.fr
-      jiraToken: sqjFnTAVspNM4NxLd1QZC5CB
+      jiraToken: fMoY64hth4lb15FHilYr93F8
       tempoToken: J1eKPcvcMlCvMjNBvXyJmn0vMPvGs0
     query:
       active: active
