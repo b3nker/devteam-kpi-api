@@ -57,11 +57,8 @@ public class JiraAPI {
     private static final String PRIORITY_MEDIUM = "Medium";
     private static final String PRIORITY_HIGH = "High";
     private static final String PRIORITY_HIGHEST = "Highest";
-    private static final List<String> DONE = new ArrayList<>(Arrays.asList(LIVRE, TERMINE, VALIDE, VALIDE_RECETTE));
     private static final List<String> DONE_BUGS = new ArrayList<>(Arrays.asList(LIVRE, TERMINE, VALIDE_RECETTE, ABANDONNE));
     private static final List<String> IN_PROGRESS = new ArrayList<>(Arrays.asList(EN_COURS, DEV_TERMINE, REFUSE_RECETTE, EN_ATTENTE, A_TESTER, A_LIVRER));
-    private static final List<String> DEV_DONE = new ArrayList<>(Arrays.asList(A_TESTER, A_LIVRER, DEV_TERMINE,TEST_CROISE));
-    private static final List<String> DEV_DONE_EN_COURS = new ArrayList<>(Arrays.asList(DEV_TERMINE, EN_COURS));
 
     //Queries URI
     private static final String SEARCH_JQL_PROJECT = "search?jql=project=";
@@ -118,23 +115,34 @@ public class JiraAPI {
         double spLivre = 0;
         double spTermine = 0;
         double spTestCroise = 0;
-        int ticketsDone = 0;
-        int ticketsInProgress = 0;
-        int ticketsToDo = 0;
-        int ticketsDevDone = 0;
-        int ticketsEnCoursDevTermine = 0;
-        int ticketsAtester = 0;
+        //
+        int ticketsTotal;
+        int ticketsAQualifier = 0;
+        int ticketsBacAffinage = 0;
+        int ticketsEnAttente = 0;
+        int ticketsAFaire = 0;
+        int ticketsEnCours = 0;
+        int ticketsAbandonne = 0;
+        int ticketsDevTermine = 0;
+        int ticketsAvalider = 0;
+        int ticketsAlivrer = 0;
+        int ticketsATester = 0;
+        int ticketsRefuseEnRecette = 0;
+        int ticketsValideEnRecette = 0;
+        int ticketsLivre = 0;
+        int ticketsTermine = 0;
+        int ticketsTestCroise = 0;
+        int ticketsValide = 0;
         String accountId = "";
         String emailAddress = "";
         String nom = "";
         String prenom = "";
         String role;
-        int total;
         String statut;
         JiraDto c = connectToJiraAPI(request);
-        total = c.getTotal();
+        ticketsTotal = c.getTotal();
         // When assignee has no tickets assigned
-        if (total == 0) {
+        if (ticketsTotal == 0) {
             return null;
         }
         for (IssueDto i : c.getIssues()) {
@@ -160,24 +168,6 @@ public class JiraAPI {
                     }
                 }
             }
-            if (DONE.contains(statut)) {
-                ticketsDone++;
-                ticketsDevDone++;
-            } else if (IN_PROGRESS.contains(statut)) {
-                if (DEV_DONE.contains(statut)) {
-                    ticketsDevDone++;
-                } else {
-                    ticketsInProgress++;
-                }
-            } else {
-                ticketsToDo++;
-            }
-            if (DEV_DONE_EN_COURS.contains(statut)) {
-                ticketsEnCoursDevTermine++;
-            }
-            if (A_TESTER.contains(statut)) {
-                ticketsAtester++;
-            }
             // Setting working time
             remaining += i.getFields().getTimeestimate() / (double) 3600;
             estimated += i.getFields().getTimeoriginalestimate() / (double) 3600;
@@ -187,49 +177,66 @@ public class JiraAPI {
             switch (statut) {
                 case A_QUALIFIER:
                     spAQualifier += curStoryPoints;
+                    ticketsAQualifier++;
                     break;
                 case BAC_AFFINAGE:
                     spBacAffinage += curStoryPoints;
+                    ticketsBacAffinage++;
                     break;
                 case EN_ATTENTE:
                     spEnAttente += curStoryPoints;
+                    ticketsEnAttente++;
                     break;
                 case A_FAIRE:
                     spAFaire += curStoryPoints;
+                    ticketsAFaire++;
                     break;
                 case EN_COURS:
                     spEnCours += curStoryPoints;
+                    ticketsEnCours++;
                     break;
                 case ABANDONNE:
                     spAbandonne += curStoryPoints;
+                    ticketsAbandonne++;
                     break;
                 case DEV_TERMINE:
                     spDevTermine += curStoryPoints;
+                    ticketsDevTermine++;
                     break;
                 case A_VALIDER:
                     spAvalider += curStoryPoints;
+                    ticketsAvalider++;
                     break;
                 case A_LIVRER:
                     spAlivrer += curStoryPoints;
+                    ticketsAlivrer++;
                     break;
                 case A_TESTER:
                     spATester += curStoryPoints;
+                    ticketsATester++;
                     break;
                 case REFUSE_RECETTE:
                     spRefuseEnRecette += curStoryPoints;
+                    ticketsRefuseEnRecette++;
                     break;
                 case VALIDE_RECETTE:
                     spValideEnRecette += curStoryPoints;
+                    ticketsValideEnRecette++;
                     break;
                 case LIVRE:
                     spLivre += curStoryPoints;
+                    ticketsLivre++;
                     break;
                 case TERMINE:
                     spTermine += curStoryPoints;
+                    ticketsTermine++;
                     break;
                 case TEST_CROISE:
                     spTestCroise += curStoryPoints;
+                    ticketsTestCroise++;
                     break;
+                case VALIDE:
+                    ticketsValide++;
                 default:
                     break;
             }
@@ -256,13 +263,23 @@ public class JiraAPI {
                 .loggedTime(timespent)
                 .estimatedTime(estimated)
                 .remainingTime(remaining)
-                .nbTickets(total)
-                .nbDone(ticketsDone)
-                .nbDevDone(ticketsDevDone)
-                .nbInProgress(ticketsInProgress)
-                .nbToDo(ticketsToDo)
-                .nbATester(ticketsAtester)
-                .nbEnCoursDevTermine(ticketsEnCoursDevTermine)
+                .ticketsTotal(ticketsTotal)
+                .ticketsAqualifier(ticketsAQualifier)
+                .ticketsBacAffinage(ticketsBacAffinage)
+                .ticketsEnAttente(ticketsEnAttente)
+                .ticketsAfaire(ticketsAFaire)
+                .ticketsEncours(ticketsEnCours)
+                .ticketsAbandonne(ticketsAbandonne)
+                .ticketsDevTermine(ticketsDevTermine)
+                .ticketsAvalider(ticketsAvalider)
+                .ticketsAlivrer(ticketsAlivrer)
+                .ticketsATester(ticketsATester)
+                .ticketsRefuseEnRecette(ticketsRefuseEnRecette)
+                .ticketsValideEnRecette(ticketsValideEnRecette)
+                .ticketsLivre(ticketsLivre)
+                .ticketsTermine(ticketsTermine)
+                .ticketsTestCroise(ticketsTestCroise)
+                .ticketsValide(ticketsValide)
                 .spTotal(spTotal)
                 .spAqualifier(spAQualifier)
                 .spBacAffinage(spBacAffinage)

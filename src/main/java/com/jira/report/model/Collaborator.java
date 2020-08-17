@@ -10,19 +10,11 @@ public class Collaborator {
     private String firstName;
     private String name;
     private String emailAddress;
-    private double velocity;
     private double totalWorkingTime;
     private double availableTime;
     private double estimatedTime;
     private double loggedTime;
     private double remainingTime;
-    private int nbTickets;
-    private int nbDone;
-    private int nbDevDone;
-    private int nbInProgress;
-    private int nbToDo;
-    private int nbEnCoursDevTermine;
-    private int nbATester;
     private double spTotal;
     private double spAqualifier;
     private double spBacAffinage;
@@ -39,6 +31,23 @@ public class Collaborator {
     private double spLivre;
     private double spTermine;
     private double spTestCroise;
+    private int ticketsTotal;
+    private int ticketsAqualifier;
+    private int ticketsBacAffinage;
+    private int ticketsEnAttente;
+    private int ticketsAfaire;
+    private int ticketsEncours;
+    private int ticketsAbandonne;
+    private int ticketsDevTermine;
+    private int ticketsAvalider;
+    private int ticketsAlivrer;
+    private int ticketsATester;
+    private int ticketsRefuseEnRecette;
+    private int ticketsValideEnRecette;
+    private int ticketsLivre;
+    private int ticketsTermine;
+    private int ticketsTestCroise;
+    private int ticketsValide;
     private String role;
 
 
