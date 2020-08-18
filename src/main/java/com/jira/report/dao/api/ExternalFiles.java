@@ -26,6 +26,7 @@ public class ExternalFiles {
     private static final Character SEPARATOR = ',';
     private static final int INDEX_ACCOUNT_ID = 2;
     private static final int FIRST_ROW = 4;
+    private static final String RUN_CHAR = "R";
 
     public ExternalFiles(){}
 
@@ -80,12 +81,12 @@ public class ExternalFiles {
                     float totalWorkingTime = 8f * (endIndex - startIndex + 1);
                     float availableTime = 8f * (endIndex - todayIndex + 1);
                     for (int i = startIndex; i <= endIndex; i++) {
-                        if (!infos[i].isEmpty()) {
+                        if (!infos[i].isEmpty() && !infos[i].contains(RUN_CHAR)) {
                             totalWorkingTime -= parseFloat(infos[i].replace(",", ".")) * 8;
                         }
                     }
                     for (int i = todayIndex; i <= endIndex; i++) {
-                        if (!infos[i].isEmpty()) {
+                        if (!infos[i].isEmpty() && !infos[i].contains(RUN_CHAR)) {
                             availableTime -= parseFloat(infos[i].replace(",", ".")) * 8;
                         }
                     }

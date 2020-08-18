@@ -150,7 +150,7 @@ public class API {
         HashMap<String, Retrospective> retrospectives = new HashMap<>();
         for (Map.Entry<String,String> entry: teamPair.entrySet()) {
             String teamName = entry.getKey();
-            List<SprintCommitment> sprints = jiraAgileAPI.getLastlyClosedSprints(nbSprintsRetrospective, teamName,projectBoardId);
+            List<SprintCommitment> sprints = jiraAgileAPI.getLastlyClosedSprints(nbSprintsRetrospective, teamName,teamPair.get(teamName));
             for (SprintCommitment sprint : sprints) {
                 if(sprint.getId() != 0){
                     double[] commitment = jiraGreenhopperAPI.getCommitment(sprint, teamPair.get(teamName));
