@@ -42,6 +42,7 @@ public class ExternalFiles {
          Variables
          */
         Map<String, Float[]> planning = new HashMap<>();
+        int NOT_FOUND_START_INDEX = 4;
         String accountId;
         int startIndex = -1;
         int endIndex = -1;
@@ -72,14 +73,24 @@ public class ExternalFiles {
                     todayIndex = i;
                 }
             }
+            //Si la date de début n'est pas trouvé
+            if(startIndex < 0){
+                startIndex = NOT_FOUND_START_INDEX;
+            }
+            if(endIndex < 0){
+                endIndex = NOT_FOUND_START_INDEX;
+            }
+            if(todayIndex < 0){
+                todayIndex = NOT_FOUND_START_INDEX;
+            }
             //On saute une ligne
             csvReader.readNext();
             String[] infos;
             while ((infos = csvReader.readNext()) != null) {
                 if (!infos[INDEX_ACCOUNT_ID].isEmpty()) {
                     accountId = infos[INDEX_ACCOUNT_ID];
-                    float totalWorkingTime = 8f * (endIndex - startIndex + 1);
-                    float availableTime = 8f * (endIndex - todayIndex + 1);
+                    float totalWorkingTime = 8f * (endIndex - startIndex);
+                    float availableTime = 8f * (endIndex - todayIndex);
                     for (int i = startIndex; i <= endIndex; i++) {
                         if (!infos[i].isEmpty() && !infos[i].contains(RUN_CHAR)) {
                             totalWorkingTime -= parseFloat(infos[i].replace(",", ".")) * 8;
