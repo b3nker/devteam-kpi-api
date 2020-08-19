@@ -1,6 +1,7 @@
 # KPI API
 KPI API is a reporting API that fetch data in JIRA APIs and serialize it into intelligible objects.
 This app is destinated to April's projects (BMKP,RMKP) for management purposes.
+KPI API is a Spring (Maven) application.
 
 ## Targeted versions
 * Java: 11
@@ -85,80 +86,67 @@ jira:
       incident: Incident
     individuals:
       idCollabs:
-        5c17b4599f443a65fecae3ca: middle lead dev # Julien Mosset
-        5a9ebe1c4af2372a88a0656b: front lead dev # Nicolas Ovejero
-        5bcd8282607ed038040177bb: middle #Pape Thiam
-        5cf921f6b06c540e82580cbd: front #Valentin Pierrel
-        5ed76cdf2fdc580b88f3bbef: middle #Alex Cheuko
-        5ed64583620b1d0c168d4e36: middle #Anthony Hernandez
-        5cb45bb34064460e407eabe4: middle lead dev #Guillermo Garcès
-        5a9ebdf74af2372a88a06565: middle #Gabriel Roquigny
-        5a2181081594706402dee482: front lead dev #Etienne Bourgouin
-        5afe92f251d0b7540b43de81: middle #Malick Diagne
-        5e98521a3a8b910c085d6a28: front #Kévin Youna
-        5d6e32e06e3e1f0d9623cb5a: middle #Pierre Tomasina
-        5e285008ee264b0e74591993: middle lead dev #Eric Coupal
-        5ed76cc1be03220ab32183be: front lead dev #Thibault Foucault
-        5d9b0573ea65c10c3fdbaab2: middle #Maxime Fourt
-        5a8155f0cad06b353733bae8: middle #Guillaume Coppens
-        5dfd11b39422830cacaa8a79: front #Carthy Marie Joseph
-        5aafb6012235812a6233652d: scrum #Lionel Sjarbi
-        5ed754b0f93b230ba59a3d38: scrum #Nicolas Beucler
-        557058_1f318bba-6336-4f60-a3b1-67e03a32a3dc: transverse #Kévin Labesse
-        5ef5ec9a7e95e80a8126e509: scrum #Pierre-Yves Garic
-        5b97bc461b4803467d26fd6e: transverse #Xavier Michel
-        5e787dfb2466490c495f2a85: transverse #Maxime Ancellin
-        5a96abe5e9dc0033a7af8cfb: transverse #Joël Royer
-        5db2f070af604e0db364eb12: transverse #David Boucard Planel
-        5a27b9ed466b4a37eec61268: transverse #Pierre Bertin
-        557058_d8f506a1-fa47-4681-9ab1-7214a062c264: transverse #Vincent Martin
-        557058_834cbf83-d227-4823-bfdf-db62c8672ad1: transverse #Victor Dumesny
-        557058_df17bf30-7843-415e-985d-151faba64429: transverse #Philippe Fleur
-        557058_87b17037-8a69-4b38-8dab-b4cf904e960a: middle #Pierre Thevenet
+        5c17b4599f443a65fzedae3ca: middle lead dev
+        5a9ebe1c4af2372a8drd0656b: front lead dev 
+        5bcd8282607ed0380dc0177bb: middle #Pape Thiam
       teamNameOne: alpha
       teamNameTwo: beta
       teamNameThree: gamma
       teamOne:
-        - 5c17b4599f443a65fecae3ca #Julien Mosset
-        - 5a9ebe1c4af2372a88a0656b #Nicolas Ovejero
-        - 5bcd8282607ed038040177bb #Pape Thiam
-        - 5cf921f6b06c540e82580cbd #Valentin Pierrel
-        - 5ed76cdf2fdc580b88f3bbef #Alex Cheuko
-        - 5a9ebdf74af2372a88a06565 #Gabriel Roquigny
+        - 5c17b4599f443a652343ae3ca
+        - 5a9ebe1c23d2dzdzd88a0656b 
+        - 5bcd828260iop0dzdz40177bb 
         - null #Unassigned
       teamTwo:
-        - 5cb45bb34064460e407eabe4 #Guillermo Garcès
-        - 5a2181081594706402dee482 #Etienne Bourgouin
-        - 5afe92f251d0b7540b43de81 #Malick Diagne
-        - 5d6e32e06e3e1f0d9623cb5a #Pierre Tomasina
-        - 5ed64583620b1d0c168d4e36 #Anthony Hernandez
-        - 5e98521a3a8b910c085d6a28 #Kévin Youna
+        - 5cb45bb34877d60e407eabe4
+        - 5a2181081Opdz06402dee482
         - null #Unassigned
       teamThree:
-        - 5e285008ee264b0e74591993 #Eric Coupal
-        - 5ed76cc1be03220ab32183be #Thibault Foucault
-        - 557058:87b17037-8a69-4b38-8dab-b4cf904e960a #Pierre Thevenet
-        - 5d9b0573ea65c10c3fdbaab2 #Maxime Fourt
-        - 5a8155f0cad06b353733bae8 #Guillaume Coppens
-        - 5dfd11b39422830cacaa8a79 #Carthy Marie Joseph
+        - 5e285008ee264b0e74591993
+        - 5ed76cc1be03220ab32183be
+        - 557058:87b17037-8a69-4b3232Dd4cf904e960a
         - null #Unassigned
 ```
 
 ## Installation
-First you have to clone the project to a local repository : 
+First you have to clone the project to your local repository : 
 
 ```shell
 $ git clone URL
 ```
 
-Then you can build and run the project with the following commands :
+Then you have to build and run the project with the following commands :
 
 ```shell
 $ mvn clean install
 $ mvn spring-boot:run
 ```
+
+This project uses Project Lombok, make sure that the corresponding plugin is installed on your IDE.
+
+## Libraries used
+This project uses different librairies to work : 
+
+ 1. SpringBoot Test
+ 2. Springboot Web
+ 3. SpringBoot Webflux
+ 4. SpringBoot Actuator
+ 5. Reactor Spring
+ 6. Lombok
+ 7. Opencsv
+
+## Features / Services
+KPI API offers following services : 
+
+* Collaborator **Read** requests
+* Sprint **Read** requests
+* Release **Read** requests
+* Backlog **Read** requests
+* Retrospective **Read** requests
+
+
 ## Authors
 * **Benjamin Kermani** - *Initial work* [Intern at @Neo9](https://github.com/b3nker)
 
 ## License/Copyright
-This project is licensed under @Neo9 license
+[@Neo9](https://neo9.fr/)
