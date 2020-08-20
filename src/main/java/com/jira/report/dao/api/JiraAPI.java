@@ -48,6 +48,7 @@ public class JiraAPI {
     private static final String A_TESTER = "A tester";
     private static final String A_VALIDER = "A valider";
     private static final String TEST_CROISE = "Test croisé";
+    private static final String MERGE_REQUEST = "Merge Request";
     //Unassigned infos
     private static final String UNASSIGNED_ROLE = "none";
     private static final String UNASSIGNED_FIRST_NAME = "Non";
@@ -113,6 +114,7 @@ public class JiraAPI {
         double spLivre = 0;
         double spTermine = 0;
         double spTestCroise = 0;
+        double spMergeRequest = 0;
         //
         int ticketsTotal;
         int ticketsAQualifier = 0;
@@ -131,6 +133,7 @@ public class JiraAPI {
         int ticketsTermine = 0;
         int ticketsTestCroise = 0;
         int ticketsValide = 0;
+        int ticketsMergeRequest = 0;
         String accountId = "";
         String emailAddress = "";
         String nom = "";
@@ -237,6 +240,9 @@ public class JiraAPI {
                     break;
                 case VALIDE:
                     ticketsValide++;
+                case MERGE_REQUEST:
+                    spMergeRequest += curStoryPoints;
+                    ticketsMergeRequest++;
                 default:
                     break;
             }
@@ -280,6 +286,7 @@ public class JiraAPI {
                 .ticketsTermine(ticketsTermine)
                 .ticketsTestCroise(ticketsTestCroise)
                 .ticketsValide(ticketsValide)
+                .ticketsMergeRequest(ticketsMergeRequest)
                 .spTotal(spTotal)
                 .spAqualifier(spAQualifier)
                 .spBacAffinage(spBacAffinage)
@@ -296,6 +303,7 @@ public class JiraAPI {
                 .spLivre(spLivre)
                 .spTermine(spTermine)
                 .spTestCroise(spTestCroise)
+                .spMergeRequest(spMergeRequest)
                 .assignedIssues(assignedIssues)
                 .build();
     }

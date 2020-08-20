@@ -33,6 +33,7 @@ public class Collaborator {
     private double spLivre;
     private double spTermine;
     private double spTestCroise;
+    private double spMergeRequest;
     private int ticketsTotal;
     private int ticketsAqualifier;
     private int ticketsBacAffinage;
@@ -50,6 +51,7 @@ public class Collaborator {
     private int ticketsTermine;
     private int ticketsTestCroise;
     private int ticketsValide;
+    private int ticketsMergeRequest;
     private String role;
     private List<String> assignedIssues;
 
