@@ -16,13 +16,16 @@ public class JiraReportConfigIndividuals {
     private String teamNameOne;
     private String teamNameTwo;
     private String teamNameThree;
+    private String teamNameFour;
     private List<String> teamOne;
     private List<String> teamTwo;
     private List<String> teamThree;
+    private List<String> teamFour;
+
 
     /**
-     * Creates a Map (key: accountId, value: Collaborator's role) by replacing collected data in "idCollabs" from application.yml
-     * Replace  all '_' with ':' in keys
+     * Creates a Map (key: accountId, value: Collaborator's role) by replacing all '_' with ':' in "idCollabs" keys
+     * from application.yml
      * @return A map
      */
     public Map<String, String> getCollabs(){

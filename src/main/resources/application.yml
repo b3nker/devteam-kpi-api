@@ -14,6 +14,7 @@ jira:
       boardIdOne: 451
       boardIdTwo: 443
       boardIdThree: 452
+      boardIdFour: 453
       nbSprintsRetrospective: 2
       nbDaysBacklog: 20
     api:
@@ -67,6 +68,7 @@ jira:
       teamNameOne: alpha
       teamNameTwo: beta
       teamNameThree: gamma
+      teamNameFour: delta
       teamOne:
         - 5c17b4599f443a65fecae3ca #Julien Mosset
         - 5a9ebe1c4af2372a88a0656b #Nicolas Ovejero
@@ -91,5 +93,12 @@ jira:
         - 5a8155f0cad06b353733bae8 #Guillaume Coppens
         - 5dfd11b39422830cacaa8a79 #Carthy Marie Joseph
         - null #Unassigned
+      teamFour:
+        - 5a96abe5e9dc0033a7af8cfb #Joël Royer
+        - 5e787dfb2466490c495f2a85 #Maxime Ancellin
+        - 5b97bc461b4803467d26fd6e #Xavier Michel
+        - 557058:87b17037-8a69-4b38-8dab-b4cf904e960a #Pierre Thevenet
+        - null #Unassigned
+
 
 

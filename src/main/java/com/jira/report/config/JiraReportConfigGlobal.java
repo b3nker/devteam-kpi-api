@@ -14,6 +14,7 @@ public class JiraReportConfigGlobal {
     private String boardIdOne;
     private String boardIdTwo;
     private String boardIdThree;
+    private String boardIdFour;
     private int nbSprintsRetrospective;
     private int nbDaysBacklog;
 }
