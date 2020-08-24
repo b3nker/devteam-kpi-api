@@ -1,6 +1,6 @@
 # KPI API
-KPI API is a reporting API that fetch data in JIRA APIs and serialize it into intelligible objects.
-This app is destinated to April's projects (BMKP,RMKP) for management purposes.
+KPI API is a reporting API that fetch data in JIRA APIs and serialize it into intelligible objects.  
+This app is destinated to April's projects (BMKP,RMKP) for management purposes.  
 KPI API is a Spring (Maven) application.
 
 ## Targeted versions
@@ -37,7 +37,6 @@ jira:
       active: Jira sprint status when a sprint is active
       maxResults: Number of results retrieve when doing an HTTP GET
       unassignedAccountId: Selected unassigned accountId by default
-      # anomalies names in Jira
       bug: Jira issuetype name for bugs
       incident: Jira issuetype name for incidents
     individuals:
@@ -88,7 +87,7 @@ jira:
       idCollabs:
         5c17b4599f443a65fzedae3ca: middle lead dev
         5a9ebe1c4af2372a8drd0656b: front lead dev 
-        5bcd8282607ed0380dc0177bb: middle #Pape Thiam
+        5bcd8282607ed0380dc0177bb: middle
       teamNameOne: alpha
       teamNameTwo: beta
       teamNameThree: gamma
@@ -127,10 +126,10 @@ This project uses Project Lombok, make sure that the corresponding plugin is ins
 ## Libraries used
 This project uses different librairies to work : 
 
- 1. SpringBoot Test
- 2. Springboot Web
- 3. SpringBoot Webflux
- 4. SpringBoot Actuator
+ 1. Spring boot Test
+ 2. Spring boot Web
+ 3. Spring boot Webflux
+ 4. Spring boot Actuator
  5. Reactor Spring
  6. Lombok
  7. Opencsv

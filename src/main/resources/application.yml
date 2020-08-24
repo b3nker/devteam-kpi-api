@@ -24,7 +24,7 @@ jira:
       jiraAgileApiUrl: rest/agile/1.0/
       username: benjamin.kermani@neo9.fr
       jiraToken: fMoY64hth4lb15FHilYr93F8
-      tempoToken: J1eKPcvcMlCvMjNBvXyJmn0vMPvGs0
+      tempoToken: CHHRzt4Xh6J2fxpAVLUWTaIMvffYxz
     query:
       active: active
       maxResults: 100
