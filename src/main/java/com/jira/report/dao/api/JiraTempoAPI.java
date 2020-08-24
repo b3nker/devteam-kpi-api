@@ -35,6 +35,19 @@ public class JiraTempoAPI {
         return loggedTime;
     }
 
+    public double getWorklogByIssue(String accountID, String issueKey, String startDate, String endDate){
+        double loggedTime = 0;
+        String request = this.tempoUrl + "/worklogs/user/" + accountID + "?&from=" + startDate + "&to=" + endDate;
+        TempoDto t = connectToJiraAPI(request);
+        assert t != null;
+        for(ResultsDto r: t.getResults()){
+            if(issueKey.equals(r.getIssue().getKey())){
+                loggedTime += r.getTimeSpentSeconds() / (double)3600;
+            }
+        }
+        return loggedTime;
+    }
+
     /**
      * Creates an TempoDto object
      * @param request The request we want to GET data from

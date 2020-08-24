@@ -5,4 +5,5 @@ import lombok.Data;
 @Data
 public class ResultsDto {
     private int timeSpentSeconds;
+    private IssueDto issue;
 }

@@ -9,6 +9,8 @@ import com.jira.report.dto.jira.IssueDto;
 import com.jira.report.dto.jira.JiraDto;
 import com.jira.report.model.Collaborator;
 import com.jira.report.model.Sprint;
+import com.jira.report.model.StoryPoint;
+import com.jira.report.model.Ticket;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -58,13 +60,18 @@ public class JiraAPI {
     private static final String PRIORITY_MEDIUM = "Medium";
     private static final String PRIORITY_HIGH = "High";
     private static final String PRIORITY_HIGHEST = "Highest";
-    private static final List<String> DONE_BUGS = new ArrayList<>(Arrays.asList(LIVRE, TERMINE, VALIDE_RECETTE, ABANDONNE));
+    private static final List<String> BUGS_DONE = new ArrayList<>(Arrays.asList(LIVRE, TERMINE, VALIDE_RECETTE, ABANDONNE));
+    private static final List<String> AT_LEAST_DEV_DONE = new ArrayList<>(Arrays.asList(DEV_TERMINE, TEST_CROISE,
+            MERGE_REQUEST, A_LIVRER, A_TESTER, VALIDE_RECETTE, LIVRE, TERMINE));
     //Queries URI
     private static final String SEARCH_JQL_PROJECT = "search?jql=project=";
     private static final String JQL_ASSIGNEE = "+AND+assignee=";
     private static final String JQL_ISSUE_TYPE = "+AND+issuetype=";
     private static final String JQL_MAX_RESULTS = "&maxResults=";
     private static final String JQL_START_AT = "&startAt=";
+    //Settings
+    private static final double LOWER_BOUND_MULTIPLIER = 0.8;
+    private static final double UPPER_BOUND_MULTIPLIER = 1.2;
 
     public JiraAPI(JiraTempoAPI jiraTempoAPI,
                    JiraReportConfigQuery jiraReportConfigQuery,
@@ -134,6 +141,8 @@ public class JiraAPI {
         int ticketsTestCroise = 0;
         int ticketsValide = 0;
         int ticketsMergeRequest = 0;
+        int ticketsOverEstimated = 0;
+        int ticketsUnderEstimated = 0;
         String accountId = "";
         String emailAddress = "";
         String nom = "";
@@ -172,8 +181,9 @@ public class JiraAPI {
                 }
             }
             // Setting working time
+            double ticketEstimatedTime = i.getFields().getTimeoriginalestimate() / (double) 3600;
             remaining += i.getFields().getTimeestimate() / (double) 3600;
-            estimated += i.getFields().getTimeoriginalestimate() / (double) 3600;
+            estimated += ticketEstimatedTime;
             //Setting story points
             double curStoryPoints = i.getFields().getStoryPoints();
             spTotal += curStoryPoints;
@@ -246,6 +256,16 @@ public class JiraAPI {
                 default:
                     break;
             }
+            // Number of overestimated or underestimated tickets
+            if(AT_LEAST_DEV_DONE.contains(statut)){
+                double ticketLoggedTime = jiraTempoAPI.getWorklogByIssue(accountId, i.getKey(),
+                        s.getStartDate().format(dtfAmerica),  s.getEndDate().format(dtfAmerica));
+                if(ticketLoggedTime >= ticketEstimatedTime * UPPER_BOUND_MULTIPLIER){
+                    ticketsUnderEstimated++;
+                }else if(ticketLoggedTime <= ticketEstimatedTime * LOWER_BOUND_MULTIPLIER){
+                    ticketsOverEstimated++;
+                }
+            }
         }
         // When assignee is null
         if (request.contains("null")) {
@@ -259,6 +279,47 @@ public class JiraAPI {
             //Calling tempo API
             timespent = jiraTempoAPI.getWorklogByAccountID(accId, s.getStartDate().format(dtfAmerica), s.getEndDate().format(dtfAmerica));
         }
+        Ticket tickets = Ticket.builder()
+                .total(ticketsTotal)
+                .aQualifier(ticketsAQualifier)
+                .bacAffinage(ticketsBacAffinage)
+                .enAttente(ticketsEnAttente)
+                .aFaire(ticketsAFaire)
+                .enCours(ticketsEnCours)
+                .abandonne(ticketsAbandonne)
+                .devTermine(ticketsDevTermine)
+                .aValider(ticketsAvalider)
+                .aLivrer(ticketsAlivrer)
+                .aTester(ticketsATester)
+                .refuseEnRecette(ticketsRefuseEnRecette)
+                .valideEnRecette(ticketsValideEnRecette)
+                .livre(ticketsLivre)
+                .termine(ticketsTermine)
+                .testCroise(ticketsTestCroise)
+                .valide(ticketsValide)
+                .mergeRequest(ticketsMergeRequest)
+                .overEstimated(ticketsOverEstimated)
+                .underEstimated(ticketsUnderEstimated)
+                .build();
+        StoryPoint storyPoints = StoryPoint.builder()
+                .total(spTotal)
+                .aQualifier(spAQualifier)
+                .bacAffinage(spBacAffinage)
+                .enAttente(spEnAttente)
+                .aFaire(spAFaire)
+                .enCours(spEnCours)
+                .abandonne(spAbandonne)
+                .devTermine(spDevTermine)
+                .aValider(spAvalider)
+                .aLivrer(spAlivrer)
+                .aTester(spATester)
+                .refuseEnRecette(spRefuseEnRecette)
+                .valideEnRecette(spValideEnRecette)
+                .livre(spLivre)
+                .termine(spTermine)
+                .testCroise(spTestCroise)
+                .mergeRequest(spMergeRequest)
+                .build();
         //Création d'un objet Collaborateur
         return Collaborator.builder()
                 .accountId(accountId)
@@ -269,41 +330,8 @@ public class JiraAPI {
                 .loggedTime(timespent)
                 .estimatedTime(estimated)
                 .remainingTime(remaining)
-                .ticketsTotal(ticketsTotal)
-                .ticketsAqualifier(ticketsAQualifier)
-                .ticketsBacAffinage(ticketsBacAffinage)
-                .ticketsEnAttente(ticketsEnAttente)
-                .ticketsAfaire(ticketsAFaire)
-                .ticketsEncours(ticketsEnCours)
-                .ticketsAbandonne(ticketsAbandonne)
-                .ticketsDevTermine(ticketsDevTermine)
-                .ticketsAvalider(ticketsAvalider)
-                .ticketsAlivrer(ticketsAlivrer)
-                .ticketsATester(ticketsATester)
-                .ticketsRefuseEnRecette(ticketsRefuseEnRecette)
-                .ticketsValideEnRecette(ticketsValideEnRecette)
-                .ticketsLivre(ticketsLivre)
-                .ticketsTermine(ticketsTermine)
-                .ticketsTestCroise(ticketsTestCroise)
-                .ticketsValide(ticketsValide)
-                .ticketsMergeRequest(ticketsMergeRequest)
-                .spTotal(spTotal)
-                .spAqualifier(spAQualifier)
-                .spBacAffinage(spBacAffinage)
-                .spEnAttente(spEnAttente)
-                .spAfaire(spAFaire)
-                .spEncours(spEnCours)
-                .spAbandonne(spAbandonne)
-                .spDevTermine(spDevTermine)
-                .spAvalider(spAvalider)
-                .spAlivrer(spAlivrer)
-                .spATester(spATester)
-                .spRefuseEnRecette(spRefuseEnRecette)
-                .spValideEnRecette(spValideEnRecette)
-                .spLivre(spLivre)
-                .spTermine(spTermine)
-                .spTestCroise(spTestCroise)
-                .spMergeRequest(spMergeRequest)
+                .storyPoints(storyPoints)
+                .tickets(tickets)
                 .assignedIssues(assignedIssues)
                 .build();
     }
@@ -335,7 +363,7 @@ public class JiraAPI {
                 FieldsDto fDto = i.getFields();
                 String statut = fDto.getStatus().getName();
                 String priority = fDto.getPriority().getName();
-                if (!DONE_BUGS.contains(statut)) {
+                if (!BUGS_DONE.contains(statut)) {
                     incidentsBugs[0]++;
                     switch (priority) {
                         case PRIORITY_LOW:

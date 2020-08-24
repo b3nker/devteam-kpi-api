@@ -9,6 +9,7 @@ import com.jira.report.dto.agile.SprintDto;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -90,8 +91,8 @@ public class JiraAgileAPI {
      * @return A Sprint object corresponding to the lastly active in the API for the specified team
      */
     public Sprint getLastlyActiveTeamSprint(String teamName, String projectBoardId) {
-        String startDate = "";
-        String endDate = "";
+        LocalDateTime startDate = null;
+        LocalDateTime endDate = null;
         String sprintName = "";
         int sprintId = 0;
         String name;
@@ -104,8 +105,8 @@ public class JiraAgileAPI {
             name = sprintsDto[i].getName().toLowerCase();
             if (active.equals(sprintsDto[i].getState()) && name.contains(teamNameLC)) {
                 sprintName = sprintsDto[i].getName();
-                startDate = sprintsDto[i].getStartDate();
-                endDate = sprintsDto[i].getEndDate();
+                startDate = Sprint.toLocalDateTime(sprintsDto[i].getStartDate());
+                endDate = Sprint.toLocalDateTime(sprintsDto[i].getEndDate());
                 sprintId = sprintsDto[i].getId();
                 break;
             }
@@ -113,8 +114,10 @@ public class JiraAgileAPI {
         return Sprint.builder()
                 .id(sprintId)
                 .name(sprintName)
-                .startDate(Sprint.toLocalDateTime(startDate))
-                .endDate(Sprint.toLocalDateTime(endDate))
+                .startDate(startDate)
+                .endDate(endDate)
+                .timeLeft(Sprint.timeLeftOnSprint(endDate))
+                .totalTime(Sprint.durationOfSprint(startDate, endDate))
                 .build();
     }
 

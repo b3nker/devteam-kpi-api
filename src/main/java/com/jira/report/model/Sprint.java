@@ -60,8 +60,7 @@ public class Sprint {
 
     public static int timeLeftOnSprint(LocalDateTime end){
         int workingDays = Sprint.getWorkingDays(LocalDateTime.now(), end);
-        int hours = workingDays*8;
-        return toIntExact(hours);
+        return workingDays*8;
     }
 
 }
