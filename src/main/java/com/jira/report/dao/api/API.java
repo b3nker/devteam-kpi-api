@@ -53,26 +53,37 @@ public class API {
         String teamNameAlpha = jiraReportConfigIndividuals.getTeamNameOne();
         String teamNameBeta = jiraReportConfigIndividuals.getTeamNameTwo();
         String teamNameGamma = jiraReportConfigIndividuals.getTeamNameThree();
-        List<String> teamAlpha = jiraReportConfigIndividuals.getTeamOne();
-        List<String> teamBeta = jiraReportConfigIndividuals.getTeamTwo();
-        List<String> teamGamma = jiraReportConfigIndividuals.getTeamThree();
-        Sprint sprintActifAlpha = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameAlpha, jiraReportConfigGlobal.getBoardIdOne());
-        Sprint sprintActifBeta = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameBeta, jiraReportConfigGlobal.getBoardIdTwo());
-        Sprint sprintActifGamma = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameGamma, jiraReportConfigGlobal.getBoardIdThree());
+        String teamNameDelta = jiraReportConfigIndividuals.getTeamNameFour();
         String boardIdAlpha = jiraReportConfigGlobal.getBoardIdOne();
         String boardIdBeta = jiraReportConfigGlobal.getBoardIdTwo();
         String boardIdGamma = jiraReportConfigGlobal.getBoardIdThree();
+        String boardIdDelta = jiraReportConfigGlobal.getBoardIdFour();
+        List<String> teamAlpha = jiraReportConfigIndividuals.getTeamOne();
+        List<String> teamBeta = jiraReportConfigIndividuals.getTeamTwo();
+        List<String> teamGamma = jiraReportConfigIndividuals.getTeamThree();
+        List<String> teamDelta = jiraReportConfigIndividuals.getTeamFour();
+        Sprint sprintActifAlpha = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameAlpha, boardIdAlpha);
+        Sprint sprintActifBeta = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameBeta, boardIdBeta);
+        Sprint sprintActifGamma = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameGamma, boardIdGamma);
+        Sprint sprintActifDelta = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameDelta, boardIdDelta);
         this.runProjectName = jiraReportConfigGlobal.getRunProjectName();
         this.projectName = jiraReportConfigGlobal.getProjectName();
+
         this.activeSprints.put(teamNameAlpha, sprintActifAlpha);
         this.activeSprints.put(teamNameBeta, sprintActifBeta);
         this.activeSprints.put(teamNameGamma, sprintActifGamma);
+        this.activeSprints.put(teamNameDelta, sprintActifDelta);
+
         this.teamPair.put(teamNameAlpha, boardIdAlpha);
         this.teamPair.put(teamNameBeta, boardIdBeta);
         this.teamPair.put(teamNameGamma, boardIdGamma);
+        this.teamPair.put(teamNameDelta, boardIdDelta);
+
         this.teams.put(teamNameAlpha, teamAlpha);
         this.teams.put(teamNameBeta, teamBeta);
         this.teams.put(teamNameGamma, teamGamma);
+        this.teams.put(teamNameDelta, teamDelta);
+
         this.bug = jiraReportConfigQuery.getBug();
         this.incident = jiraReportConfigQuery.getIncident();
         this.planningPath = jiraReportConfigExternal.getPlanning();
@@ -80,7 +91,6 @@ public class API {
         this.unassignedAccountId = jiraReportConfigQuery.getUnassignedAccountId();
         this.nbDaysBacklog = jiraReportConfigGlobal.getNbDaysBacklog();
         this.nbSprintsRetrospective = jiraReportConfigGlobal.getNbSprintsRetrospective();
-
     }
 
     /**

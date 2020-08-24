@@ -452,17 +452,10 @@ public class JiraAPI {
     /**
      * Creates a Double. Retrieve the number of storypoints linked to issueId
      * @param issueID Ticket Id
-     * @param projectName Project name from which we desire to collect data
      * @return Number of story points assigned to an issue
      */
-    public double getStoryPoint(String issueID, String projectName) {
-        /*
-        Variables
-         */
-        String request = baseUrl + jiraApiUrl + SEARCH_JQL_PROJECT + projectName + "+AND+issue=" + issueID;
-        /*
-        Logic
-         */
+    public double getStoryPoint(String issueID) {
+        String request = baseUrl + jiraApiUrl + "search?jql=issue=" + issueID;
         JiraDto jDto = connectToJiraAPI(request);
         IssueDto i = jDto.getIssues()[0];
         return i.getFields().getStoryPoints();

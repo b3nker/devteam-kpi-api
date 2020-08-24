@@ -80,7 +80,7 @@ public class JiraGreenhopperAPI {
         finalCommitment += allIssuesEstimateSum;
         //Added issues
         for (String issueKey: addedIssues) {
-            addedWork += jiraAPI.getStoryPoint(issueKey, this.projectName);
+            addedWork += jiraAPI.getStoryPoint(issueKey);
         }
         commitment[0] = initialCommitment;
         commitment[1] = finalCommitment;
