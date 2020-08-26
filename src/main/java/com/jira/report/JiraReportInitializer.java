@@ -37,10 +37,13 @@ public class JiraReportInitializer {
         backlogDao.loadBacklog();
         loadingDataStopWatch.stop();
 
+         */
+
+
         loadingDataStopWatch.start("loadCollaborators");
         collaboratorDao.loadCollaborators();
         loadingDataStopWatch.stop();
-         */
+
 
         loadingDataStopWatch.start("loadRetrospectives");
         retrospectiveDao.loadRetrospectives();
