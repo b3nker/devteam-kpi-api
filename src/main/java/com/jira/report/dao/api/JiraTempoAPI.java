@@ -49,7 +49,7 @@ public class JiraTempoAPI {
     }
 
     /**
-     * Creates an TempoDto object
+     * Creates a TempoDto object
      * @param request The request we want to GET data from
      * @return A TempoDto object containing parsed data from the GET request to the API
      */

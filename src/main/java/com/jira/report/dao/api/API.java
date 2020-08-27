@@ -15,13 +15,11 @@ import java.util.*;
 @Service
 public class API {
     private final JiraAPI jiraAPI;
-    private final String projectBoardId;
     private final int maxResults;
     private final JiraGreenhopperAPI jiraGreenhopperAPI;
     private final JiraAgileAPI jiraAgileAPI;
     private final ExternalFiles externalFiles;
     private final String projectName;
-    private final String runProjectName;
     private final int nbSprintsRetrospective;
     private final int nbDaysBacklog;
     private final String unassignedAccountId;
@@ -31,12 +29,13 @@ public class API {
     private final String planningPath;
     private final String releasePath;
     private final String bug;
-    private final String incident;
 
     //Settings
     static final DateTimeFormatter dtfEurope = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     static final DateTimeFormatter dtfAmerica = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     static final LocalDateTime TODAY = LocalDateTime.now();
+    static final String UNASSIGNED_NAME = "Assigné";
+    static final String UNASSIGNED_FIRST_NAME = "Non";
 
     public API(JiraAPI jiraAPI, JiraGreenhopperAPI jiraGreenhopperAPI,
                JiraAgileAPI jiraAgileAPI, ExternalFiles externalFiles,
@@ -49,7 +48,6 @@ public class API {
         this.jiraAgileAPI = jiraAgileAPI;
         this.externalFiles = externalFiles;
         this.maxResults = jiraReportConfigQuery.getMaxResults();
-        this.projectBoardId = jiraReportConfigGlobal.getBoardIdProject();
         String teamNameAlpha = jiraReportConfigIndividuals.getTeamNameOne();
         String teamNameBeta = jiraReportConfigIndividuals.getTeamNameTwo();
         String teamNameGamma = jiraReportConfigIndividuals.getTeamNameThree();
@@ -66,26 +64,20 @@ public class API {
         Sprint sprintActifBeta = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameBeta, boardIdBeta);
         Sprint sprintActifGamma = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameGamma, boardIdGamma);
         Sprint sprintActifDelta = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameDelta, boardIdDelta);
-        this.runProjectName = jiraReportConfigGlobal.getRunProjectName();
         this.projectName = jiraReportConfigGlobal.getProjectName();
-
         this.activeSprints.put(teamNameAlpha, sprintActifAlpha);
         this.activeSprints.put(teamNameBeta, sprintActifBeta);
         this.activeSprints.put(teamNameGamma, sprintActifGamma);
         this.activeSprints.put(teamNameDelta, sprintActifDelta);
-
         this.teamPair.put(teamNameAlpha, boardIdAlpha);
         this.teamPair.put(teamNameBeta, boardIdBeta);
         this.teamPair.put(teamNameGamma, boardIdGamma);
         this.teamPair.put(teamNameDelta, boardIdDelta);
-
         this.teams.put(teamNameAlpha, teamAlpha);
         this.teams.put(teamNameBeta, teamBeta);
         this.teams.put(teamNameGamma, teamGamma);
         this.teams.put(teamNameDelta, teamDelta);
-
         this.bug = jiraReportConfigQuery.getBug();
-        this.incident = jiraReportConfigQuery.getIncident();
         this.planningPath = jiraReportConfigExternal.getPlanning();
         this.releasePath = jiraReportConfigExternal.getRelease();
         this.unassignedAccountId = jiraReportConfigQuery.getUnassignedAccountId();
@@ -124,10 +116,19 @@ public class API {
                 c.remove(this.unassignedAccountId);
             }else{
                 unassigned = Collaborator.builder()
-                        .accountId(this.unassignedAccountId)
+                        .firstName(UNASSIGNED_FIRST_NAME)
+                        .name(UNASSIGNED_NAME)
+                        .emailAddress("")
+                        .accountId(this.unassignedAccountId + ' ' + label)
+                        .storyPoints(StoryPoint.builder().build())
+                        .tickets(Ticket.builder().build())
+                        .role("")
+                        .assignedIssues(new ArrayList<>())
                         .build();
             }
             c.put(unassigned.getAccountId(), unassigned);
+            for(Map.Entry<String,Collaborator> d : c.entrySet()){
+            }
             collaborators.putAll(c);
         }
         return collaborators;

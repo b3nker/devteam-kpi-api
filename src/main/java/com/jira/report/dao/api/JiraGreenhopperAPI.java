@@ -90,7 +90,7 @@ public class JiraGreenhopperAPI {
     }
 
     /**
-     * Creates an JiraGreenHopperDto object
+     * Creates a JiraGreenHopperDto object
      * @param request The request we want to GET data from
      * @return A JiraGreenHopperDto object containing parsed data from the GET request to the API
      */

@@ -94,7 +94,7 @@ public class JiraAPI {
      * @param s Sprint, to request data on a period of time and fetch data in JiraTempoAPI
      * @param projectName Project name linked to the specified sprint
      * @param maxResults Number of results returned from GET method.
-     * @return A Collaborator object
+     * @return A Collaborator object, null if no ticket is assigned to it
      */
     public Collaborator getCollaborator(String accId, String label, Sprint s, String projectName, int maxResults) {
           /*
@@ -490,7 +490,7 @@ public class JiraAPI {
     }
 
     /**
-     * Creates an JiraDto object
+     * Creates a JiraDto object
      * @param request The request we want to GET data from
      * @return A JiraDto object containing parsed data from the GET request to the API
      */
