@@ -33,17 +33,18 @@ public class JiraGreenhopperAPI {
 
     /**
      * Creates a list of strings. Each string corresponds to an issue that has been added in the specified input sprint
-     * @param s SprintCommitment object from which we want to get added issues
+     * @param id Sprint id,
      * @param boardId Board to which the sprint is linked
      * @return All added issues as list of strings
      */
-    public List<String> getIssueKeys(SprintCommitment s, String boardId){
-        String request = this.baseUrl + this.greenhopperUrl + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + s.getId();
+    public List<String> getAddedIssueKeys(int id, String boardId){
+        String request = this.baseUrl + this.greenhopperUrl + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + id;
         JiraGreenHopperDto greenHopperDto = connectToJiraAPI(request);
         assert greenHopperDto != null;
         Set<String> addedIssues = greenHopperDto.getContents().getIssueKeysAddedDuringSprint().keySet();
         return new ArrayList<>(addedIssues);
     }
+
 
     /**
      * Creates an array of double by fetching data on initial commitment,...

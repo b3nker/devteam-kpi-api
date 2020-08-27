@@ -509,6 +509,55 @@ public class JiraAPI {
     }
 
     /**
+     * Creates a Ticket. Retrieve the number of tickets (and their issuetype) in issuesID list and merge information
+     * in a unique object
+     * @param issuesID List of issues
+     * @return A Ticket object
+     */
+    public Ticket getTicketsInfos(List<String> issuesID){
+        int totalTickets = issuesID.size();
+        int ticketsBug = 0;
+        int ticketsUS = 0;
+        int ticketsTask = 0;
+        String issueType;
+        for(String issue: issuesID){
+            String request = baseUrl + jiraApiUrl + "search?jql=issue=" + issue;
+            JiraDto jDto = connectToJiraAPI(request);
+            IssueDto i = jDto.getIssues()[0];
+            issueType = i.getFields().getIssuetype().getName();
+            if(JQL_ISSUE_TYPE_BUG.equals(issueType)){
+                ticketsBug++;
+            }else if(JQL_ISSUE_TYPE_TASK.equals(issueType)){
+                ticketsTask++;
+            }else if(JQL_ISSUE_TYPE_US.equals(issueType)){
+                ticketsUS++;
+            }
+        }
+        return Ticket.builder()
+                .total(totalTickets)
+                .ticketsTask(ticketsTask)
+                .ticketsBug(ticketsBug)
+                .ticketsUS(ticketsUS)
+                .build();
+    }
+
+    /**
+     * Creates a Double. Retrieve the number of estimated hours in issuesID list.
+     * @param issuesID List of issues
+     * @return A Double representing estimated time on issuesID tickets (in hours)
+     */
+    public double getEstimatedTime(List<String> issuesID){
+        double addedWork = 0;
+        for(String issue: issuesID){
+            String request = baseUrl + jiraApiUrl + "search?jql=issue=" + issue;
+            JiraDto jDto = connectToJiraAPI(request);
+            IssueDto i = jDto.getIssues()[0];
+            addedWork += i.getFields().getTimeoriginalestimate() / (double) 3600;
+        }
+        return addedWork;
+    }
+
+    /**
      * Creates a JiraDto object
      * @param request The request we want to GET data from
      * @return A JiraDto object containing parsed data from the GET request to the API

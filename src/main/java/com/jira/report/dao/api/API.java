@@ -95,6 +95,14 @@ public class API {
             String label = entry.getKey();
             Team t = getTeam(teams.get(label), label);
             activeSprints.get(label).setTeam(t);
+            //Set addedWork
+            List<String> addedIssues = this.jiraGreenhopperAPI.getAddedIssueKeys
+                    (activeSprints.get(label).getId(), this.teamPair.get(activeSprints.get(label).getTeam().getName())) ;
+            Ticket addedTickets = this.jiraAPI.getTicketsInfos(addedIssues);
+            double addedWork = this.jiraAPI.getEstimatedTime(addedIssues);
+            activeSprints.get(label).setAddedTickets(addedTickets);
+            activeSprints.get(label).setAddedWork(addedWork);
+
         }
         return activeSprints;
     }
@@ -127,8 +135,6 @@ public class API {
                         .build();
             }
             c.put(unassigned.getAccountId(), unassigned);
-            for(Map.Entry<String,Collaborator> d : c.entrySet()){
-            }
             collaborators.putAll(c);
         }
         return collaborators;
@@ -165,7 +171,7 @@ public class API {
             for (SprintCommitment sprint : sprints) {
                 if(sprint.getId() != 0){
                     double[] commitment = jiraGreenhopperAPI.getCommitment(sprint, teamPair.get(teamName));
-                    List<String> issueKeys = jiraGreenhopperAPI.getIssueKeys(sprint, teamPair.get(teamName));
+                    List<String> issueKeys = jiraGreenhopperAPI.getAddedIssueKeys(sprint.getId(), teamPair.get(teamName));
                     sprint.setAddedIssueKeys(issueKeys);
                     sprint.setInitialCommitment(commitment[0]);
                     sprint.setFinalCommitment(commitment[1]);

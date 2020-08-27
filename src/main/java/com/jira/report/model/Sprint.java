@@ -19,6 +19,8 @@ public class Sprint {
     private int totalTime; // in hours without considering public holidays
     private LocalDateTime endDate;
     private Team team;
+    private double addedWork;
+    private Ticket addedTickets;
 
     /*
     Return the number of working days between 2 LocalDateTime
