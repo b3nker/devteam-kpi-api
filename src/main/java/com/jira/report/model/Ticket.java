@@ -26,4 +26,7 @@ public class Ticket {
     private int mergeRequest;
     private int overEstimated;
     private int underEstimated;
+    private int ticketsBug;
+    private int ticketsTask;
+    private int ticketsUS;
 }

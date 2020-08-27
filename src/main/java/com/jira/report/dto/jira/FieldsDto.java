@@ -8,6 +8,7 @@ public class FieldsDto {
     private AssigneeDto assignee;
     private StatusDto status;
     private PriorityDto priority;
+    private IssueTypeDto issuetype;
     private int timeoriginalestimate;
     private int timeestimate;
     private int timespent;

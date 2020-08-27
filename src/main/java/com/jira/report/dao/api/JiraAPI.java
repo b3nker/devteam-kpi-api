@@ -72,6 +72,9 @@ public class JiraAPI {
     //Settings
     private static final double LOWER_BOUND_MULTIPLIER = 0.8;
     private static final double UPPER_BOUND_MULTIPLIER = 1.2;
+    private static final String JQL_ISSUE_TYPE_TASK = "Tâche";
+    private static final String JQL_ISSUE_TYPE_US = "Récit utilisateur";
+    private static final String JQL_ISSUE_TYPE_BUG = "Bug";
 
     public JiraAPI(JiraTempoAPI jiraTempoAPI,
                    JiraReportConfigQuery jiraReportConfigQuery,
@@ -143,12 +146,16 @@ public class JiraAPI {
         int ticketsMergeRequest = 0;
         int ticketsOverEstimated = 0;
         int ticketsUnderEstimated = 0;
+        int ticketsBug = 0;
+        int ticketsUS = 0;
+        int ticketsTask = 0;
         String accountId = "";
         String emailAddress = "";
         String nom = "";
         String prenom = "";
         String role;
         String statut;
+        String issueType;
         List<String> assignedIssues = new ArrayList<>();
         JiraDto c = connectToJiraAPI(request);
         ticketsTotal = c.getTotal();
@@ -256,6 +263,15 @@ public class JiraAPI {
                 default:
                     break;
             }
+            //Issuetype
+            issueType = i.getFields().getIssuetype().getName();
+            if(JQL_ISSUE_TYPE_BUG.equals(issueType)){
+                ticketsBug++;
+            }else if(JQL_ISSUE_TYPE_TASK.equals(issueType)){
+                ticketsTask++;
+            }else if(JQL_ISSUE_TYPE_US.equals(issueType)){
+                ticketsUS++;
+            }
             // Number of overestimated or underestimated tickets
             if(AT_LEAST_DEV_DONE.contains(statut)){
                 double ticketLoggedTime = jiraTempoAPI.getWorklogByIssue(accountId, i.getKey(),
@@ -300,6 +316,9 @@ public class JiraAPI {
                 .mergeRequest(ticketsMergeRequest)
                 .overEstimated(ticketsOverEstimated)
                 .underEstimated(ticketsUnderEstimated)
+                .ticketsBug(ticketsBug)
+                .ticketsUS(ticketsUS)
+                .ticketsTask(ticketsTask)
                 .build();
         StoryPoint storyPoints = StoryPoint.builder()
                 .total(spTotal)
