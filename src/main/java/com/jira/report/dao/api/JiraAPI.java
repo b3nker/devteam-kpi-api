@@ -272,8 +272,7 @@ public class JiraAPI {
             }else if(JQL_ISSUE_TYPE_US.equals(issueType)){
                 ticketsUS++;
             }
-            // Number of overestimated or underestimated tickets
-            if(AT_LEAST_DEV_DONE.contains(statut)){
+            if(AT_LEAST_DEV_DONE.contains(statut) && !request.contains("null")){
                 double ticketLoggedTime = jiraTempoAPI.getWorklogByIssue(accountId, i.getKey(),
                         s.getStartDate().format(dtfAmerica),  s.getEndDate().format(dtfAmerica));
                 if(ticketLoggedTime >= ticketEstimatedTime * UPPER_BOUND_MULTIPLIER){
@@ -282,6 +281,7 @@ public class JiraAPI {
                     ticketsOverEstimated++;
                 }
             }
+
         }
         // When assignee is null
         if (request.contains("null")) {
