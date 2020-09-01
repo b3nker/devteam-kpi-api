@@ -26,7 +26,6 @@ import static java.time.temporal.ChronoUnit.DAYS;
 public class JiraAPI {
 
     private static final String JQL_SPRINT = "+AND+sprint=";
-    private static final String JQL_LABELS = "+AND+labels=";
     private final WebClient jiraWebClient;
     private final JiraTempoAPI jiraTempoAPI;
     private final String baseUrl;
@@ -93,18 +92,17 @@ public class JiraAPI {
     /**
      * Creates a Collaborator object. Fetch "timespent" data using method from JiraTempoAPI
      * @param accId Collaborator accountId
-     * @param label Corresponds to team name, it's contained in jql "labels" field
      * @param s Sprint, to request data on a period of time and fetch data in JiraTempoAPI
      * @param projectName Project name linked to the specified sprint
      * @param maxResults Number of results returned from GET method.
      * @return A Collaborator object, null if no ticket is assigned to it
      */
-    public Collaborator getCollaborator(String accId, String label, Sprint s, String projectName, int maxResults) {
+    public Collaborator getCollaborator(String accId, Sprint s, String projectName, int maxResults) {
           /*
         Variables
         */
         String request = baseUrl + jiraApiUrl + SEARCH_JQL_PROJECT + projectName + JQL_ASSIGNEE + accId +
-                JQL_SPRINT + s.getId() + JQL_LABELS + label + JQL_MAX_RESULTS + maxResults;
+                JQL_SPRINT + s.getId() + JQL_MAX_RESULTS + maxResults;
         double timespent = 0;
         double estimated = 0;
         double remaining = 0;

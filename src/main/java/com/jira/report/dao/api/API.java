@@ -215,7 +215,7 @@ public class API {
             if(accId.isEmpty()){
                 accId = null;
             }
-            if ((c = jiraAPI.getCollaborator(accId, teamName, activeSprints.get(teamName),this.projectName,maxResults)) != null) {
+            if ((c = jiraAPI.getCollaborator(accId, activeSprints.get(teamName),this.projectName,maxResults)) != null) {
                 if(planning.containsKey(accId)){
                     Float[] timeValues = planning.get(accId);
                     c.setTotalWorkingTime(timeValues[0]);
