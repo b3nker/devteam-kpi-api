@@ -2,9 +2,9 @@ package com.jira.report.dao.api;
 
 import com.jira.report.config.JiraReportConfigApi;
 import com.jira.report.config.JiraReportConfigGlobal;
-import com.jira.report.model.SprintCommitment;
 import com.jira.report.dto.greenhopper.ContentsDto;
 import com.jira.report.dto.greenhopper.JiraGreenHopperDto;
+import com.jira.report.model.entity.SprintCommitmentEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -15,7 +15,6 @@ import java.util.Set;
 @Service
 public class JiraGreenhopperAPI {
     private final WebClient jiraWebClient;
-    private final String projectName;
     private final JiraAPI jiraAPI;
     private final String baseUrl;
     private final String greenhopperUrl;
@@ -27,7 +26,6 @@ public class JiraGreenhopperAPI {
         this.jiraWebClient = jiraWebClient;
         this.baseUrl = jiraReportConfigApi.getBaseUrl();
         this.jiraAPI = jiraAPI;
-        this.projectName = jiraReportConfigGlobal.getProjectName();
         this.greenhopperUrl = jiraReportConfigApi.getJiraGreenhopperApiUrl();
     }
 
@@ -37,7 +35,7 @@ public class JiraGreenhopperAPI {
      * @param boardId Board to which the sprint is linked
      * @return All added issues as list of strings
      */
-    public List<String> getAddedIssueKeys(int id, String boardId){
+    public List<String> getAddedIssueKeys(Long id, String boardId){
         String request = this.baseUrl + this.greenhopperUrl + "rapid/charts/sprintreport" + "?rapidViewId=" + boardId + "&sprintId=" + id;
         JiraGreenHopperDto greenHopperDto = connectToJiraAPI(request);
         assert greenHopperDto != null;
@@ -52,7 +50,7 @@ public class JiraGreenhopperAPI {
      * @param boardId Board to which the sprint is linked
      * @return An array of double, collecting SprintCommitment data (initial commitment,...)
      */
-    public double[] getCommitment(SprintCommitment s, String boardId) {
+    public double[] getCommitment(SprintCommitmentEntity s, String boardId) {
         /*
         Variables
          */

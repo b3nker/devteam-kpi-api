@@ -1,22 +1,21 @@
 package com.jira.report.dao.api;
 
-import com.jira.report.config.JiraReportConfigExternal;
-import com.jira.report.model.Release;
-import com.jira.report.model.Sprint;
+import com.jira.report.model.entity.ReleaseEntity;
+import com.jira.report.model.entity.SprintEntity;
 import com.opencsv.CSVParser;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import org.springframework.stereotype.Service;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static com.jira.report.dao.api.API.*;
+import static com.jira.report.dao.api.API.TODAY;
+import static com.jira.report.dao.api.API.dtfEurope;
 import static java.lang.Double.parseDouble;
 import static java.lang.Float.parseFloat;
 import static java.lang.Integer.parseInt;
@@ -37,7 +36,7 @@ public class ExternalFiles {
      * @return A Map containing, for each collaborator, his number of hours on the sprint, and left time as of today
      * @throws IOException, If "planning.csv" cannot be found.
      */
-    public Map<String, Float[]> getPlanning(String planningPath, Sprint sprint) {
+    public Map<String, Float[]> getPlanning(String planningPath, SprintEntity sprint) {
         /*
          Variables
          */
@@ -103,7 +102,6 @@ public class ExternalFiles {
                     }
                     Float[] workTime = {totalWorkingTime,availableTime};
                     planning.put(accountId, workTime);
-                    // System.out.println(accountId + " " + workTime[0] + " " + workTime[1]);
                 }
             }
         } catch (IOException e) {
@@ -119,12 +117,12 @@ public class ExternalFiles {
      * @throws IOException, If file cannot be found
      * @throws ParseException, If file cannot be parsed (illegal character)
      */
-    public List<Release> getReleases(String path) throws IOException, ParseException {
+    public List<ReleaseEntity> getReleases(String path) throws IOException, ParseException {
         SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
         int nbLinesToSkip = 2;
         char valueDot = '.';
         char valueComma = ',';
-        List<Release> releases = new ArrayList<>();
+        List<ReleaseEntity> releases = new ArrayList<>();
         FileReader filereader = new FileReader(path);
         CSVParser parser = new CSVParserBuilder().withSeparator(SEPARATOR).build();
         CSVReader csvReader = new CSVReaderBuilder(filereader)
@@ -137,7 +135,7 @@ public class ExternalFiles {
         while ((infos = csvReader.readNext()) != null) {
             Date startDate = formatter.parse(infos[1]);
             Date endDate = formatter.parse(infos[2]);
-            Release r = Release.builder()
+            ReleaseEntity r = ReleaseEntity.builder()
                     .name(infos[0])
                     .startDate(startDate)
                     .endDate(endDate)

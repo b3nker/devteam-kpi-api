@@ -1,27 +1,31 @@
 package com.jira.report.controller;
 
-import com.jira.report.model.Sprint;
+import com.jira.report.model.entity.SprintEntity;
 import com.jira.report.service.SprintService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import io.swagger.annotations.Api;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collection;
 
 
 @RestController
-@RequestMapping("/")
+@Api(value = "Sprint endpoints")
 public class SprintController {
-    @Autowired
-    private SprintService sprintService;
+    private final SprintService sprintService;
+
+    public SprintController(SprintService sprintService) {
+        this.sprintService = sprintService;
+    }
 
     @GetMapping(value = "/sprint")
-    public Collection<Sprint> getSprintTeam(){
-        return this.sprintService.getSprint();
+    public Collection<SprintEntity> getSprintTeam() {
+        return sprintService.getSprint();
     }
 
     @GetMapping(value = "/sprint/{teamName}")
-    public Sprint getCollaboratorsPerTeamDuringSprint(@PathVariable("teamName") String teamName){
-        return this.sprintService.getSprintTeam(teamName);
+    public SprintEntity getCollaboratorsPerTeamDuringSprint(@PathVariable("teamName") String teamName) {
+        return sprintService.getSprintTeam(teamName);
     }
-
 }

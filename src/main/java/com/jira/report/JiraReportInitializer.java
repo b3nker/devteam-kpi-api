@@ -1,54 +1,50 @@
 package com.jira.report;
 
-import com.jira.report.dao.*;
+import com.jira.report.service.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
+import java.text.ParseException;
 
 @Component
 @AllArgsConstructor
 @Slf4j
 public class JiraReportInitializer {
 
-    private final ReleaseDao releaseDao;
-    private final SprintDao sprintDao;
-    private final BacklogDao backlogDao;
-    private final CollaboratorDao collaboratorDao;
-    private final RetrospectiveDao retrospectiveDao;
-
+    private final ReleaseService releaseService;
+    private final SprintService sprintService;
+    private final BacklogService backlogService;
+    private final CollaboratorService collaboratorService;
+    private final RetrospectiveService retrospectiveService;
 
     @PostConstruct
-    public void loadDataAtStartup() {
+    public void loadDataAtStartup() throws IOException, ParseException {
         StopWatch loadingDataStopWatch = new StopWatch("loadingDataStopWatch");
 
-        loadingDataStopWatch.start("loadReleases");
-        releaseDao.loadReleases();
-        loadingDataStopWatch.stop();
-
         loadingDataStopWatch.start("loadSprints");
-        sprintDao.loadSprints();
+        sprintService.loadSprints();
         loadingDataStopWatch.stop();
 
-        loadingDataStopWatch.start("loadBacklog");
-        backlogDao.loadBacklog();
+        loadingDataStopWatch.start("loadReleases");
+        releaseService.loadReleases();
         loadingDataStopWatch.stop();
-
 
         loadingDataStopWatch.start("loadRetrospectives");
-        retrospectiveDao.loadRetrospectives();
+        retrospectiveService.loadRetrospectives();
         loadingDataStopWatch.stop();
 
         loadingDataStopWatch.start("loadCollaborators");
-        collaboratorDao.loadCollaborators();
+        collaboratorService.loadCollaborators();
         loadingDataStopWatch.stop();
 
-
+        loadingDataStopWatch.start("loadBacklog");
+        backlogService.loadBacklog();
+        loadingDataStopWatch.stop();
 
         log.info("Finished data loading : {}", loadingDataStopWatch.prettyPrint());
     }
-
-
 }

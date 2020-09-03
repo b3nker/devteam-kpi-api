@@ -1,6 +1,11 @@
 spring:
-  codec:
-    max-in-memory-size: 100MB
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      database: reporting
+    codec:
+      max-in-memory-size: 100MB
 
 jira:
   external:
