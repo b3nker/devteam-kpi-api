@@ -7,73 +7,35 @@ import com.jira.report.dto.jira.AssigneeDto;
 import com.jira.report.dto.jira.FieldsDto;
 import com.jira.report.dto.jira.IssueDto;
 import com.jira.report.dto.jira.JiraDto;
-import com.jira.report.model.Collaborator;
-import com.jira.report.model.Sprint;
-import com.jira.report.model.StoryPoint;
-import com.jira.report.model.Ticket;
+import com.jira.report.model.entity.StoryPointEntity;
+import com.jira.report.model.entity.TicketEntity;
+import com.jira.report.model.entity.CollaboratorEntity;
+import com.jira.report.model.entity.SprintEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
-import static com.jira.report.dao.api.API.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import static com.jira.report.dao.api.API.TODAY;
+import static com.jira.report.dao.api.API.dtfAmerica;
+import static com.jira.report.dao.api.constant.APIConstant.*;
 import static java.time.temporal.ChronoUnit.DAYS;
 
 @Service
 @Slf4j
 public class JiraAPI {
 
-    private static final String JQL_SPRINT = "+AND+sprint=";
     private final WebClient jiraWebClient;
     private final JiraTempoAPI jiraTempoAPI;
     private final String baseUrl;
     private final String jiraApiUrl;
     private final Map<String, String> idCollabs;
     private final String unassignedAccountId;
-    // JIRA STATUS & CUSTOM STATUS
-    private static final String A_QUALIFIER = "A qualifier";
-    private static final String A_FAIRE = "A Faire";
-    private static final String BAC_AFFINAGE = "Bac d'affinage";
-    private static final String TERMINE = "Terminé";
-    private static final String LIVRE = "Livré";
-    private static final String VALIDE_RECETTE = "Validé en recette";
-    private static final String VALIDE = "Validé";
-    private static final String ABANDONNE = "Abandonné";
-    private static final String EN_COURS = "En cours";
-    private static final String DEV_TERMINE = "Dév terminé";
-    private static final String REFUSE_RECETTE = "Refusé en recette";
-    private static final String EN_ATTENTE = "En attente";
-    private static final String A_LIVRER = "A Livrer";
-    private static final String A_TESTER = "A tester";
-    private static final String A_VALIDER = "A valider";
-    private static final String TEST_CROISE = "Test croisé";
-    private static final String MERGE_REQUEST = "Merge Request";
-    //Unassigned infos
-    private static final String UNASSIGNED_ROLE = "none";
-    private static final String UNASSIGNED_FIRST_NAME = "Non";
-    private static final String UNASSIGNED_LAST_NAME = "Assigné";
-    //Priority
-    private static final String PRIORITY_LOW = "Low";
-    private static final String PRIORITY_MEDIUM = "Medium";
-    private static final String PRIORITY_HIGH = "High";
-    private static final String PRIORITY_HIGHEST = "Highest";
-    private static final List<String> BUGS_DONE = new ArrayList<>(Arrays.asList(LIVRE, TERMINE, VALIDE_RECETTE, ABANDONNE));
-    private static final List<String> AT_LEAST_DEV_DONE = new ArrayList<>(Arrays.asList(DEV_TERMINE, TEST_CROISE,
-            MERGE_REQUEST, A_LIVRER, A_TESTER, VALIDE_RECETTE, LIVRE, TERMINE));
-    //Queries URI
-    private static final String SEARCH_JQL_PROJECT = "search?jql=project=";
-    private static final String JQL_ASSIGNEE = "+AND+assignee=";
-    private static final String JQL_ISSUE_TYPE = "+AND+issuetype=";
-    private static final String JQL_MAX_RESULTS = "&maxResults=";
-    private static final String JQL_START_AT = "&startAt=";
-    //Settings
-    private static final double LOWER_BOUND_MULTIPLIER = 0.8;
-    private static final double UPPER_BOUND_MULTIPLIER = 1.2;
-    private static final String JQL_ISSUE_TYPE_TASK = "Tâche";
-    private static final String JQL_ISSUE_TYPE_US = "Récit utilisateur";
-    private static final String JQL_ISSUE_TYPE_BUG = "Bug";
 
     public JiraAPI(JiraTempoAPI jiraTempoAPI,
                    JiraReportConfigQuery jiraReportConfigQuery,
@@ -97,7 +59,7 @@ public class JiraAPI {
      * @param maxResults Number of results returned from GET method.
      * @return A Collaborator object, null if no ticket is assigned to it
      */
-    public Collaborator getCollaborator(String accId, Sprint s, String projectName, int maxResults) {
+    public CollaboratorEntity getCollaborator(String accId, String label, SprintEntity s, String projectName, int maxResults) {
           /*
         Variables
         */
@@ -293,7 +255,7 @@ public class JiraAPI {
             //Calling tempo API
             timespent = jiraTempoAPI.getWorklogByAccountID(accId, s.getStartDate().format(dtfAmerica), s.getEndDate().format(dtfAmerica));
         }
-        Ticket tickets = Ticket.builder()
+        TicketEntity tickets = TicketEntity.builder()
                 .total(ticketsTotal)
                 .aQualifier(ticketsAQualifier)
                 .bacAffinage(ticketsBacAffinage)
@@ -318,7 +280,7 @@ public class JiraAPI {
                 .ticketsUS(ticketsUS)
                 .ticketsTask(ticketsTask)
                 .build();
-        StoryPoint storyPoints = StoryPoint.builder()
+        StoryPointEntity storyPointsEntity = StoryPointEntity.builder()
                 .total(spTotal)
                 .aQualifier(spAQualifier)
                 .bacAffinage(spBacAffinage)
@@ -338,7 +300,7 @@ public class JiraAPI {
                 .mergeRequest(spMergeRequest)
                 .build();
         //Création d'un objet Collaborateur
-        return Collaborator.builder()
+        return CollaboratorEntity.builder()
                 .accountId(accountId)
                 .emailAddress(emailAddress)
                 .name(nom)
@@ -347,7 +309,7 @@ public class JiraAPI {
                 .loggedTime(timespent)
                 .estimatedTime(estimated)
                 .remainingTime(remaining)
-                .storyPoints(storyPoints)
+                .storyPoints(storyPointsEntity)
                 .tickets(tickets)
                 .assignedIssues(assignedIssues)
                 .build();
@@ -512,7 +474,7 @@ public class JiraAPI {
      * @param issuesID List of issues
      * @return A Ticket object
      */
-    public Ticket getTicketsInfos(List<String> issuesID){
+    public TicketEntity getTicketsInfos(List<String> issuesID){
         int totalTickets = issuesID.size();
         int ticketsBug = 0;
         int ticketsUS = 0;
@@ -531,7 +493,7 @@ public class JiraAPI {
                 ticketsUS++;
             }
         }
-        return Ticket.builder()
+        return TicketEntity.builder()
                 .total(totalTickets)
                 .ticketsTask(ticketsTask)
                 .ticketsBug(ticketsBug)

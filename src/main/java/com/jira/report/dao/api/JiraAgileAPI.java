@@ -2,10 +2,11 @@ package com.jira.report.dao.api;
 
 import com.jira.report.config.JiraReportConfigApi;
 import com.jira.report.config.JiraReportConfigQuery;
-import com.jira.report.model.Sprint;
-import com.jira.report.model.SprintCommitment;
 import com.jira.report.dto.agile.AgileDto;
 import com.jira.report.dto.agile.SprintDto;
+import com.jira.report.model.entity.SprintCommitmentEntity;
+import com.jira.report.model.entity.SprintEntity;
+import com.jira.report.service.helper.SprintHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -38,14 +39,14 @@ public class JiraAgileAPI {
      * @param projectBoardId BoardId from which the sprints are retrieved
      * @return A list of SprintCommitment objects
      */
-    public List<SprintCommitment> getLastlyClosedSprints(int nbSprints, String teamName, String projectBoardId) {
+    public List<SprintCommitmentEntity> getLastlyClosedSprints(int nbSprints, String teamName, String projectBoardId) {
         /*
         Variables
          */
         int nbSprintsFound = 0;
         boolean lastActiveFound = false;
         String teamNameLC = teamName.toLowerCase();
-        List<SprintCommitment> sc = new ArrayList<>();
+        List<SprintCommitmentEntity> sc = new ArrayList<>();
         String request = baseUrl + jiraAgileUrl + BOARD_URI + projectBoardId + SPRINT_URI;
         /*
         Logic
@@ -59,7 +60,7 @@ public class JiraAgileAPI {
                 String sprintName = sprintsDto[i].getName();
                 if (!lastActiveFound) {
                     if (sprintName.toLowerCase().contains(teamNameLC) && active.equals(sprintsDto[i].getState())) {
-                        sc.add(SprintCommitment.builder()
+                        sc.add(SprintCommitmentEntity.builder()
                                 .name(sprintsDto[i].getName())
                                 .id(sprintsDto[i].getId())
                                 .build());
@@ -68,7 +69,7 @@ public class JiraAgileAPI {
                     }
                 } else {
                     if (sprintsDto[i].getName().toLowerCase().contains(teamNameLC) && nbSprintsFound < nbSprints) {
-                        sc.add(SprintCommitment.builder()
+                        sc.add(SprintCommitmentEntity.builder()
                                 .name(sprintsDto[i].getName())
                                 .id(sprintsDto[i].getId())
                                 .build());
@@ -78,7 +79,7 @@ public class JiraAgileAPI {
             }
         }
         while (nbSprintsFound < nbSprints) {
-            sc.add(SprintCommitment.builder().build());
+            sc.add(SprintCommitmentEntity.builder().build());
             nbSprintsFound++;
         }
         return sc;
@@ -90,11 +91,11 @@ public class JiraAgileAPI {
      * @param projectBoardId BoardId from which the sprints are retrieved
      * @return A Sprint object corresponding to the lastly active in the API for the specified team
      */
-    public Sprint getLastlyActiveTeamSprint(String teamName, String projectBoardId) {
+    public SprintEntity getLastlyActiveTeamSprint(String teamName, String projectBoardId) {
         LocalDateTime startDate = null;
         LocalDateTime endDate = null;
         String sprintName = "";
-        int sprintId = 0;
+        Long sprintId = 0L;
         String name;
         String teamNameLC = teamName.toLowerCase();
         String request = baseUrl + jiraAgileUrl + BOARD_URI + projectBoardId + SPRINT_URI;
@@ -105,19 +106,19 @@ public class JiraAgileAPI {
             name = sprintsDto[i].getName().toLowerCase();
             if (active.equals(sprintsDto[i].getState()) && name.contains(teamNameLC)) {
                 sprintName = sprintsDto[i].getName();
-                startDate = Sprint.toLocalDateTime(sprintsDto[i].getStartDate());
-                endDate = Sprint.toLocalDateTime(sprintsDto[i].getEndDate());
+                startDate = SprintHelper.toLocalDateTime(sprintsDto[i].getStartDate());
+                endDate = SprintHelper.toLocalDateTime(sprintsDto[i].getEndDate());
                 sprintId = sprintsDto[i].getId();
                 break;
             }
         }
-        return Sprint.builder()
+        return SprintEntity.builder()
                 .id(sprintId)
                 .name(sprintName)
                 .startDate(startDate)
                 .endDate(endDate)
-                .timeLeft(Sprint.timeLeftOnSprint(endDate))
-                .totalTime(Sprint.durationOfSprint(startDate, endDate))
+                .timeLeft(SprintHelper.timeLeftOnSprint(endDate))
+                .totalTime(SprintHelper.durationOfSprint(startDate, endDate))
                 .build();
     }
 

@@ -1,7 +1,7 @@
 package com.jira.report.dao.api;
 
 import com.jira.report.config.*;
-import com.jira.report.model.*;
+import com.jira.report.model.entity.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +10,9 @@ import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+import static com.jira.report.dao.api.constant.APIConstant.UNASSIGNED_FIRST_NAME;
+import static com.jira.report.dao.api.constant.APIConstant.UNASSIGNED_NAME;
 
 @Slf4j
 @Service
@@ -25,7 +28,7 @@ public class API {
     private final String unassignedAccountId;
     private final HashMap<String, String> teamPair = new HashMap<>();
     private final HashMap<String, List<String>> teams = new HashMap<>();
-    private final HashMap<String, Sprint> activeSprints = new HashMap<>();
+    private final HashMap<String, SprintEntity> activeSprints = new HashMap<>();
     private final String planningPath;
     private final String releasePath;
     private final String bug;
@@ -34,8 +37,6 @@ public class API {
     static final DateTimeFormatter dtfEurope = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     static final DateTimeFormatter dtfAmerica = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     static final LocalDateTime TODAY = LocalDateTime.now();
-    static final String UNASSIGNED_NAME = "Assigné";
-    static final String UNASSIGNED_FIRST_NAME = "Non";
 
     public API(JiraAPI jiraAPI, JiraGreenhopperAPI jiraGreenhopperAPI,
                JiraAgileAPI jiraAgileAPI, ExternalFiles externalFiles,
@@ -60,10 +61,10 @@ public class API {
         List<String> teamBeta = jiraReportConfigIndividuals.getTeamTwo();
         List<String> teamGamma = jiraReportConfigIndividuals.getTeamThree();
         List<String> teamDelta = jiraReportConfigIndividuals.getTeamFour();
-        Sprint sprintActifAlpha = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameAlpha, boardIdAlpha);
-        Sprint sprintActifBeta = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameBeta, boardIdBeta);
-        Sprint sprintActifGamma = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameGamma, boardIdGamma);
-        Sprint sprintActifDelta = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameDelta, boardIdDelta);
+        SprintEntity sprintActifAlpha = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameAlpha, boardIdAlpha);
+        SprintEntity sprintActifBeta = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameBeta, boardIdBeta);
+        SprintEntity sprintActifGamma = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameGamma, boardIdGamma);
+        SprintEntity sprintActifDelta = jiraAgileAPI.getLastlyActiveTeamSprint(teamNameDelta, boardIdDelta);
         this.projectName = jiraReportConfigGlobal.getProjectName();
         this.activeSprints.put(teamNameAlpha, sprintActifAlpha);
         this.activeSprints.put(teamNameBeta, sprintActifBeta);
@@ -90,15 +91,15 @@ public class API {
      * Service used to retrieve sprints and sprint per team.
      * @return A HashMap containing sprints for each team.
      */
-    public Map<String,Sprint> callJiraSprintAPI() {
+    public Map<String,SprintEntity> callJiraSprintAPI() {
         for (Map.Entry<String, List<String>> entry: teams.entrySet()) {
             String label = entry.getKey();
-            Team t = getTeam(teams.get(label), label);
+            TeamEntity t = getTeam(teams.get(label), label);
             activeSprints.get(label).setTeam(t);
             //Set addedWork
             List<String> addedIssues = this.jiraGreenhopperAPI.getAddedIssueKeys
                     (activeSprints.get(label).getId(), this.teamPair.get(activeSprints.get(label).getTeam().getName())) ;
-            Ticket addedTickets = this.jiraAPI.getTicketsInfos(addedIssues);
+            TicketEntity addedTickets = this.jiraAPI.getTicketsInfos(addedIssues);
             double addedWork = this.jiraAPI.getEstimatedTime(addedIssues);
             activeSprints.get(label).setAddedTickets(addedTickets);
             activeSprints.get(label).setAddedWork(addedWork);
@@ -113,23 +114,23 @@ public class API {
      * Service used to retrieve collaborators data
      * @return A HashMap containing all collaborators data
      */
-    public Map<String, Collaborator> callJiraCollabSprintAPI() {
-        HashMap<String, Collaborator> collaborators = new HashMap<>();
+    public Map<String, CollaboratorEntity> callJiraCollabSprintAPI() {
+        HashMap<String, CollaboratorEntity> collaborators = new HashMap<>();
         for (Map.Entry<String, List<String>> entry : teams.entrySet()) {
             String label = entry.getKey();
-            Map<String, Collaborator> c = getCollaboratorsPerTeam(teams.get(label), label);
-            Collaborator unassigned = c.get(this.unassignedAccountId);
+            Map<String, CollaboratorEntity> c = getCollaboratorsPerTeam(teams.get(label), label);
+            CollaboratorEntity unassigned = c.get(this.unassignedAccountId);
             if(unassigned != null){
                 unassigned.setAccountId(this.unassignedAccountId + ' ' + label);
                 c.remove(this.unassignedAccountId);
             }else{
-                unassigned = Collaborator.builder()
+                unassigned = CollaboratorEntity.builder()
                         .firstName(UNASSIGNED_FIRST_NAME)
                         .name(UNASSIGNED_NAME)
                         .emailAddress("")
                         .accountId(this.unassignedAccountId + ' ' + label)
-                        .storyPoints(StoryPoint.builder().build())
-                        .tickets(Ticket.builder().build())
+                        .storyPoints(StoryPointEntity.builder().build())
+                        .tickets(TicketEntity.builder().build())
                         .role("")
                         .assignedIssues(new ArrayList<>())
                         .build();
@@ -145,9 +146,9 @@ public class API {
      * Service used to retrieve project's backlog data (number of bugs,...)
      * @return A Backlog object containing project's data
      */
-    public Backlog callJiraBacklogAPI() {
+    public BacklogEntity callJiraBacklogAPI() {
         int[] bugs = jiraAPI.getProjectIncidentBug(projectName, bug,maxResults);
-        return Backlog.builder()
+        return BacklogEntity.builder()
                 .nbBugs(bugs[0])
                 .nbBugsLow(bugs[1])
                 .nbBugsMedium(bugs[2])
@@ -163,23 +164,25 @@ public class API {
      * Service used to retrieve initial and former sprints data (initial commitment,....).
      * @return A map containing retrospective objects.
      */
-    public Map<String, Retrospective> callJiraRetrospectiveAPI() {
-        HashMap<String, Retrospective> retrospectives = new HashMap<>();
-        for (Map.Entry<String,String> entry: teamPair.entrySet()) {
+    public Map<String, RetrospectiveEntity> callJiraRetrospectiveAPI() {
+        HashMap<String, RetrospectiveEntity> retrospectives = new HashMap<>();
+        for (Map.Entry<String, String> entry : teamPair.entrySet()) {
             String teamName = entry.getKey();
-            List<SprintCommitment> sprints = jiraAgileAPI.getLastlyClosedSprints(nbSprintsRetrospective, teamName,teamPair.get(teamName));
-            for (SprintCommitment sprint : sprints) {
-                if(sprint.getId() != 0){
-                    double[] commitment = jiraGreenhopperAPI.getCommitment(sprint, teamPair.get(teamName));
-                    List<String> issueKeys = jiraGreenhopperAPI.getAddedIssueKeys(sprint.getId(), teamPair.get(teamName));
-                    sprint.setAddedIssueKeys(issueKeys);
-                    sprint.setInitialCommitment(commitment[0]);
-                    sprint.setFinalCommitment(commitment[1]);
-                    sprint.setAddedWork(commitment[2]);
-                    sprint.setCompletedWork(commitment[3]);
+            List<SprintCommitmentEntity> sprints = jiraAgileAPI.getLastlyClosedSprints(nbSprintsRetrospective, teamName, teamPair.get(teamName));
+            for (SprintCommitmentEntity sprint : sprints) {
+                if (sprint.getId() != null) {
+                    if (sprint.getId() != 0) {
+                        double[] commitment = jiraGreenhopperAPI.getCommitment(sprint, teamPair.get(teamName));
+                        List<String> issueKeys = jiraGreenhopperAPI.getAddedIssueKeys(sprint.getId(), teamPair.get(teamName));
+                        sprint.setAddedIssueKeys(issueKeys);
+                        sprint.setInitialCommitment(commitment[0]);
+                        sprint.setFinalCommitment(commitment[1]);
+                        sprint.setAddedWork(commitment[2]);
+                        sprint.setCompletedWork(commitment[3]);
+                    }
                 }
             }
-            Retrospective r = Retrospective.builder()
+            RetrospectiveEntity r = RetrospectiveEntity.builder()
                     .teamName(teamName)
                     .sprints(sprints)
                     .build();
@@ -195,7 +198,7 @@ public class API {
      * @throws IOException, If the file cannot be found.
      * @throws ParseException, If the data cannot be parsed
      */
-    public List<Release> getReleases() throws IOException, ParseException {
+    public List<ReleaseEntity> getReleases() throws IOException, ParseException {
         return externalFiles.getReleases(releasePath);
     }
 
@@ -206,16 +209,16 @@ public class API {
      * @param teamName name of the team linked to previous parameter.
      * @return A Map of collaborators for a specific team
      */
-    public Map<String, Collaborator> getCollaboratorsPerTeam(List<String> teamAccId, String teamName) {
+    public Map<String, CollaboratorEntity> getCollaboratorsPerTeam(List<String> teamAccId, String teamName) {
         Map<String, Float[]> planning = externalFiles.getPlanning(planningPath, activeSprints.get(teamName));
-        Map<String, Collaborator> collaborators = new HashMap<>();
-        Collaborator c;
+        Map<String, CollaboratorEntity> collaborators = new HashMap<>();
+        CollaboratorEntity c;
         for (String accId : teamAccId) {
             // In application.yml, unassigned who is defined with a nil value is returned as an empty char
             if(accId.isEmpty()){
                 accId = null;
             }
-            if ((c = jiraAPI.getCollaborator(accId, activeSprints.get(teamName),this.projectName,maxResults)) != null) {
+            if ((c = jiraAPI.getCollaborator(accId, teamName, activeSprints.get(teamName),this.projectName,maxResults)) != null) {
                 if(planning.containsKey(accId)){
                     Float[] timeValues = planning.get(accId);
                     c.setTotalWorkingTime(timeValues[0]);
@@ -233,10 +236,10 @@ public class API {
      * @param teamName Team name linked to previous parameter
      * @return A Team object containing a list of Collaborators and team name.
      */
-    public Team getTeam(List<String> teamAccId, String teamName) {
-        Map<String, Collaborator> collaborators = getCollaboratorsPerTeam(teamAccId, teamName);
-        List<Collaborator> c = new ArrayList<>(collaborators.values());
-        return Team.builder()
+    public TeamEntity getTeam(List<String> teamAccId, String teamName) {
+        Map<String, CollaboratorEntity> collaborators = getCollaboratorsPerTeam(teamAccId, teamName);
+        List<CollaboratorEntity> c = new ArrayList<>(collaborators.values());
+        return TeamEntity.builder()
                 .name(teamName)
                 .collaborators(c)
                 .build();
