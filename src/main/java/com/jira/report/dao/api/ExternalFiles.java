@@ -14,8 +14,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static com.jira.report.dao.api.API.TODAY;
-import static com.jira.report.dao.api.API.dtfEurope;
+import static com.jira.report.dao.api.API.*;
 import static java.lang.Double.parseDouble;
 import static java.lang.Float.parseFloat;
 import static java.lang.Integer.parseInt;
@@ -24,7 +23,7 @@ import static java.lang.Integer.parseInt;
 public class ExternalFiles {
     private static final Character SEPARATOR = ',';
     private static final int INDEX_ACCOUNT_ID = 2;
-    private static final int FIRST_ROW = 4;
+    private static final int FIRST_ROW = 5;
     private static final String RUN_CHAR = "R";
 
     public ExternalFiles(){}
@@ -61,14 +60,17 @@ public class ExternalFiles {
                 csvReader.readNext();
             }
             dates = csvReader.readNext();
+            String startDateFormatted = sprint.getStartDate().format(dtfSmallEurope);
+            String endDateFormatted = sprint.getEndDate().format(dtfSmallEurope);
+            String actualDateFormatted = TODAY.format(dtfSmallEurope);
             for (int i = 0; i < dates.length; i++) {
-                if (sprint.getStartDate().format(dtfEurope).equals(dates[i])) {
+                if (startDateFormatted.equals(dates[i])) {
                     startIndex = i;
                 }
-                if (sprint.getEndDate().format(dtfEurope).equals(dates[i])) {
+                if (endDateFormatted.equals(dates[i])) {
                     endIndex = i;
                 }
-                if (TODAY.format(dtfEurope).equals(dates[i])) {
+                if (actualDateFormatted.equals(dates[i])) {
                     todayIndex = i;
                 }
             }

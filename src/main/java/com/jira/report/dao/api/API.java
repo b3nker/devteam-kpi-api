@@ -35,6 +35,7 @@ public class API {
 
     //Settings
     static final DateTimeFormatter dtfEurope = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    static final DateTimeFormatter dtfSmallEurope = DateTimeFormatter.ofPattern("dd/MM/yy");
     static final DateTimeFormatter dtfAmerica = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     static final LocalDateTime TODAY = LocalDateTime.now();
 
