@@ -86,7 +86,7 @@ public class JiraAPI {
         double spTestCroise = 0;
         double spMergeRequest = 0;
         //
-        int ticketsTotal;
+        int ticketsTotal = 0;
         int ticketsAQualifier = 0;
         int ticketsBacAffinage = 0;
         int ticketsEnAttente = 0;
@@ -118,13 +118,11 @@ public class JiraAPI {
         String issueType;
         List<String> assignedIssues = new ArrayList<>();
         JiraDto c = connectToJiraAPI(request);
-        ticketsTotal = c.getTotal();
         // When assignee has no tickets assigned
-        if (ticketsTotal == 0) {
+        if (c.getTotal() == 0) {
             return null;
         }
         for (IssueDto i : c.getIssues()) {
-            assignedIssues.add(i.getKey());
             statut = i.getFields().getStatus().getName();
             if (i.getFields().getAssignee() != null) {
                 AssigneeDto assignee = i.getFields().getAssignee();
@@ -157,19 +155,15 @@ public class JiraAPI {
             switch (statut) {
                 case A_QUALIFIER:
                     spAQualifier += curStoryPoints;
-                    ticketsAQualifier++;
                     break;
                 case BAC_AFFINAGE:
                     spBacAffinage += curStoryPoints;
-                    ticketsBacAffinage++;
                     break;
                 case EN_ATTENTE:
                     spEnAttente += curStoryPoints;
-                    ticketsEnAttente++;
                     break;
                 case A_FAIRE:
                     spAFaire += curStoryPoints;
-                    ticketsAFaire++;
                     break;
                 case EN_COURS:
                     spEnCours += curStoryPoints;
@@ -177,54 +171,98 @@ public class JiraAPI {
                     break;
                 case ABANDONNE:
                     spAbandonne += curStoryPoints;
-                    ticketsAbandonne++;
                     break;
                 case DEV_TERMINE:
                     spDevTermine += curStoryPoints;
-                    ticketsDevTermine++;
                     break;
                 case A_VALIDER:
                     spAvalider += curStoryPoints;
-                    ticketsAvalider++;
                     break;
                 case A_LIVRER:
                     spAlivrer += curStoryPoints;
-                    ticketsAlivrer++;
                     break;
                 case A_TESTER:
                     spATester += curStoryPoints;
-                    ticketsATester++;
                     break;
                 case REFUSE_RECETTE:
                     spRefuseEnRecette += curStoryPoints;
-                    ticketsRefuseEnRecette++;
                     break;
                 case VALIDE_RECETTE:
                     spValideEnRecette += curStoryPoints;
-                    ticketsValideEnRecette++;
                     break;
                 case LIVRE:
                     spLivre += curStoryPoints;
-                    ticketsLivre++;
                     break;
                 case TERMINE:
                     spTermine += curStoryPoints;
-                    ticketsTermine++;
                     break;
                 case TEST_CROISE:
                     spTestCroise += curStoryPoints;
-                    ticketsTestCroise++;
                     break;
-                case VALIDE:
-                    ticketsValide++;
                 case MERGE_REQUEST:
                     spMergeRequest += curStoryPoints;
-                    ticketsMergeRequest++;
                 default:
                     break;
             }
-            //Issuetype
+            //Setting tickets
             issueType = i.getFields().getIssuetype().getName();
+            if(!JQL_ISSUE_TYPE_SUBTASK.equals(issueType)){
+                assignedIssues.add(i.getKey());
+                ticketsTotal++;
+                switch (statut) {
+                    case A_QUALIFIER:
+                        ticketsAQualifier++;
+                        break;
+                    case BAC_AFFINAGE:
+                        ticketsBacAffinage++;
+                        break;
+                    case EN_ATTENTE:
+                        ticketsEnAttente++;
+                        break;
+                    case A_FAIRE:
+                        ticketsAFaire++;
+                        break;
+                    case EN_COURS:
+                        ticketsEnCours++;
+                        break;
+                    case ABANDONNE:
+                        ticketsAbandonne++;
+                        break;
+                    case DEV_TERMINE:
+                        ticketsDevTermine++;
+                        break;
+                    case A_VALIDER:
+                        ticketsAvalider++;
+                        break;
+                    case A_LIVRER:
+                        ticketsAlivrer++;
+                        break;
+                    case A_TESTER:
+                        ticketsATester++;
+                        break;
+                    case REFUSE_RECETTE:
+                        ticketsRefuseEnRecette++;
+                        break;
+                    case VALIDE_RECETTE:
+                        ticketsValideEnRecette++;
+                        break;
+                    case LIVRE:
+                        ticketsLivre++;
+                        break;
+                    case TERMINE:
+                        ticketsTermine++;
+                        break;
+                    case TEST_CROISE:
+                        ticketsTestCroise++;
+                        break;
+                    case VALIDE:
+                        ticketsValide++;
+                    case MERGE_REQUEST:
+                        ticketsMergeRequest++;
+                    default:
+                        break;
+                }
+            }
             if(JQL_ISSUE_TYPE_BUG.equals(issueType)){
                 ticketsBug++;
             }else if(JQL_ISSUE_TYPE_TASK.equals(issueType)){

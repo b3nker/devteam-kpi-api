@@ -52,5 +52,5 @@ public final class APIConstant {
     public static final String JQL_ISSUE_TYPE_TASK = "Tâche";
     public static final String JQL_ISSUE_TYPE_US = "Récit utilisateur";
     public static final String JQL_ISSUE_TYPE_BUG = "Bug";
-
+    public static final String JQL_ISSUE_TYPE_SUBTASK = "Sous-tâche";
 }
