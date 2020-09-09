@@ -15,6 +15,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.jira.report.dao.api.API.*;
+import static com.jira.report.dao.api.constant.APIConstant.TODAY;
+import static com.jira.report.dao.api.constant.APIConstant.dtfSmallEurope;
 import static java.lang.Double.parseDouble;
 import static java.lang.Float.parseFloat;
 import static java.lang.Integer.parseInt;
@@ -33,7 +35,6 @@ public class ExternalFiles {
      * @param planningPath path to "planning.csv"
      * @param sprint Sprint to get precise start and end date for each team (as a team is assigned to a sprint)
      * @return A Map containing, for each collaborator, his number of hours on the sprint, and left time as of today
-     * @throws IOException, If "planning.csv" cannot be found.
      */
     public Map<String, Float[]> getPlanning(String planningPath, SprintEntity sprint) {
         /*

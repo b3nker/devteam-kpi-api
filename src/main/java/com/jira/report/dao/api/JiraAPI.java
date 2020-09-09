@@ -21,8 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.jira.report.dao.api.API.TODAY;
-import static com.jira.report.dao.api.API.dtfAmerica;
+import static com.jira.report.dao.api.constant.APIConstant.TODAY;
 import static com.jira.report.dao.api.constant.APIConstant.*;
 import static java.time.temporal.ChronoUnit.DAYS;
 

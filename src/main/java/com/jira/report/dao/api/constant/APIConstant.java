@@ -1,5 +1,7 @@
 package com.jira.report.dao.api.constant;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -53,4 +55,7 @@ public final class APIConstant {
     public static final String JQL_ISSUE_TYPE_US = "Récit utilisateur";
     public static final String JQL_ISSUE_TYPE_BUG = "Bug";
     public static final String JQL_ISSUE_TYPE_SUBTASK = "Sous-tâche";
+    public static final DateTimeFormatter dtfSmallEurope = DateTimeFormatter.ofPattern("dd/MM/yy");
+    public static final DateTimeFormatter dtfAmerica = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    public static final LocalDateTime TODAY = LocalDateTime.now();
 }
