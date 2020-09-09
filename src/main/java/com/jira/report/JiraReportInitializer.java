@@ -20,16 +20,18 @@ public class JiraReportInitializer {
     private final BacklogService backlogService;
     private final CollaboratorService collaboratorService;
     private final RetrospectiveService retrospectiveService;
+    private final CommentService commentService;
 
     @PostConstruct
     public void loadDataAtStartup() throws IOException, ParseException {
         StopWatch loadingDataStopWatch = new StopWatch("loadingDataStopWatch");
 
+
         loadingDataStopWatch.start("loadSprints");
         sprintService.loadSprints();
         loadingDataStopWatch.stop();
 
-        /*
+
         loadingDataStopWatch.start("loadReleases");
         releaseService.loadReleases();
         loadingDataStopWatch.stop();
@@ -46,8 +48,10 @@ public class JiraReportInitializer {
         backlogService.loadBacklog();
         loadingDataStopWatch.stop();
 
+        loadingDataStopWatch.start("loadComment");
+        commentService.loadComment();
+        loadingDataStopWatch.stop();
 
-         */
         log.info("Finished data loading : {}", loadingDataStopWatch.prettyPrint());
     }
 }
