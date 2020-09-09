@@ -41,7 +41,7 @@ public final class APIConstant {
     public static final String PRIORITY_HIGHEST = "Highest";
     public static final List<String> BUGS_DONE = new ArrayList<>(Arrays.asList(LIVRE, TERMINE, VALIDE_RECETTE, ABANDONNE));
     public static final List<String> AT_LEAST_DEV_DONE = new ArrayList<>(Arrays.asList(DEV_TERMINE, TEST_CROISE,
-            MERGE_REQUEST, A_LIVRER, A_TESTER, VALIDE_RECETTE, LIVRE, TERMINE));
+            MERGE_REQUEST, A_LIVRER, A_TESTER, A_VALIDER, VALIDE_RECETTE, VALIDE, LIVRE, TERMINE, ABANDONNE));
     //Queries URI
     public static final String SEARCH_JQL_PROJECT = "search?jql=project=";
     public static final String JQL_ASSIGNEE = "+AND+assignee=";

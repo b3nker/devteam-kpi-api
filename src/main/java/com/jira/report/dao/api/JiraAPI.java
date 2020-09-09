@@ -84,7 +84,6 @@ public class JiraAPI {
         double spTermine = 0;
         double spTestCroise = 0;
         double spMergeRequest = 0;
-        //
         int ticketsTotal = 0;
         int ticketsAQualifier = 0;
         int ticketsBacAffinage = 0;
@@ -123,6 +122,7 @@ public class JiraAPI {
         }
         for (IssueDto i : c.getIssues()) {
             statut = i.getFields().getStatus().getName();
+            //Setting assignee's info
             if (i.getFields().getAssignee() != null) {
                 AssigneeDto assignee = i.getFields().getAssignee();
                 accountId = assignee.getAccountId();
@@ -261,24 +261,23 @@ public class JiraAPI {
                     default:
                         break;
                 }
-            }
-            if(JQL_ISSUE_TYPE_BUG.equals(issueType)){
-                ticketsBug++;
-            }else if(JQL_ISSUE_TYPE_TASK.equals(issueType)){
-                ticketsTask++;
-            }else if(JQL_ISSUE_TYPE_US.equals(issueType)){
-                ticketsUS++;
-            }
-            if(AT_LEAST_DEV_DONE.contains(statut) && !request.contains("null")){
-                double ticketLoggedTime = jiraTempoAPI.getWorklogByIssue(accountId, i.getKey(),
-                        s.getStartDate().format(dtfAmerica),  s.getEndDate().format(dtfAmerica));
-                if(ticketLoggedTime >= ticketEstimatedTime * UPPER_BOUND_MULTIPLIER){
-                    ticketsUnderEstimated++;
-                }else if(ticketLoggedTime <= ticketEstimatedTime * LOWER_BOUND_MULTIPLIER){
-                    ticketsOverEstimated++;
+                if(AT_LEAST_DEV_DONE.contains(statut) && !request.contains("null")){
+                    double ticketLoggedTime = jiraTempoAPI.getWorklogByIssue(accountId, i.getKey(),
+                            s.getStartDate().format(dtfAmerica),  s.getEndDate().format(dtfAmerica));
+                    if(ticketLoggedTime >= ticketEstimatedTime * UPPER_BOUND_MULTIPLIER){
+                        ticketsUnderEstimated++;
+                    }else if(ticketLoggedTime <= ticketEstimatedTime * LOWER_BOUND_MULTIPLIER){
+                        ticketsOverEstimated++;
+                    }
+                }
+                if(JQL_ISSUE_TYPE_BUG.equals(issueType)){
+                    ticketsBug++;
+                }else if(JQL_ISSUE_TYPE_TASK.equals(issueType)){
+                    ticketsTask++;
+                }else if(JQL_ISSUE_TYPE_US.equals(issueType)){
+                    ticketsUS++;
                 }
             }
-
         }
         // When assignee is null
         if (request.contains("null")) {
