@@ -200,6 +200,7 @@ public class JiraAPI {
                     break;
                 case MERGE_REQUEST:
                     spMergeRequest += curStoryPoints;
+                    break;
                 default:
                     break;
             }
@@ -256,10 +257,19 @@ public class JiraAPI {
                         break;
                     case VALIDE:
                         ticketsValide++;
+                        break;
                     case MERGE_REQUEST:
                         ticketsMergeRequest++;
+                        break;
                     default:
                         break;
+                }
+                if(JQL_ISSUE_TYPE_BUG.equals(issueType)){
+                    ticketsBug++;
+                }else if(JQL_ISSUE_TYPE_TASK.equals(issueType)){
+                    ticketsTask++;
+                }else if(JQL_ISSUE_TYPE_US.equals(issueType)){
+                    ticketsUS++;
                 }
                 if(AT_LEAST_DEV_DONE.contains(statut) && !request.contains("null")){
                     double ticketLoggedTime = jiraTempoAPI.getWorklogByIssue(accountId, i.getKey(),
@@ -269,13 +279,6 @@ public class JiraAPI {
                     }else if(ticketLoggedTime <= ticketEstimatedTime * LOWER_BOUND_MULTIPLIER){
                         ticketsOverEstimated++;
                     }
-                }
-                if(JQL_ISSUE_TYPE_BUG.equals(issueType)){
-                    ticketsBug++;
-                }else if(JQL_ISSUE_TYPE_TASK.equals(issueType)){
-                    ticketsTask++;
-                }else if(JQL_ISSUE_TYPE_US.equals(issueType)){
-                    ticketsUS++;
                 }
             }
         }
