@@ -49,7 +49,7 @@ public class CommentService {
         commentDao.deleteAll();
         LOGGER.info("Starting to construct Comments objects");
         List<CommentEntity> c = new ArrayList<>();
-        c.add(new CommentEntity((long) 1108, "RAS"));
+        c.add(new CommentEntity((long)1108, "RAS"));
         Collection<CommentEntity> comments;
         comments = c;
         commentDao.saveAll(comments);

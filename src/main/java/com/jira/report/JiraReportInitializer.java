@@ -31,7 +31,7 @@ public class JiraReportInitializer {
         sprintService.loadSprints();
         loadingDataStopWatch.stop();
 
-
+        /*
         loadingDataStopWatch.start("loadReleases");
         releaseService.loadReleases();
         loadingDataStopWatch.stop();
@@ -47,6 +47,7 @@ public class JiraReportInitializer {
         loadingDataStopWatch.start("loadBacklog");
         backlogService.loadBacklog();
         loadingDataStopWatch.stop();
+         */
 
         loadingDataStopWatch.start("loadComment");
         commentService.loadComment();

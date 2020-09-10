@@ -25,13 +25,13 @@ public class CommentController {
     @ApiResponse(code = 200, message = "Comment updated")
     @PutMapping(value = "/comment/{sprintId}")
     public void updateSprintTeam(@PathVariable("sprintId") Long sprintId,
-                                 String comment) {
+                                 @RequestBody String comment) {
         commentService.updateComment(sprintId, comment);
     }
 
     @ApiResponse(code = 200, message = "Comment created")
     @PostMapping(value = "/comment")
-    public void createSprintTeam(CommentEntity commentEntity) {
+    public void createSprintTeam(@RequestBody CommentEntity commentEntity) {
         commentService.createComment(commentEntity.getSprintId(), commentEntity.getComment());
     }
 }
