@@ -25,7 +25,12 @@ public class SprintController {
     }
 
     @GetMapping(value = "/sprint/{teamName}")
-    public SprintEntity getCollaboratorsPerTeamDuringSprint(@PathVariable("teamName") String teamName) {
+    public Collection<SprintEntity> getAllSprintForATeam(@PathVariable("teamName") String teamName) {
+        return sprintService.getSprintsTeam(teamName);
+    }
+
+    @GetMapping(value = "/sprint/{teamName}/last")
+    public SprintEntity getLastSprintOfTeam(@PathVariable("teamName") String teamName) {
         return sprintService.getSprintTeam(teamName);
     }
 }
