@@ -273,10 +273,12 @@ public class JiraAPI {
                 if(AT_LEAST_DEV_DONE.contains(statut) && !request.contains("null")){
                     double ticketLoggedTime = jiraTempoAPI.getWorklogByIssue(accountId, i.getKey(),
                             s.getStartDate().format(dtfAmerica),  s.getEndDate().format(dtfAmerica));
-                    if(ticketLoggedTime >= ticketEstimatedTime * UPPER_BOUND_MULTIPLIER){
-                        ticketsUnderEstimated++;
-                    }else if(ticketLoggedTime <= ticketEstimatedTime * LOWER_BOUND_MULTIPLIER){
-                        ticketsOverEstimated++;
+                    if (ticketEstimatedTime != 0) {
+                        if(ticketLoggedTime >= ticketEstimatedTime * UPPER_BOUND_MULTIPLIER){
+                            ticketsUnderEstimated++;
+                        }else if(ticketLoggedTime <= ticketEstimatedTime * LOWER_BOUND_MULTIPLIER){
+                            ticketsOverEstimated++;
+                        }
                     }
                 }
             }
@@ -288,9 +290,7 @@ public class JiraAPI {
             accountId = unassignedAccountId;
             role = UNASSIGNED_ROLE;
         } else {
-            //Replace ":" with "_"
             role = this.idCollabs.get(accountId);
-            //Calling tempo API
             timespent = jiraTempoAPI.getWorklogByAccountID(accId, s.getStartDate().format(dtfAmerica), s.getEndDate().format(dtfAmerica));
         }
         TicketEntity tickets = TicketEntity.builder()
