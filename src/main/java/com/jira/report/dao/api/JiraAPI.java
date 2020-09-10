@@ -7,10 +7,10 @@ import com.jira.report.dto.jira.AssigneeDto;
 import com.jira.report.dto.jira.FieldsDto;
 import com.jira.report.dto.jira.IssueDto;
 import com.jira.report.dto.jira.JiraDto;
-import com.jira.report.model.entity.StoryPointEntity;
-import com.jira.report.model.entity.TicketEntity;
 import com.jira.report.model.entity.CollaboratorEntity;
 import com.jira.report.model.entity.SprintEntity;
+import com.jira.report.model.entity.StoryPointEntity;
+import com.jira.report.model.entity.TicketEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static com.jira.report.dao.api.constant.APIConstant.TODAY;
 import static com.jira.report.dao.api.constant.APIConstant.*;
 import static java.time.temporal.ChronoUnit.DAYS;
 

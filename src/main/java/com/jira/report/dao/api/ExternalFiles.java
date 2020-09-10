@@ -14,7 +14,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import static com.jira.report.dao.api.API.*;
 import static com.jira.report.dao.api.constant.APIConstant.TODAY;
 import static com.jira.report.dao.api.constant.APIConstant.dtfSmallEurope;
 import static java.lang.Double.parseDouble;

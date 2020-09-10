@@ -47,10 +47,6 @@ public class JiraReportInitializer {
         backlogService.loadBacklog();
         loadingDataStopWatch.stop();
 
-        loadingDataStopWatch.start("loadComment");
-        commentService.loadComment();
-        loadingDataStopWatch.stop();
-
         log.info("Finished data loading : {}", loadingDataStopWatch.prettyPrint());
     }
 }

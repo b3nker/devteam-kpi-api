@@ -5,13 +5,8 @@ import com.jira.report.service.CommentService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.NoSuchElementException;
-
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 
 @RestController
