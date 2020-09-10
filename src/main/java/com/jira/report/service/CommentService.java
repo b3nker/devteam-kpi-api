@@ -45,8 +45,6 @@ public class CommentService {
 
     @Transactional
     public void loadComment(){
-        LOGGER.info("Removing data from the comment collection");
-        commentDao.deleteAll();
         LOGGER.info("Starting to construct Comments objects");
         List<CommentEntity> c = new ArrayList<>();
         c.add(new CommentEntity((long)1108, "RAS"));

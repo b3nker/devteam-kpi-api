@@ -24,8 +24,6 @@ public class BacklogService {
 
     @Transactional
     public void loadBacklog(){
-        LOGGER.info("Removing data from the backlog collection");
-        backlogDao.deleteAll();
         LOGGER.info("Starting to construct Backlog object");
         BacklogEntity backlog = api.callJiraBacklogAPI();
         backlogDao.save(backlog);

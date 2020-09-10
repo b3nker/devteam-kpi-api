@@ -26,8 +26,6 @@ public class SprintService {
 
     @Transactional
     public void loadSprints(){
-        LOGGER.info("Removing data from the sprint collection");
-        sprintDao.deleteAll();
         LOGGER.info("Starting to construct Sprints objects");
         Collection<SprintEntity> sprints = api.callJiraSprintAPI().values();
         sprintDao.saveAll(sprints);
