@@ -205,7 +205,7 @@ public class JiraAPI {
             }
             //Setting tickets
             issueType = i.getFields().getIssuetype().getName();
-            if(!JQL_ISSUE_TYPE_SUBTASK.equals(issueType)){
+            if(!i.getFields().getIssuetype().getSubtask()){
                 assignedIssues.add(i.getKey());
                 ticketsTotal++;
                 switch (statut) {
