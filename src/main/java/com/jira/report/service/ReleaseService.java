@@ -30,8 +30,6 @@ public class ReleaseService {
             ParseException.class
     })
     public void loadReleases() throws IOException, ParseException {
-        LOGGER.info("Removing data from the release collection");
-        releaseDao.deleteAll();
         LOGGER.info("Starting to construct releases objects");
         try {
             List<ReleaseEntity> releases = api.getReleases();

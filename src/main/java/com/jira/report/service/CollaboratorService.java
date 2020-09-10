@@ -26,8 +26,6 @@ public class CollaboratorService {
 
     @Transactional
     public void loadCollaborators() {
-        LOGGER.info("Removing data from the collaborator collection");
-        collaboratorDAO.deleteAll();
         LOGGER.info("Starting to construct Collaborator objects");
         Collection<CollaboratorEntity> collaboratorsSprint = api.callJiraCollabSprintAPI().values();
         collaboratorDAO.saveAll(collaboratorsSprint);

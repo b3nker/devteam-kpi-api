@@ -26,8 +26,6 @@ public class RetrospectiveService {
 
     @Transactional
     public void loadRetrospectives(){
-        LOGGER.info("Removing data from the retrospective collection");
-        retrospectiveDao.deleteAll();
         LOGGER.info("Starting to construct Retrospective objects");
         Collection<RetrospectiveEntity> retrospectives = api.callJiraRetrospectiveAPI().values();
         retrospectiveDao.saveAll(retrospectives);
