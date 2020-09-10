@@ -28,9 +28,9 @@ jira:
       jiraGreenhopperApiUrl: rest/greenhopper/1.0/
       tempoApiUrl: https://api.tempo.io/core/3
       jiraAgileApiUrl: rest/agile/1.0/
-      username: benjamin.kermani@neo9.fr
-      jiraToken: fMoY64hth4lb15FHilYr93F8
-      tempoToken: CHHRzt4Xh6J2fxpAVLUWTaIMvffYxz
+      username: david.moulin@neo9.fr
+      jiraToken: sPJMQMLrQeHtsOr4edRwBDC1
+      tempoToken: r0MuUerIQGNtCaRwiKzttSZP0V8yA8
     query:
       active: active
       maxResults: 100

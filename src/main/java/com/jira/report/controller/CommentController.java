@@ -4,7 +4,14 @@ import com.jira.report.model.entity.CommentEntity;
 import com.jira.report.service.CommentService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.NoSuchElementException;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 
 @RestController
@@ -16,22 +23,17 @@ public class CommentController {
         this.commentService = commentService;
     }
 
-    @ApiResponse(code = 200, message = "Comment retrieved", response = CommentEntity.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Comment Retrieved", response = CommentEntity.class),
+            @ApiResponse(code = 404, message = "Comment not found")})
     @GetMapping(value = "/comment/{sprintId}")
-    public CommentEntity getSprintTeam(@PathVariable("sprintId") Long sprintId) {
+    public CommentEntity getComment(@PathVariable("sprintId") Long sprintId) throws ResponseStatusException {
         return commentService.getComment(sprintId);
-    }
-
-    @ApiResponse(code = 200, message = "Comment updated")
-    @PutMapping(value = "/comment/{sprintId}")
-    public void updateSprintTeam(@PathVariable("sprintId") Long sprintId,
-                                 @RequestBody String comment) {
-        commentService.updateComment(sprintId, comment);
     }
 
     @ApiResponse(code = 200, message = "Comment created")
     @PostMapping(value = "/comment")
-    public void createSprintTeam(@RequestBody CommentEntity commentEntity) {
+    public void createComment(@RequestBody CommentEntity commentEntity) {
         commentService.createComment(commentEntity.getSprintId(), commentEntity.getComment());
     }
 }
