@@ -51,8 +51,8 @@ public final class APIConstant {
     //Settings
     public static final double LOWER_BOUND_MULTIPLIER = 0.8;
     public static final double UPPER_BOUND_MULTIPLIER = 1.2;
-    public static final String JQL_ISSUE_TYPE_TASK = "Tâche";
-    public static final String JQL_ISSUE_TYPE_US = "Récit utilisateur";
+    public static final String JQL_ISSUE_TYPE_TASK = "Task";
+    public static final String JQL_ISSUE_TYPE_US = "User Story";
     public static final String JQL_ISSUE_TYPE_BUG = "Bug";
     public static final String JQL_ISSUE_TYPE_SUBTASK = "Sous-tâche";
     public static final DateTimeFormatter dtfSmallEurope = DateTimeFormatter.ofPattern("dd/MM/yy");

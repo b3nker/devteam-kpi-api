@@ -96,8 +96,8 @@ public class API {
             TeamEntity t = getTeam(teams.get(label), label);
             activeSprints.get(label).setTeam(t);
             //Set addedWork
-            List<String> addedIssues = this.jiraGreenhopperAPI.getAddedIssueKeys
-                    (activeSprints.get(label).getId(), this.teamPair.get(activeSprints.get(label).getTeam().getName())) ;
+            List<String> addedIssues = this.jiraGreenhopperAPI
+                    .getAddedIssueKeys(activeSprints.get(label).getId(), this.teamPair.get(activeSprints.get(label).getTeam().getName())) ;
             TicketEntity addedTickets = this.jiraAPI.getTicketsInfos(addedIssues);
             double addedWork = this.jiraAPI.getEstimatedTime(addedIssues);
             activeSprints.get(label).setAddedTickets(addedTickets);
