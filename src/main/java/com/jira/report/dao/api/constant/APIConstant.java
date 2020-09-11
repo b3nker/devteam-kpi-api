@@ -8,6 +8,9 @@ import java.util.List;
 
 public final class APIConstant {
 
+    private APIConstant() {
+    }
+
     public static final String JQL_SPRINT = "+AND+sprint=";
     public static final String JQL_LABELS = "+AND+labels=";
 
