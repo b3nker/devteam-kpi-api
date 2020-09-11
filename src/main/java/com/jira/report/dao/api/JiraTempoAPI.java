@@ -35,6 +35,14 @@ public class JiraTempoAPI {
         return loggedTime;
     }
 
+    /**
+     *  Retrieves the time logged on tempo for a given issue
+     * @param accountID collaborator assigned to the issue
+     * @param issueKey unique identifier of the issue
+     * @param startDate start date of the issue
+     * @param endDate end date of the issue
+     * @return number of hours logged on a given issue.
+     */
     public double getWorklogByIssue(String accountID, String issueKey, String startDate, String endDate){
         double loggedTime = 0;
         String request = this.tempoUrl + "/worklogs/user/" + accountID + "?&from=" + startDate + "&to=" + endDate;

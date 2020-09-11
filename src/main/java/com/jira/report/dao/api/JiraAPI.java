@@ -57,7 +57,7 @@ public class JiraAPI {
      * @param maxResults Number of results returned from GET method.
      * @return A Collaborator object, null if no ticket is assigned to it
      */
-    public CollaboratorEntity getCollaborator(String accId, String label, SprintEntity s, String projectName, int maxResults) {
+    public CollaboratorEntity getCollaborator(String accId, SprintEntity s, String projectName, int maxResults) {
           /*
         Variables
         */
@@ -417,7 +417,6 @@ public class JiraAPI {
      * @param maxResults Number of results returned from GET method.
      * @return An array of Integer
      */
-
     public int[] getCreated(int nbDays, String projectName, String issueType, int maxResults) {
         /*
         Variables
